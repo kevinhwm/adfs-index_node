@@ -286,6 +286,7 @@ void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
     struct evbuffer *returnbuffer = evbuffer_new();
     evbuffer_add_printf( returnbuffer, "---------------------------------\r\n");
     evbuffer_add_printf( returnbuffer, "zone info is :\r\n");
+
     for(confmap::iterator it= node2zone.begin();it!=node2zone.end();it++)
     {
         evbuffer_add_printf( returnbuffer, "%s",url2name[it->first].c_str());
@@ -294,6 +295,7 @@ void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
         evbuffer_add_printf( returnbuffer, "\r\n");
     }
     evbuffer_add_printf( returnbuffer, "node info is : \r\n");
+
     for(confmap::iterator it= statusnode.begin();it!=statusnode.end();it++)
     {
         evbuffer_add_printf( returnbuffer, "%s",url2name[it->first].c_str());
@@ -302,6 +304,7 @@ void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
         evbuffer_add_printf( returnbuffer, "\r\n");
     }
     evbuffer_add_printf( returnbuffer, "zone overload is : \r\n");
+
     for(map<string, long>::iterator it= zoneover.begin();it!=zoneover.end();it++)
     {
         evbuffer_add_printf( returnbuffer, "%s",it->first.c_str());
@@ -317,7 +320,6 @@ void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
     evhttp_send_reply( req, HTTP_OK, "Status", returnbuffer );
     evbuffer_free(returnbuffer);
     return;
-
 }
 
 
@@ -2323,6 +2325,7 @@ int main(int argc, char *argv[], char *envp[])
             fprintf( fpid, "%d\n", ::getpid() );
             fclose( fpid );
         }
+
         lcdate = nowdate();
         init_urimap();
         event_init();
