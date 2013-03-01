@@ -37,22 +37,20 @@ int upkey(char *url, char *name, char *data)
             printf("%s", "\n");
         }
         else
-        {
             printf("%s\n", "failed");
-        }
 
         curl_easy_cleanup(handle);
         curl_formfree(post);
     }
     else
     {
-
         curl_easy_cleanup(handle);
         //     curl_global_cleanup();
         printf("%s\n", "handle failed");
     }
     return succ;
 }
+
 
 int upload(char *url, char* record, char*data, long record_length)
 {
