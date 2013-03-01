@@ -6,11 +6,8 @@ Author      :  GavinMa
 Email       :  crackme@antiy.com
 */
 
+
 #include "indexserver.h"
-
-
-
-
 
 
 /*overload >> for yaml outstream*/
@@ -19,7 +16,6 @@ void operator >> (const YAML::Node&node, NodeInfo&info)
     node["name"] >> info.name;
     node["status"] >> info.status;
     node["url"] >> info.url;
-
 }
 
 void operator >> (const YAML::Node&node, Zone&zoneinfo)
@@ -52,8 +48,8 @@ int log_init(const char *conf_file)
         std::cout << "Configure Problem:" << f.what() << std::endl;
         return 255;
     }
-
 }
+
 
 //get curr date
 int nowdate()
@@ -82,6 +78,7 @@ int nowtime()
     return result;
 }
 
+
 //return zone num
 int zonefind(string nodename)
 {
@@ -89,6 +86,7 @@ int zonefind(string nodename)
     int num = zonename2zonenum[zonename];
     return num;
 }
+
 
 //split string by tok
 void split(const string& src, string tok,  vector<string> &v, bool trim=false,
@@ -112,8 +110,11 @@ void split(const string& src, string tok,  vector<string> &v, bool trim=false,
         v.push_back(endstr);
     //	return v;
 }
+
+
 //need to change for yaml config
-bool yaml2map(string yamldata, map<string, long> &zonecount, map<string, long> &l_overload, long &c_overload)
+bool yaml2map(string yamldata, map<string, long> &zonecount, 
+        map<string, long> &l_overload, long &c_overload)
 {
     bool succ = false;
     std::stringstream fin;
@@ -139,14 +140,12 @@ bool yaml2map(string yamldata, map<string, long> &zonecount, map<string, long> &
                 log_access->info("%s", it->url.c_str());
             }
             if(!(strcmp(it->status.c_str(),"ro")))
-            {
                 downnode[it->url] = it->status;
-            }
+
             statusnode[it->url] = it->status;
             node2zone[it->url] = zone.name;
 
             name2url[it->name] = it->url;
-
             url2name[it->url]  = it->name;
         }
         zonename2zonenum[zone.name] = i;
@@ -156,9 +155,7 @@ bool yaml2map(string yamldata, map<string, long> &zonecount, map<string, long> &
     }
     succ = true;
 
-
     return succ;
-
 }
 
 
@@ -169,29 +166,19 @@ bool judgediff(int datesource, int datebase, int datehour, int datemin, int curr
     int datediff = datesource - datebase;
     int mindiff = datehour*60 + datemin - currtime;
     if(!datediff)
-    {
         if(mindiff<=0)
-        {
             succ = true;
-        }
-
-    }
     else if(datediff==-1)
-    {
         if(mindiff>=0)
-        {
             succ = true;
-        }
-    }
     else
-    {
         succ = false;
-    }
+
     return succ;
-
 }
-//random vector#include	"log4cpp/Category.hh"
 
+
+//random vector#include	"log4cpp/Category.hh"
 void random_vector(vector<string> &vec)
 {
     time_t timep;
@@ -202,8 +189,8 @@ void random_vector(vector<string> &vec)
     random_shuffle(vec.begin(), vec.end());
 }
 
-//too urgly code
 
+//too urgly code
 string minload_zone(vector<string> &zoneinfo)
 {
     string min_node;
@@ -218,16 +205,12 @@ string minload_zone(vector<string> &zoneinfo)
         if(g_zonecount[node2zone[*it]] < int(load_ratio*10))
         {
             if(statusnode[*it]!="na")
-            {
                 min_node = *it;
-
-            }
             else
-            {
                 g_zonecount[node2zone[*it]] +=1;
-            }
         }
     }
+
     if(!min_node.length())
     {
         min_node.clear();
@@ -236,18 +219,15 @@ string minload_zone(vector<string> &zoneinfo)
                 it++ )
         {
             g_zonecount[node2zone[*it]] = 0;
+
             if((statusnode[*it] != "na")&&(min_node.length()==0))
-            {
                 min_node = *it;
-            }
         }
         //  min_node =  zoneinfo.at(rand()%(zoneinfo.size() ));
-
     }
     return min_node;
-
-
 }
+
 
 bool findkey(string key, confmap node)
 {
@@ -255,9 +235,8 @@ bool findkey(string key, confmap node)
     confmap::iterator iter;
     iter = node.find( key );
     if ( iter != node.end() )
-    {
         retn = true;
-    }
+
     return retn;
 }
 
@@ -271,16 +250,14 @@ void choose_avaliablenode_for_everyzone(confmap confnode, vector<string> &ZoneVe
         vector <string> Node ;
 
         if(!count)
-        {
             ZoneVec.clear();
-        }
+
         for( map<string,long>::iterator it = zoneover.begin();
                 it != zoneover.end();
                 it++ )
         {
             if(confnode.size()!=0)
             {
-
                 confmap::iterator item = confnode.begin();
                 std::advance( item, rand()%(confnode.size()) );
                 string node = item->first;
@@ -289,12 +266,9 @@ void choose_avaliablenode_for_everyzone(confmap confnode, vector<string> &ZoneVe
                 for ( confmap::iterator iter=confnode.begin();iter!=confnode.end();)
                 {
                     if(node2zone[iter->first.c_str()] == node2zone[node])
-                    {
                         confnode.erase(iter++);
-                    }
                     else
                         iter++;
-
                 }
             }
         }
@@ -304,10 +278,7 @@ void choose_avaliablenode_for_everyzone(confmap confnode, vector<string> &ZoneVe
         string excep = string("random node exception:");
         excep.append(e.what());
         log_err->error(excep);
-
     }
-
-
 }
 
 void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
@@ -349,6 +320,7 @@ void cb_ViewConfig( struct evhttp_request *req, void *arg, const char *suburi)
 
 }
 
+
 //Upload by file buffer
 void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
 {
@@ -365,9 +337,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
         int buffer_data_len = EVBUFFER_LENGTH( pInBuffer );
         if(start)
         {
-
-
-
             bool overwrite = false;
             bool succ = false;
             string fname;
@@ -376,17 +345,18 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                 suburi++;
             if( suburi[0] == '?' )
                 suburi++;
+
             const char *pname = suburi;
             if(!strcmp(pname, string("overwrite=1").c_str()))
-            {
                 overwrite = true;
-            }
 
             if( buffer_data_len > 0 )
             {
                 try
                 {
-                    int flength = evbuffer_copyout( pInBuffer, (void *)pFileBuffer, MaxBufferLength );
+                    int flength = evbuffer_copyout( pInBuffer, (void *)pFileBuffer, 
+                            MaxBufferLength );
+
                     if(flength==MaxBufferLength)
                     {
                         log_access->error("Request Entity Too Large");
@@ -394,7 +364,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                         evbuffer_free(returnbuffer);
                         return;
                     }
-
 
                     MPFD::Parser parser;
                     parser.SetMaxCollectedDataLength(MaxBufferLength);
@@ -407,11 +376,9 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                     {
                         const char *checksumval = evhttp_find_header( &querys, "checksum" );
                         if( checksumval != NULL && checksumval[0]=='1' )
-                        {
                             checksum = true;
-                        }
-
                     }
+
                     std::map<std::string, MPFD::Field *> fields = parser.GetFieldsMap();
                     for( std::map<std::string, MPFD::Field*>::iterator it = fields.begin();
                             it != fields.end();
@@ -424,9 +391,7 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                             if( MPFD::Field::TextType == it->second->GetType() )
                                 over = it->second->GetTextTypeContent();
                             if(kyotocabinet::atoi(over.c_str()))
-                            {
                                 overwrite = true;
-                            }
                             else
                                 break;
                         }
@@ -464,10 +429,8 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                 return;
                             }
 
-
                             if(!overwrite&&(tempdata!=NULL))
                             {
-
                                 evhttp_add_header( req->output_headers,"Status","HTTP/1.1 403 Forbidden");
                                 log_access->notice(" upload sample file %s, no use overwrite", fname.c_str());
                                 evbuffer_add_printf( returnbuffer, "OK" );
@@ -486,14 +449,13 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                 char * temp_history;
                                 newobj = json_tokener_parse(tempdata);
                                 confmap tempjson;
-                                json_object_object_foreach(newobj, key, val){
+                                json_object_object_foreach(newobj, key, val)
                                     tempjson[string(key)] = string((char*)json_object_to_json_string(val));
-                                }
+                                
                                 url = (char*)tempjson["node"].c_str();
                                 if(tempjson.size()!=0)
-                                {
                                     temp_history = (char*)tempjson["history"].c_str();
-                                }
+                                
                                 string json_url = string(url).substr(1, strlen(url)-2);
                                 string history_url;
                                 vector <string> ConvertVec;
@@ -506,13 +468,10 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                         it != ConvertVec.end();
                                         it++ )
                                 {
-
-
                                     string caturl,tempurl, rourl;
                                     tempurl = name2url[*it];
                                     if(memnode.find(tempurl)==memnode.end())
                                     {
-
                                         vector <string> TempVec;
                                         choose_avaliablenode_for_everyzone(memnode, TempVec);
                                         rourl = tempurl;
@@ -521,11 +480,8 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                         {
                                             tempurl = TempVec.at(rand()%(TempVec.size() ));
                                             if(node2zone[rourl]==node2zone[tempurl])
-                                            {
                                                 break;
-                                            }
                                         }
-
                                     }
                                     caturl = string("http://").append(tempurl);
                                     caturl.append(string("/upload_file"));
@@ -534,43 +490,29 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                             (char*)(pFile), fSize);
 
                                     if(res)
-                                    {
                                         log_access->info("overwrite upload file %s to %s success.", fname.c_str(), caturl.c_str());
-                                    }
                                     else
-                                    {
                                         log_access->info("overwrite upload file %s to %s failed.", fname.c_str(), caturl.c_str());
-                                    }
 
                                     if(res)
                                     {
-
-
                                         if(rourl.size()!=0)
                                         {
                                             history_url.append(url2name[rourl]);
                                             history_url.append("|");
-
                                         }
                                         json_url.append(url2name[tempurl]);
                                         json_url.append("|");
                                         int zonenum = zonefind(tempurl);
                                         if(lcdate == nowdate())
-                                        {
                                             upcount[zonenum][lctime]+=1;
-
-
-                                        }
                                         else
                                         {
                                             upcount[zonenum][lctime]=0;
                                             upcount[zonenum][lctime]+=1;
                                             lcdate = nowdate();
                                         }
-
                                     }
-
-
                                 }
 
                                 json_url = json_url.substr(0, json_url.size()-1);
@@ -580,11 +522,8 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                 json_string = json_object_new_string(json_url.c_str());
                                 json_object_object_add(obj, "node", json_string);
 
-
-
                                 if(history_url.size()!=0)
                                 {
-
                                     struct json_object *json_history;
                                     history_url = history_url.substr(0, history_url.size()-1);
                                     json_history = json_object_new_string(history_url.c_str());
@@ -607,7 +546,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                     json_object_put(obj);
                                     json_object_put(json_history);
                                     json_object_put(json_string);
-
                                 }
                                 else
                                 {
@@ -627,17 +565,11 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                     }
 
                                     json_object_put(obj);
-
                                     json_object_put(json_string);
                                 }
-
-
-
-
                             }
                             else//tempdata ==NULL
                             {
-
                                 vector <string> ZoneVec;
                                 choose_avaliablenode_for_everyzone(memnode, ZoneVec);
                                 int res = 0;
@@ -655,32 +587,25 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                     res = upload(const_cast<char*>(url.c_str()), const_cast<char*>(fname.c_str()),
                                             (char*)(pFile), fSize);
                                     if(res)
-                                    {
                                         log_access->info("first upload file %s to %s success.", fname.c_str(), url.c_str());
-                                    }
                                     else
-                                    {
                                         log_access->info("first upload file %s to %s failed.", fname.c_str(), url.c_str());
-                                    }
 
                                     if(res)
                                     {
                                         json_tempstr.append(url2name[*it]);
                                         json_tempstr.append("|");
                                         int zonenum = zonefind(tempurl);
-                                        if(lcdate == nowdate())
-                                        {
+
+                                        if(lcdate == nowdate()) 
                                             upcount[zonenum][lctime]+=1;
-                                        }
-                                        else
+                                        else 
                                         {
                                             upcount[zonenum][lctime]=0;
                                             upcount[zonenum][lctime]+=1;
                                             lcdate = nowdate();
                                         }
                                     }
-
-
                                 }
 
                                 //json parse
@@ -699,13 +624,10 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                         log_access->info(" storage sample %s info success. ", fname.c_str());
                                     }
                                     else
-                                    {
                                         log_access->info(" storage sample %s info failed. ", fname.c_str());
-                                    }
                                 }
                                 json_object_put(obj);
                                 json_object_put(json_string);
-
                             }
 
                             delete []tempdata;
@@ -715,7 +637,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                 catch(MPFD::Exception e ){
                     ("Error:%s\n", e.GetError().c_str() );
                 }
-
             }
             else
             {
@@ -776,7 +697,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
 //upload by key/value
 void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
 {
-
     try
     {
         struct evbuffer *returnbuffer = evbuffer_new();
@@ -790,22 +710,18 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
         int buffer_data_len = EVBUFFER_LENGTH( pInBuffer );
         if(start)
         {
-
             bool overwrite = false;
             bool succ = false;
             if( suburi[0] == '/' )
                 suburi++;
             if( suburi[0] == '?' )
                 suburi++;
+
             const char *pname = suburi;
             if(!strcmp(pname, string("overwrite=1").c_str()))
-            {
-
                 overwrite = true;
-            }
             if( buffer_data_len > 0 )
             {
-
                 const char *pname = suburi;
                 try{
                     int flength = evbuffer_copyout( pInBuffer, (void *)pFileBuffer, MaxBufferLength );
@@ -827,7 +743,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                     string upname,updata;
                     char * tempdata;
 
-
                     for( std::map<std::string, MPFD::Field*>::iterator it = fields.begin();
                             it != fields.end();
                             it++ )
@@ -836,19 +751,13 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                         {
                             string over;
                             if( MPFD::Field::TextType == it->second->GetType() )
-                            {
                                 over = it->second->GetTextTypeContent();
-
-                            }
                             if(kyotocabinet::atoi(over.c_str()))
-                            {
                                 overwrite = true;
-                            }
                         }
 
                         else if( it->first == "upname")
                         {
-
                             if( MPFD::Field::TextType == it->second->GetType() )
                             {
                                 upname = it->second->GetTextTypeContent();
@@ -875,8 +784,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                     }
                     if( upname.length() > 0 && updata.length() > 0 )
                     {
-
-
                         if(memnode.size()==0)
                         {
                             log_err->crit("no avaliable node");
@@ -904,14 +811,15 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                             char * temp_history;
                             newobj = json_tokener_parse(tempdata);
                             confmap tempjson;
+
                             json_object_object_foreach(newobj, key, val){
                                 tempjson[string(key)] = string((char*)json_object_to_json_string(val));
                             }
+
                             url = (char*)tempjson["node"].c_str();
                             if(tempjson.size()!=0)
-                            {
                                 temp_history = (char*)tempjson["history"].c_str();
-                            }
+
                             json_object_put(newobj);
                             string json_url = string(url).substr(1, strlen(url)-2);
                             string history_url;
@@ -924,8 +832,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                     it != ConvertVec.end();
                                     it++ )
                             {
-
-
                                 string caturl,tempurl, rourl;
                                 tempurl = name2url[*it];
                                 if(memnode.find(tempurl)==memnode.end())
@@ -938,9 +844,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                     {
                                         tempurl = TempVec.at(rand()%(TempVec.size() ));
                                         if(node2zone[rourl]==node2zone[tempurl])
-                                        {
                                             break;
-                                        }
                                     }
                                 }
 
@@ -949,13 +853,10 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                 res = upkey(const_cast<char*>(caturl.c_str()),
                                         const_cast<char*>(upname.c_str()), const_cast<char*>(updata.c_str()));
                                 if(res)
-                                {
                                     log_access->info("overwrite upload data %s to %s success.", upname.c_str(), caturl.c_str());
-                                }
                                 else
-                                {
                                     log_access->info("overwrite upload data %s to %s failed.", upname.c_str(), caturl.c_str());
-                                }
+
                                 if(res)
                                 {
                                     if(rourl.size()!=0)
@@ -968,10 +869,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                     json_url.append("|");
                                     int zonenum = zonefind(tempurl);
                                     if(lcdate == nowdate())
-                                    {
                                         upcount[zonenum][lctime]+=1;
-
-                                    }
                                     else
                                     {
                                         upcount[zonenum][lctime]=0;
@@ -979,7 +877,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                         lcdate = nowdate();
                                     }
                                 }
-
                             }
                             json_url = json_url.substr(0, json_url.size()-1);
 
@@ -989,7 +886,8 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                             json_string = json_object_new_string(json_url.c_str());
                             json_object_object_add(obj, "node", json_string);
                             if(history_url.size()!=0)
-                            {   struct json_object *json_history;
+                            {   
+                                struct json_object *json_history;
                                 history_url = history_url.substr(0, history_url.size()-1);
                                 json_history = json_object_new_string(history_url.c_str());
                                 json_object_object_add(obj, "history", json_history);
@@ -1004,9 +902,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                         log_access->info("storage sample %s info success.", upname.c_str());
                                     }
                                     else
-                                    {
                                         log_access->info("storage sample %s info failed.", upname.c_str());
-                                    }
                                 }
                                 json_object_put(obj);
 
@@ -1027,9 +923,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                 }
                                 json_object_put(obj);
                                 json_object_put(json_string);
-
                             }
-
                         }
                         else
                         {
@@ -1049,13 +943,9 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                 res = upkey(const_cast<char*>(url.c_str()),
                                         const_cast<char*>(upname.c_str()), const_cast<char*>(updata.c_str()));
                                 if(res)
-                                {
                                     log_access->info("first upload data %s to %s success.", upname.c_str(), url.c_str());
-                                }
                                 else
-                                {
                                     log_access->info("first upload data %s to %s failed.", upname.c_str(), url.c_str());
-                                }
 
                                 if(res)
                                 {
@@ -1064,9 +954,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
 
                                     int zonenum = zonefind(tempurl);
                                     if(lcdate == nowdate())
-                                    {
                                         upcount[zonenum][lctime]+=1;
-                                    }
                                     else
                                     {
                                         upcount[zonenum][lctime]=0;
@@ -1074,8 +962,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                         lcdate = nowdate();
                                     }
                                 }
-
-
                             }
                             //json parse
                             struct json_object *obj, *json_string;
@@ -1093,9 +979,7 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                                     log_access->info("storage sample %s info success.", upname.c_str());
                                 }
                                 else
-                                {
                                     log_access->info("storage sample %s info failed.", upname.c_str());
-                                }
                             }
                             json_object_put(obj);
                             json_object_put(json_string);
@@ -1144,7 +1028,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
                 evbuffer_free(returnbuffer);
                 return;
             }
-
         }
         else
         {
@@ -1161,8 +1044,6 @@ void cb_UploadData( struct evhttp_request *req, void *arg, const char *suburi)
             evbuffer_free(returnbuffer );
             return;
         }
-
-
     }
     catch(exception&e)
     {
@@ -1275,9 +1156,7 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )
             int lctime = nowtime();
             int zonenum = zonefind(json_string);
             if(lcdate == nowdate())
-            {
                 downcount[zonenum][lctime]+=1;
-            }
             else
             {
                 downcount[zonenum][lctime]=0;
@@ -1308,9 +1187,9 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
-
 }
+
+
 //return avaliable node
 void cb_Retnnode( struct evhttp_request *req, void *arg, const char *suburi )
 {
@@ -1326,6 +1205,7 @@ void cb_Retnnode( struct evhttp_request *req, void *arg, const char *suburi )
         const char *pname = suburi;
         if( pname[0] == '/' )
             pname++;
+
         vector <string> ZoneVec;
         choose_avaliablenode_for_everyzone(downnode, ZoneVec);
         string url;
@@ -1340,27 +1220,19 @@ void cb_Retnnode( struct evhttp_request *req, void *arg, const char *suburi )
             evbuffer_add_printf( returnbuffer, "%s", url.c_str() );
         }
         evhttp_add_header( req->output_headers,"Status","HTTP/1.1 200 OK");
-        //        evhttp_add_header( req->output_headers, "Content-Type", "text/plain" );
-        //        evhttp_send_reply( req, HTTP_OK, url.c_str(), returnbuffer );
-        //        evbuffer_free(returnbuffer);
-        //        return;
-
-
     }
     else
     {
         evbuffer_add_printf( returnbuffer, "Indexserver is not running!,please start");
         evhttp_add_header( req->output_headers,"Status","HTTP/1.1 403 Forbidden");
-        //        evhttp_send_reply( req, HTTP_OK, "Status", returnbuffer );
-        //        evbuffer_free(returnbuffer);
-
     }
     evhttp_add_header( req->output_headers, "Content-Type", "text/plain" );
     evhttp_send_reply( req, HTTP_OK, "status", returnbuffer );
     evbuffer_free(returnbuffer);
     return;
-
 }
+
+
 //total download upload
 void cb_Status( struct evhttp_request *req, void *arg, const char *suburi )
 {
@@ -1389,95 +1261,71 @@ void cb_Status( struct evhttp_request *req, void *arg, const char *suburi )
             for (vector<string>::iterator it=url.begin();it!=url.end();it++)
             {
                 if(!it->find("method"))
-                {
                     method = it->substr(it->find("=")+1, it->size());
-                }
                 else if(!it->find("date"))
-                {
                     date = it->substr(it->find("=")+1, it->size());
-                }
                 else if(!it->find("zone"))
-                {
                     zone = it->substr(it->find("=")+1, it->size());
-
-                }
-
             }
             if(date.size()!=12&&date.size()!=0)
             {
-
                 log_access->notice("data format is not right");
                 evhttp_send_error( req, HTTP_BADREQUEST, "date is 12 bit format eg:201112121201 YYYYMMDDhhmm" );
                 evbuffer_free(returnbuffer);
                 return;
             }
+
             int datetime = kyotocabinet::atoi(date.substr(0, 8).c_str());
             int hour = kyotocabinet::atoi(date.substr(8,2).c_str());
             int min = kyotocabinet::atoi(date.substr(10,2).c_str());
             int lctime = nowtime();
             bool diff = judgediff(datetime, lcdate, hour, min, lctime);
+
             if(method=="upload")
             {
-
-
                 if(zone.size()==0)
                 {
                     if(diff)
                     {
                         int total = 0;
                         for(int i=0; i<zoneover.size();i++)
-                        {
                             total += upcount[i][hour*60+min];
-                        }
+
                         char temp[64];
                         sprintf(temp, "%d", total);
 
                         evbuffer_add_printf( returnbuffer, "%s", temp);
                     }
                     else
-                    {
                         evbuffer_add_printf( returnbuffer, "0");
-                    }
                 }
                 else
                 {
                     if(diff)
                     {
-
                         char temp[64];
                         sprintf(temp, "%ld", upcount[zonename2zonenum[zone]][hour*60+min]);
                         evbuffer_add_printf( returnbuffer, "%s", temp);
-
                     }
                     else
-                    {
                         evbuffer_add_printf( returnbuffer, "0");
-                    }
-
                 }
-
             }
             else if(method=="download")
             {
                 if(zone.size()==0)
                 {
-
                     if(diff)
                     {
                         int total = 0;
                         for(int i=0; i<zoneover.size();i++)
-                        {
                             total += downcount[i][hour*60+min];
-                        }
                         char temp[64];
                         sprintf(temp, "%d", total);
                         evbuffer_add_printf( returnbuffer, "%s", temp);
                     }
                     else
-                    {
                         evbuffer_add_printf( returnbuffer, "0");
-                    }
-
                 }
                 else
                 {
@@ -1489,9 +1337,7 @@ void cb_Status( struct evhttp_request *req, void *arg, const char *suburi )
                         evbuffer_add_printf( returnbuffer, "%s", temp);
                     }
                     else
-                    {
                         evbuffer_add_printf( returnbuffer, "0");
-                    }
                 }
             }
             else
@@ -1513,7 +1359,6 @@ void cb_Status( struct evhttp_request *req, void *arg, const char *suburi )
             evhttp_send_reply( req, HTTP_FORBIDDEN, "Status", returnbuffer );
             evbuffer_free(returnbuffer);
             return;
-
         }
     }
 
@@ -1543,6 +1388,7 @@ void cb_Manage(struct evhttp_request *req, void *arg, const char *suburi)
             const char *pname = suburi;
             if( pname[0] == '/' )
                 pname++;
+
             int status = kyotocabinet::atoi(pname);
             if(status)
             {
@@ -1559,13 +1405,11 @@ void cb_Manage(struct evhttp_request *req, void *arg, const char *suburi)
 
                 else
                 {
-
                     log_access->info("index is running now");
                     evbuffer_add_printf( returnbuffer, "Indexserver is running now");
                     evhttp_add_header( req->output_headers,"Status","HTTP/1.1 403 Forbidden");
                     evhttp_send_reply( req, HTTP_FORBIDDEN, "Status", returnbuffer );
                     evbuffer_free(returnbuffer);
-
                 }
             }
             else
@@ -1589,8 +1433,6 @@ void cb_Manage(struct evhttp_request *req, void *arg, const char *suburi)
                     evbuffer_free(returnbuffer);
                     return ;
                 }
-
-
             }
         }
         else
@@ -1609,10 +1451,9 @@ void cb_Manage(struct evhttp_request *req, void *arg, const char *suburi)
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
-
-
 }
+
+
 void cb_Config(struct evhttp_request *req, void *arg, const char *suburi)
 {
     try
@@ -1630,7 +1471,6 @@ void cb_Config(struct evhttp_request *req, void *arg, const char *suburi)
             suburi++;
         if(suburi[0] == '?')
             suburi++;
-
 
         if(buffer_data_len>0)
         {
@@ -1663,9 +1503,7 @@ void cb_Config(struct evhttp_request *req, void *arg, const char *suburi)
                     }
                 }
                 if(  updata.length() > 0 )
-                {
                     fin = updata;
-                }
 
             }//try
             catch(MPFD::Exception e )
@@ -1717,8 +1555,8 @@ void cb_Config(struct evhttp_request *req, void *arg, const char *suburi)
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
 }
+
 
 void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
 {
@@ -1738,12 +1576,9 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
             const char *pname = suburi;
             if( pname[0] == '/' )
                 pname++;
-            //  vector <string> ZoneNode;
-            //check if not node has
-            // random_Node(memnode, ZoneNode);
+
             if(downnode.size()==0)
             {
-
                 log_err->crit("no avaliable node ");
                 evhttp_add_header( req->output_headers,"Status","HTTP/1.1 403 Forbidden");
                 evbuffer_add_printf( returnbuffer, "Dear, i'm sorry, no avaliable node please contact administrtor" );
@@ -1758,7 +1593,6 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
             char *tempurl = g_indexdb.get( pname, strlen(pname) + 1,  &len, NULL);
             if ((tempurl == NULL)||(tempurl[0] == '\0'))
             {
-
                 log_access->notice("no this record %s", pname);
                 evhttp_send_error( req, HTTP_NOTFOUND, "No This Record\n." );
                 evbuffer_free(returnbuffer);
@@ -1773,13 +1607,14 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
             json_object_object_foreach(obj, key, val){
                 tempjson[string(key)] = string((char*)json_object_to_json_string(val));
             }
+
             url = (char*)tempjson["node"].c_str();
             delete []tempurl;
             string json_url = string(url).substr(1, strlen(url)-2);
             map<int, string> ZoneMap;
             vector <string> ZoneVec;
             vector <string> ConvertVec;
-            //const string arguurl = json_url;
+
             json_object_put(obj);
             split(json_url, string("|"), ConvertVec);
             json_url.clear();
@@ -1787,15 +1622,16 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
                     it != ConvertVec.end();
                     it++ )
             {
-
                 json_url.append(name2url[*it]);
                 json_url.append("|");
             }
+
             json_url = json_url.substr(0, json_url.size()-1);
             const string arguurl = json_url;
             split(arguurl, string("|"), ZoneVec);
             random_vector(ZoneVec);
             string json_string = minload_zone(ZoneVec);
+
             if(json_string.empty())
             {
                 log_access->notice("url all na");
@@ -1803,10 +1639,12 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
                 evbuffer_free(returnbuffer);
                 return;
             }
+
             strcat(nodeurl, "http://");
             strcat(nodeurl,  json_string.c_str());
             strcat(nodeurl, "/history/");
             strcat(nodeurl,  pname);
+
             if( string(json_url).length()==0 )
             {
                 log_access->notice("no this record %s", pname);
@@ -1814,13 +1652,13 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
                 evbuffer_free(returnbuffer);
                 return;
             }
+
             evhttp_add_header( req->output_headers,"Status","HTTP/1.1 303 See Other");
             evhttp_add_header( req->output_headers, "Location", (const char*)nodeurl );
             evhttp_send_reply( req, HTTP_SEEOTHER, pname, returnbuffer );
             log_access->info("get %s history list success", pname);
             evbuffer_free(returnbuffer);
             g_zonecount[node2zone[json_string]]+=1;
-
 
             return;
         }
@@ -1847,6 +1685,7 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
     }
 }
 
+
 void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
 {
     try
@@ -1854,25 +1693,23 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
         struct evbuffer *returnbuffer = evbuffer_new();
         if(start)
         {
-
             if( strlen( suburi ) == 0 )
             {
-
                 log_access->notice("access gethistory url error");
                 evhttp_send_error( req, HTTP_NOTFOUND, "url error. <br/>Example: http://host/gethistory/yourfilename&id=1." );
                 evbuffer_free(returnbuffer);
                 return;
             }
+
             const char *namekey;
             const char *pname = suburi;
             if( pname[0] == '/' )
                 pname++;
+
             namekey = pname;
             if( pname[0] == '&');
             pname++;
-            // vector <string> ZoneNode;
-            //check if not node has
-            // random_Node(memnode, ZoneNode);
+
             if(downnode.size()==0)
             {
                 log_err->crit("no avaliable node");
@@ -1882,6 +1719,7 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
                 evbuffer_free(returnbuffer);
                 return;
             }
+
             char nodeurl[100];
             memset(nodeurl, 0, 100);
             size_t len  =  0;
@@ -1900,16 +1738,17 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
             char * zoneinfo;
             obj = json_tokener_parse(tempurl);
             confmap tempjson;
+
             json_object_object_foreach(obj, key, val){
                 tempjson[string(key)] = string((char*)json_object_to_json_string(val));
             }
+
             url = (char*)tempjson["node"].c_str();
             delete []tempurl;
             string json_url = string(url).substr(1, strlen(url)-2);
             map<int, string> ZoneMap;
             vector <string> ZoneVec;
             vector <string> ConvertVec;
-            //const string arguurl = json_url;
             json_object_put(obj);
             split(json_url, string("|"), ConvertVec);
             json_url.clear();
@@ -1917,7 +1756,6 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
                     it != ConvertVec.end();
                     it++ )
             {
-
                 json_url.append(name2url[*it]);
                 json_url.append("|");
             }
@@ -1954,10 +1792,9 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
             g_zonecount[node2zone[json_string]]+=1;
             int lctime = nowtime();
             int zonenum = zonefind(json_string);
+
             if(lcdate == nowdate())
-            {
                 downcount[zonenum][lctime]+=1;
-            }
             else
             {
                 downcount[zonenum][lctime]=0;
@@ -1989,6 +1826,8 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
     }
 
 }
+
+
 //Delete element from index
 void cb_DeleteKey(struct evhttp_request *req, void *arg, const char *suburi )
 {
@@ -2008,8 +1847,6 @@ void cb_DeleteKey(struct evhttp_request *req, void *arg, const char *suburi )
             if( pname[0] == '/' )
                 pname++;
 
-            //vector <string> ZoneNode;
-            //random_Node(memnode, ZoneNode);
             if(downnode.size()==0)
             {
                 log_err->crit("no avaliable node");
@@ -2059,11 +1896,8 @@ void cb_DeleteKey(struct evhttp_request *req, void *arg, const char *suburi )
                     nodeurl.append(pname);
                     res = delete_key(const_cast<char*>(nodeurl.c_str()));
                     if(res)
-                    {
                         count++;
-                    }
                 }
-
             }
             if(count == ConvertVec.size())
             {
@@ -2075,9 +1909,7 @@ void cb_DeleteKey(struct evhttp_request *req, void *arg, const char *suburi )
                     remove_result = g_indexdb.set(newname, strlen(newname)+1, tempurl, strlen(tempurl)+1);
                 }
                 else
-                {
                     remove_result = false;
-                }
 
                 if(remove_result)
                 {
@@ -2130,14 +1962,12 @@ void cb_DeleteKey(struct evhttp_request *req, void *arg, const char *suburi )
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
 }
 
 void cb_RetnIndex( struct evhttp_request *req, void *arg, const char *suburi )
 {
     if(start)
     {
-
         struct evbuffer *returnbuffer = evbuffer_new();
         if( strlen(suburi) == 0)
         {
@@ -2145,8 +1975,10 @@ void cb_RetnIndex( struct evhttp_request *req, void *arg, const char *suburi )
             evbuffer_free(returnbuffer);
             return;
         }
+
         if( suburi[0] == '/' )
             suburi++;
+
         string url(suburi);
         string md5 = url.substr(0, url.find("&"));
         string node = url.substr(url.find("&")+1, url.size());
@@ -2173,9 +2005,8 @@ void cb_RetnIndex( struct evhttp_request *req, void *arg, const char *suburi )
         evbuffer_free(returnbuffer);
         return;
     }
-
-
 }
+
 
 void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi )
 {
@@ -2196,16 +2027,14 @@ void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi )
                 suburi++;
             if( suburi[0] == '?' )
                 suburi++;
-            //fix follow nodename or url
 
             string url(suburi);
             string nodename = url.substr(0, url.find("&"));
             string status = url.substr(url.find("&")+1, url.size());
+
             if(!strcmp("node",(char*)nodename.substr(0,4).c_str()))
-            {
                 nodename = name2url[nodename];
 
-            }
             if(findkey(nodename, statusnode))
             {
                 if(status == "rw")
@@ -2223,7 +2052,6 @@ void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi )
                     downnode.erase(nodename);
                     memnode.erase(nodename);
                 }
-
 
                 statusnode[nodename] = status;
                 log_access->info("monitor node:%s to %s", nodename.c_str(), status.c_str());
@@ -2252,10 +2080,7 @@ void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi )
             evhttp_send_reply( req, HTTP_FORBIDDEN, "Status", returnbuffer );
             evbuffer_free(returnbuffer);
             return;
-
         }
-
-
     }
     catch(exception&e)
     {
@@ -2263,8 +2088,6 @@ void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi )
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
-
 }
 
 void cb_Exists( struct evhttp_request *req, void *arg, const char *suburi )
@@ -2285,8 +2108,6 @@ void cb_Exists( struct evhttp_request *req, void *arg, const char *suburi )
             if( pname[0] == '/' )
                 pname++;
 
-            //vector <string> ZoneNode;
-            //random_Node(dow, ZoneNode);
             if(downnode.size()==0)
             {
                 log_err->crit("no avaliable node");
@@ -2339,8 +2160,8 @@ void cb_Exists( struct evhttp_request *req, void *arg, const char *suburi )
         excep.append(e.what());
         log_err->emerg(excep);
     }
-
 }
+
 
 void cb_Index( struct evhttp_request *req, void *arg, const char *suburi )
 {
@@ -2364,6 +2185,8 @@ void cb_Index( struct evhttp_request *req, void *arg, const char *suburi )
     evbuffer_free(returnbuffer);
     return;
 }
+
+
 void request_handler(struct evhttp_request *req, void *arg)
 {
     const char *uri = evhttp_request_get_uri( req );
@@ -2377,14 +2200,11 @@ void request_handler(struct evhttp_request *req, void *arg)
 
     map<string, cmd_callback>::iterator it = g_urimap.find( cmd );
     if( it != g_urimap.end() )
-    {
         (*it->second)(req, arg, suburi );
-    }
     else
-    {
         printf("Unknown cmd:%s\n", cmd );
-    }
 }
+
 
 void init_urimap()
 {
@@ -2410,13 +2230,12 @@ static void quit_safely(const int sig )
 {
     g_indexdb.close();
     if( g_pidfile )
-    {
         remove( g_pidfile );
-    }
 
     printf("Bye...\n");
     exit(0);
 }
+
 
 static void show_help(void )
 {
@@ -2434,18 +2253,16 @@ static void show_help(void )
 
 int main(int argc, char *argv[], char *envp[])
 {
+    short           http_port       = 8080;
+    char            http_addr[128]  = "0.0.0.0";
+    struct evhttp * http_server     = NULL;
+    bool          	daemon          = false;
+    int 	    	cache_size      = 512;
+    int 	    	dbcapsize       = 1000000;
+    char 	    	indexpath[256];
+    char            statuspath[256];
 
-    short           http_port = 8080;
-    char            http_addr[128] = "0.0.0.0";
-    struct evhttp  *http_server = NULL;
-    bool    	daemon = false;
-    int 		cache_size = 512;
-    int		dbcapsize = 1000000;
-    char 		indexpath[256];
-    char        statuspath[256];
     int c;
-
-
     while ((c = getopt(argc, argv, "l:p:m:u:c:vdh")) != -1)
     {
         switch (c) {
@@ -2483,7 +2300,6 @@ int main(int argc, char *argv[], char *envp[])
     }
     try
     {
-
         signal( SIGINT, quit_safely );
         signal( SIGKILL, quit_safely );
         signal( SIGQUIT, quit_safely);
@@ -2494,13 +2310,11 @@ int main(int argc, char *argv[], char *envp[])
         if( daemon == true )
         {
             pid = fork();
-            if(pid < 0 ){
+            if( pid < 0 )
                 exit(EXIT_FAILURE);
-            }
 
-            if( pid > 0 ){
+            if( pid > 0 )
                 exit(EXIT_SUCCESS );
-            }
         }
 
         if(g_pidfile )
@@ -2535,9 +2349,10 @@ int main(int argc, char *argv[], char *envp[])
     }
     catch(...)
     {
-
         log_err->emerg("index start occur exception");
         delete log_err;
         delete log_access;
     }
 }
+
+
