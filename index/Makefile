@@ -1,20 +1,17 @@
-obj = indexserver.o  Exception.o Field.o Parser.o curl_upload.o BinString.o 
-#md5sum.o
+OBJS = curl_upload.o BinString.o Field.o Parser.o Exception.o indexserver.o
 
-indexserver : $(obj)
-	gcc $(obj) -m64 -levent -lcrypto -llog4cpp -pthread -ljson -lkyototycoon -lcurl -lyaml-cpp -lz -o indexserver 
+all: $(OBJS)
+	g++ -m64 $(OBJS) -o indexserver -lcrypto -llog4cpp -ljson -lcurl -lyaml-cpp -lkyototycoon -levent
 
-indexserver.o :indexserver.cpp
-Exception.o :Exception.cpp
-Field.o :Field.cpp
-Parser.o :Parser.cpp
-BinString.o :BinString.cpp
+indexserver.o: indexserver.cpp
+Exception.o: Exception.cpp
+Field.o: Field.cpp
+Parser.o: Parser.cpp
+BinString.o: BinString.cpp
+curl_upload.o: curl_upload.cpp
 
-curl_upload.o : curl_upload.cpp
 
-#md5sum.o    :md5sum.h
-
-.PHONY : clean
-clean :
-	rm -rf indexserver $(obj)
+.PHONY: clean
+clean:
+	rm -rf indexserver $(OBJS)
 

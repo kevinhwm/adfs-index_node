@@ -168,11 +168,11 @@ bool judgediff(int datesource, int datebase, int datehour, int datemin, int curr
     if(!datediff)
         if(mindiff<=0)
             succ = true;
-    else if(datediff==-1)
-        if(mindiff>=0)
-            succ = true;
-    else
-        succ = false;
+        else if(datediff==-1)
+            if(mindiff>=0)
+                succ = true;
+            else
+                succ = false;
 
     return succ;
 }
@@ -453,11 +453,11 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                                 confmap tempjson;
                                 json_object_object_foreach(newobj, key, val)
                                     tempjson[string(key)] = string((char*)json_object_to_json_string(val));
-                                
+
                                 url = (char*)tempjson["node"].c_str();
                                 if(tempjson.size()!=0)
                                     temp_history = (char*)tempjson["history"].c_str();
-                                
+
                                 string json_url = string(url).substr(1, strlen(url)-2);
                                 string history_url;
                                 vector <string> ConvertVec;
