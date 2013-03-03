@@ -1570,7 +1570,8 @@ void cb_History(struct evhttp_request *req, void *arg, const char *suburi)
             if( strlen( suburi ) == 0 )
             {
                 log_access->notice("access history url error");
-                evhttp_send_error( req, HTTP_NOTFOUND, "url error. <br/>Example: http://host/history/yourfilename." );
+                evhttp_send_error( req, HTTP_NOTFOUND, 
+                        "url error. <br/>Example: http://host/history/yourfilename." );
                 evbuffer_free(returnbuffer);
                 return;
             }
@@ -1698,7 +1699,8 @@ void cb_GetHistory(struct evhttp_request *req, void *arg, const char *suburi)
             if( strlen( suburi ) == 0 )
             {
                 log_access->notice("access gethistory url error");
-                evhttp_send_error( req, HTTP_NOTFOUND, "url error. <br/>Example: http://host/gethistory/yourfilename&id=1." );
+                evhttp_send_error( req, HTTP_NOTFOUND, 
+                        "url error. <br/>Example: http://host/gethistory/yourfilename&id=1." );
                 evbuffer_free(returnbuffer);
                 return;
             }
@@ -2225,7 +2227,6 @@ void init_urimap()
     g_urimap["gethistory"] = cb_GetHistory;
     g_urimap["exists"]  = cb_Exists;
     g_urimap[""] = cb_Index;
-
 }
 
 static void quit_safely(const int sig )
@@ -2244,12 +2245,12 @@ static void show_help(void )
     char b[] = "--------------------------------------------------------------------------------------------------\n"
         "-l <ip_addr>  interface to listen on, default is 0.0.0.0\n"
         "-p <num>      TCP port number to listen on (default: 1218)\n"
-        "-d 		  run as a daemon.\n"
-        "-u [pidfile]  pidfile if needed.\n"
-        "-h            print this help and exit\n"
         "-m            max upload file buffer, default is 10m, input is mb base\n"
+        "-u [pidfile]  pidfile if needed.\n"
         "-c            conf file\n"
         "-v            print version\n\n\n";
+        "-d 		   run as a daemon.\n"
+        "-h            print this help and exit\n"
     fprintf(stderr, b, strlen(b));
 }
 
@@ -2290,8 +2291,8 @@ int main(int argc, char *argv[], char *envp[])
                 show_help();
                 return 0;
             case 'v':
-                cout<<"version 1.10.7 By Antiy Platform"<<endl;
-                exit(0);
+                cout<<"version 3.0.0"<<endl;
+                return 0;
         }
     }
     int res = log_init(CONFPATH);
@@ -2339,7 +2340,7 @@ int main(int argc, char *argv[], char *envp[])
         sprintf(buf, "%d", http_port);
 
         indexinfo.append(buf);
-        indexinfo.append(" start success");
+        indexinfo.append("start success");
 
         log_access->info(indexinfo);
 
