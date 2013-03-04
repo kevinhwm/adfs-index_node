@@ -11,3 +11,19 @@
 *.lai
 *.la
 *.a
+
+#Libraries
+*.lib
+*.a
+
+#Shared objects (inc. Windows DLLs)
+*.dll
+*.so.*
+
+#Excutables
+*.exe
+*.out
+*.app
+
+#Folders
+.deps
