@@ -362,21 +362,25 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                     if(flength==MaxBufferLength)
                     {
                         log_access->error("Request Entity Too Large");
-                        evhttp_send_error( req, HTTP_RETLarge, "Request Entity Too Large" );
+                        evhttp_send_error( req, HTTP_RETLarge, 
+                                "Request Entity Too Large" );
                         evbuffer_free(returnbuffer);
                         return;
                     }
 
                     MPFD::Parser parser;
                     parser.SetMaxCollectedDataLength(MaxBufferLength);
-                    parser.SetUploadedFilesStorage(MPFD::Parser::StoreUploadedFilesInMemory );
+                    parser.SetUploadedFilesStorage(
+                            MPFD::Parser::StoreUploadedFilesInMemory );
                     parser.SetContentType( content );
                     parser.AcceptSomeData( pFileBuffer, flength );
                     evkeyvalq querys;
                     bool checksum=false;
-                    if( 0 == evhttp_parse_query_str( suburi, &querys ) )
+                    if( 0 == evhttp_parse_query_str( suburi, &querys ) ) 
                     {
-                        const char *checksumval = evhttp_find_header( &querys, "checksum" );
+                        const char *checksumval = evhttp_find_header( 
+                                &querys, "checksum" );
+
                         if( checksumval != NULL && checksumval[0]=='1' )
                             checksum = true;
                     }

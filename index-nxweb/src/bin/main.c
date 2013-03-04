@@ -43,9 +43,9 @@
 extern nxweb_handler hello_handler;
 extern nxweb_handler benchmark_handler;
 extern nxweb_handler benchmark_handler_inworker;
-
 extern nxweb_handler test_handler;
 extern nxweb_handler sendfile_handler;
+
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
 extern nxweb_handler fetch_handler;
@@ -57,6 +57,9 @@ extern nxweb_handler list_handler;
 
 KCDB* g_kcdb;
 int g_kcrecord_header = 4;
+int g_MaxUploadSize = 1048576 * 200;
+
+
 // These are benchmarking handlers (see modules/benchmark.c):
 NXWEB_SET_HANDLER(benchmark, "/benchmark-inprocess", &benchmark_handler, .priority=100);
 NXWEB_SET_HANDLER(benchmark_inworker, "/benchmark-inworker", &benchmark_handler_inworker, .priority=100);
