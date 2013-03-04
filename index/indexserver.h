@@ -64,9 +64,9 @@ char *pFileBuffer = (char *)malloc(MaxBufferLength);
 typedef void (*cmd_callback )( struct evhttp_request *req, void *arg, const char *suburi );
 std::map<string, cmd_callback > g_urimap;//stl map array
 char *g_pidfile = NULL; //fix pid file
-char CONFPATH[1024]  = "../conf/log.conf";
+char CONFPATH[1024] = "../conf/log.conf";
 
-bool start = false;//start flag 1:start 0:stop
+bool start = false;     //start flag 1:start 0:stop
 
 //indexdb argument
 string ihost;
@@ -79,19 +79,18 @@ uint64_t downcount[MAX_ZONE][1440];
 typedef map <string, string> confmap;
 
 //multiconf multinode;
-confmap  node2zone;//node to zone convert
-confmap  url2name;//url to name
-confmap  name2url;//url to name
+confmap node2zone;      //node to zone convert
+confmap url2name;       //url to name
+confmap name2url;       //url to name
+confmap memnode;        //node avaliable
+confmap statusnode;     //node status
+confmap downnode;       //node download
 
-//confmap  zonenode;
-map<string, long>  zoneover;//zone overload
-map<string, long>  g_zonecount;//count zone downlaod numbers
-long g_overload = 0 ;
-confmap memnode;//node avaliable
-confmap statusnode;//node status
-confmap downnode ; //node download
+map<string, long> zoneover;     //zone overload
+map<string, long> g_zonecount;  //count zone downlaod numbers
 map<string, int> zonename2zonenum;
 
+long g_overload = 0 ;
 int lcdate = 0;
 bool confirmConf = false;
 typedef basic_string<char>::size_type S_T;
