@@ -2248,9 +2248,10 @@ static void show_help(void )
         "-m            max upload file buffer, default is 10m, input is mb base\n"
         "-u [pidfile]  pidfile if needed.\n"
         "-c            conf file\n"
-        "-v            print version\n\n\n";
+        "-v            print version\n\n\n"
         "-d 		   run as a daemon.\n"
-        "-h            print this help and exit\n"
+        "-h            print this help and exit\n";
+
     fprintf(stderr, b, strlen(b));
 }
 
