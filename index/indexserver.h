@@ -2,65 +2,44 @@
 #define INDEXSERVER_H_INCLUDED
 
 #include "BinString.h"
+#include "Parser.h"
+#include "curl_upload.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
+#include <math.h>
+#include <time.h>
+
+#include <vector>
+#include <string>
+#include <map>
 #include <iostream>
 #include <fstream>
+#include <exception>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-//math
-#include <math.h>
-
-//libevent
-#include <event.h>
-#include <evhttp.h>
-
-//kyotocabinet
-#include <kchashdb.h>
-#include <kccachedb.h>
-
-//kyototycoon
-#include <ktremotedb.h>
-
-//MPFD
-#include "Parser.h"
-
-
-//opensource lib
+#include <getopt.h>
 #include <openssl/md5.h>
-#include <pthread.h>
-
-//stl
-#include <vector>
-#include <string>
-#include <map>
 
 //json
 #include "json/json.h"
-#include "json/json_object.h"
-#include "json/json_tokener.h"
-
-//time
-#include "time.h"
-
-//yaml
-#include "yaml-cpp/yaml.h"
-
 //log4cpp
 #include <log4cpp/Category.hh>
-#include <log4cpp/FileAppender.hh>
-#include <log4cpp/SimpleLayout.hh>
 #include <log4cpp/PropertyConfigurator.hh>
-#include "log4cpp/CategoryStream.hh"
+//yaml
+#include "yaml-cpp/yaml.h"
+//libevent
+#include <event.h>
+#include <evhttp.h>
+//kyotocabinet
+#include <kchashdb.h>
+#include <kccachedb.h>
+//kyototycoon
+#include <ktremotedb.h>
 
-//Exception
-#include <exception>
-
-//#define CONFPATH "../conf/log.conf"
 
 #define HTTP_FORBIDDEN  403
 #define HTTP_SEEOTHER   303
@@ -68,10 +47,6 @@
 #define MAX_TIME        1439
 #define MAX_ZONE        1000
 
-#define eps 1e-8
-#define ABS(x) ((x)<0?-(x):(x))
-
-#include "curl_upload.h"
 
 //namespace
 using namespace kyotocabinet;
@@ -96,7 +71,6 @@ bool start = false;//start flag 1:start 0:stop
 //indexdb argument
 string ihost;
 int iport;
-//char * sqlite_name = "/usr/local/adfszone/indexserver/db/total.db";
 
 //count array
 uint64_t upcount[MAX_ZONE][1440];

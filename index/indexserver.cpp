@@ -1382,7 +1382,8 @@ void cb_Manage(struct evhttp_request *req, void *arg, const char *suburi)
             if( strlen( suburi ) == 0 )
             {
                 log_access->notice("access manage url error");
-                evhttp_send_error( req, HTTP_NOTFOUND, "url error. start:1 stop:0 <br/>http://host/manage/0" );
+                evhttp_send_error( req, HTTP_NOTFOUND, 
+                        "url error. start:1 stop:0 <br/>http://host/manage/0" );
                 evbuffer_free(returnbuffer);
                 return;
             }
@@ -2248,9 +2249,10 @@ static void show_help(void )
         "-m            max upload file buffer, default is 10m, input is mb base\n"
         "-u [pidfile]  pidfile if needed.\n"
         "-c            conf file\n"
-        "-v            print version\n\n\n";
+        "-v            print version\n\n\n"
         "-d 		   run as a daemon.\n"
-        "-h            print this help and exit\n"
+        "-h            print this help and exit\n";
+
     fprintf(stderr, b, strlen(b));
 }
 
