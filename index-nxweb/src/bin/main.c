@@ -151,18 +151,18 @@ static void server_main() {
 // Utility stuff:
 
 static void show_help(void) {
-    printf( "usage:    nxweb <options>\n\n"
+    printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
-            " -m mem   set memory map size in MB (default: 64)"
-            " -M fMax  set file max size in MB   (default: 80)"
+            " -m mem   set memory map size in MB (default: 64)\n"
+            " -M fMax  set file max size in MB   (default: 80)\n"
             " -w dir   set work dir    (default: ./)\n"
             " -l file  set log file    (default: stderr or nxweb_error_log for daemon)\n"
             " -p file  set pid file    (default: nxweb.pid)\n"
             " -u user  set process uid\n"
             " -g group set process gid\n"
             " -P port  set http port\n"
-            " -x path  database file   (default: ./store.kch)"
+            " -x path  database file   (default: ./store.kch)\n"
 #ifdef WITH_SSL
             " -S port  set https port\n"
 #endif
@@ -191,10 +191,9 @@ int main(int argc, char** argv) {
                 show_help();
                 return 0;
             case 'v':
-                printf( "NXWEB - ultra-fast and super-lightweight web server\n"
-                        "version:      nxweb/" REVISION "\n"
+                printf( "version:      indexserver - " REVISION "\n"
                         "build-date:   " __DATE__ " " __TIME__ "\n"
-                        "project page: https://bitbucket.org/yarosla/nxweb/\n"
+                        "project page: https://github.com/kevinhwm/adfs-index_node\n"
                       );
                 return 0;
             case 'd':

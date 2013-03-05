@@ -42,25 +42,25 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "nxweb"
+#define PACKAGE "indexserver"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT ""
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "nxweb"
+#define PACKAGE_NAME "indexserver"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "nxweb 3.1.0-dev"
+#define PACKAGE_STRING "indexserver 3.0.1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "nxweb"
+#define PACKAGE_TARNAME "indexserver"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.1.0-dev"
+#define PACKAGE_VERSION "3.0.1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -69,7 +69,7 @@
 #define USE_REGISTER_PRINTF_SPECIFIER 1
 
 /* Version number of package */
-#define VERSION "3.1.0-dev"
+#define VERSION "3.0.1"
 
 /* Use IMAGEMAGICK */
 /* #undef WITH_IMAGEMAGICK */

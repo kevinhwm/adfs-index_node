@@ -10,11 +10,11 @@
 static const char upload_handler_key;
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
-extern KCDB* g_kcdb;
-extern int g_kcrecord_header;
-
 #define MAX_COUNT_PER_LIST 10000
 
+
+extern KCDB* g_kcdb;
+//extern int g_kcrecord_header;
 
 typedef struct KC_DATA{
     void * data_ptr;
@@ -35,7 +35,10 @@ static void upload_request_data_finalize(
 }
 
 
-static nxweb_result download_on_request(nxweb_http_server_connection* conn, nxweb_http_request* req, nxweb_http_response* resp) 
+static nxweb_result download_on_request(
+        nxweb_http_server_connection* conn, 
+        nxweb_http_request* req, 
+        nxweb_http_response* resp) 
 {
     printf("download - request\n");
     // get the namespace. defaults using 

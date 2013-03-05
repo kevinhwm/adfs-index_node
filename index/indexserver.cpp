@@ -390,7 +390,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi)
                             it != fields.end();
                             it++ )
                     {
-
                         if( it->first == "overwrite" )
                         {
                             string over;

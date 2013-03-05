@@ -112,18 +112,18 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t len )
     */
 
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if( pufo->filename_ready_to_receive == 1 ){
+    if ( pufo->filename_ready_to_receive == 1 ){
         strncpy( pufo->filename, at, length );
         pufo->filename_ready_to_receive = 0;
         //printf("Found filename:%s\n", pufo->filename );
         pufo->file_ready_to_receive = 1;
         return 0;
     }
-    if( pufo->file_ready_to_receive ){
-        if( pufo->ffilemem == NULL ) {
+    if ( pufo->file_ready_to_receive ){
+        if ( pufo->ffilemem == NULL ) {
             return 0;
         }
-        if( pufo->ffilemem )
+        if ( pufo->ffilemem )
             fwrite( at, 1, length, pufo->ffilemem);
         //printf("Write to file body %d.", length );
     }
@@ -134,7 +134,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t len )
 int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if( pufo->ffilemem )
+    if ( pufo->ffilemem )
     {
         fclose( pufo->ffilemem );
         pufo->file_complete = 1;
@@ -150,6 +150,8 @@ static nxweb_result upload_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
+    printf("--- upload_on_request\n");
+
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
 
@@ -166,24 +168,20 @@ static nxweb_result upload_on_request(
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
 
-        ufo->parser = multipart_parser_init( ufo->post_boundary, 
-                &ufo->parser_settings );
+        ufo->parser = multipart_parser_init( 
+                ufo->post_boundary, &ufo->parser_settings );
 
         nxweb_parse_request_parameters( req, 0 );
         const char * over_write = nx_simple_map_get_nocase( 
                 req->parameters, "overwrite" );
 
         multipart_parser_set_data( ufo->parser, ufo );
-        ufo->ffilemem = open_memstream((char**) &ufo->file_ptr, &ufo->file_len );
-
+        ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        if( strlen( ufo->filename ) > 0 && ufo->file_complete )
+        if ( strlen( ufo->filename ) > 0 && ufo->file_complete )
         {
-            printf("[%8lu][%8lu]\t[%s]\n", 
-                    strlen(ufo->filename), ufo->file_len, ufo->filename );
-
             if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), 
                         ufo->file_ptr, ufo->file_len ) )
             {
@@ -192,14 +190,14 @@ static nxweb_result upload_on_request(
             else
             {
                 nxweb_response_printf( resp, "OK\n");
-                nxweb_response_printf( resp, "Filename:%s\n", ufo->filename );
-                nxweb_response_printf( resp, "FileLength:%d\n", ufo->file_len );
+                nxweb_response_printf( resp, "file name:%s\n", ufo->filename );
+                nxweb_response_printf( resp, "file length:%d\n", ufo->file_len );
             }
         }
         else
-            printf("File not received:filename(%s)\n", ufo->filename );
+            printf("file not received:filename(%s)\n", ufo->filename );
 
-        if( ufo->file_ptr )
+        if ( ufo->file_ptr )
         {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
@@ -232,6 +230,8 @@ upload_request_data_finalize(
         nxweb_http_response* resp, 
         nxe_data data) 
 {
+    printf("--- upload_request_data_finalize\n");
+
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) 
@@ -253,6 +253,8 @@ upload_on_post_data(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
+    printf("--- upload_on_post_data\n");
+
     if (req->content_length > g_MaxUploadSize) 
     {
         nxweb_send_http_error(resp, 413, "Request Entity Too Large");
@@ -260,6 +262,7 @@ upload_on_post_data(
         nxweb_start_sending_response(conn, resp);
         return NXWEB_OK;
     }
+
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
 
@@ -286,6 +289,8 @@ upload_on_post_data_complete(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
+    printf("--- upload_on_post_data_complete\n");
+    
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this
@@ -294,7 +299,7 @@ upload_on_post_data_complete(
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     fclose((FILE *)fwb->fd);
     fwb->fd=0;
-    //printf("on post_complete...\n");
+
     return NXWEB_OK;
 }
 
