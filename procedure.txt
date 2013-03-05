@@ -1,0 +1,49 @@
+index node 详细设计文档
+
+处理流程
+
+一 主启动进程
+（1）启动程序，设置参数
+	"-l <ip_addr>  interface to listen on, default is 0.0.0.0\n"
+	"-p <num>      TCP port number to listen on (default: 1218)\n"
+	"-m            max upload file buffer, default is 10m, input is mb base\n"
+	"-u [pidfile]  pidfile if needed.\n"
+	"-c            conf file\n"
+	"-d            run as a daemon.\n"
+	"-v            print version\n\n\n"
+	"-h            print this help and exit\n";
+（2）设置若干信号的响应函数
+	SIGINT, SIGKILL（无效）, SIGQUIT, SIGHUP, SIGTERM
+（3）根据 -d 参数，确定是否创建后台进程。fork实现。
+（4）根据 -u 参数，确定是否创建 pid 文件。
+（5）启动 http 服务器。
+
+二 http响应函数
+1	"upload"		cb_UploadFile
+（1）查找是否设置 overwirte 参数。
+（2）判断文件大小是否超过上限，如果超过则【return】。
+略：判断 http_header : checksum。
+（3）计算收到文件的MD5，并与文件名比较。
+	不同：【return】
+（4）查询是否有可用node
+	没有：【return】
+（5）没有设置 overwrite 参数，且当前样本已存在，【return】
+（6）设置 overwrite 参数，且当前样本已存在。随机选择node，存入样本
+（7）
+
+2	"uploadkey"		cb_UploadData
+3	"download"		cb_Download
+4	"status"		cb_Status
+5	"config"		cb_Config
+6	"manage"		cb_Manage
+7	"retnNode"		cb_Retnnode
+8	"retn"		cb_RetnIndex
+9	"monitor"		cb_Monitor
+10	"view"		cb_ViewConfig
+11	"delete"		cb_DeleteKey
+12	"history"		cb_History
+13	"gethistory"	cb_GetHistory
+14	"exists"		cb_Exists
+15	""			cb_Index
+
+

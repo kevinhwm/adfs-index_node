@@ -50,7 +50,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
-bin_PROGRAMS = nxweb$(EXEEXT)
+bin_PROGRAMS = indexserver$(EXEEXT)
 subdir = src/bin
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -64,15 +64,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_nxweb_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) hello.$(OBJEXT) \
-	upload.$(OBJEXT) download.$(OBJEXT) subrequests.$(OBJEXT) \
-	multipart_parser.$(OBJEXT)
-nxweb_OBJECTS = $(am_nxweb_OBJECTS)
+am_indexserver_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) \
+	hello.$(OBJEXT) upload.$(OBJEXT) download.$(OBJEXT) \
+	subrequests.$(OBJEXT) multipart_parser.$(OBJEXT)
+indexserver_OBJECTS = $(am_indexserver_OBJECTS)
 am__DEPENDENCIES_1 =
-nxweb_DEPENDENCIES = $(am__DEPENDENCIES_1)
-nxweb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(nxweb_LDFLAGS) \
-	$(LDFLAGS) -o $@
+indexserver_DEPENDENCIES = $(am__DEPENDENCIES_1)
+indexserver_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(indexserver_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/src/include/nxweb
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -86,8 +86,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(nxweb_SOURCES)
-DIST_SOURCES = $(nxweb_SOURCES)
+SOURCES = $(indexserver_SOURCES)
+DIST_SOURCES = $(indexserver_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -224,9 +224,9 @@ top_builddir = ../..
 top_srcdir = ../..
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = -pthread $(GNUTLS_CFLAGS) $(IMAGEMAGICK_CFLAGS)
-nxweb_SOURCES = main.c modules/benchmark.c modules/hello.c modules/upload.c modules/download.c modules/subrequests.c post_parser/multipart_parser.c post_parser/multipart_parser.h
-nxweb_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
-nxweb_LDFLAGS = -L$(top_builddir)/src/lib
+indexserver_SOURCES = main.c modules/benchmark.c modules/hello.c modules/upload.c modules/download.c modules/subrequests.c post_parser/multipart_parser.c post_parser/multipart_parser.h
+indexserver_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
+indexserver_LDFLAGS = -L$(top_builddir)/src/lib
 all: all-am
 
 .SUFFIXES:
@@ -307,9 +307,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-nxweb$(EXEEXT): $(nxweb_OBJECTS) $(nxweb_DEPENDENCIES) $(EXTRA_nxweb_DEPENDENCIES) 
-	@rm -f nxweb$(EXEEXT)
-	$(nxweb_LINK) $(nxweb_OBJECTS) $(nxweb_LDADD) $(LIBS)
+indexserver$(EXEEXT): $(indexserver_OBJECTS) $(indexserver_DEPENDENCIES) $(EXTRA_indexserver_DEPENDENCIES) 
+	@rm -f indexserver$(EXEEXT)
+	$(indexserver_LINK) $(indexserver_OBJECTS) $(indexserver_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

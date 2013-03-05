@@ -32,10 +32,10 @@ am__make_dryrun = \
     esac; \
     test $$am__dry = yes; \
   }
-pkgdatadir = $(datadir)/indexserver
-pkgincludedir = $(includedir)/indexserver
-pkglibdir = $(libdir)/indexserver
-pkglibexecdir = $(libexecdir)/indexserver
+pkgdatadir = $(datadir)/nodeserver
+pkgincludedir = $(includedir)/nodeserver
+pkglibdir = $(libdir)/nodeserver
+pkglibexecdir = $(libexecdir)/nodeserver
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -50,7 +50,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
-bin_PROGRAMS = nxweb$(EXEEXT)
+bin_PROGRAMS = nodeserver$(EXEEXT)
 subdir = src/bin
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -64,15 +64,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_nxweb_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) hello.$(OBJEXT) \
-	upload.$(OBJEXT) download.$(OBJEXT) subrequests.$(OBJEXT) \
-	multipart_parser.$(OBJEXT)
-nxweb_OBJECTS = $(am_nxweb_OBJECTS)
+am_nodeserver_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) \
+	hello.$(OBJEXT) upload.$(OBJEXT) download.$(OBJEXT) \
+	subrequests.$(OBJEXT) multipart_parser.$(OBJEXT)
+nodeserver_OBJECTS = $(am_nodeserver_OBJECTS)
 am__DEPENDENCIES_1 =
-nxweb_DEPENDENCIES = $(am__DEPENDENCIES_1)
-nxweb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(nxweb_LDFLAGS) \
-	$(LDFLAGS) -o $@
+nodeserver_DEPENDENCIES = $(am__DEPENDENCIES_1)
+nodeserver_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(nodeserver_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/src/include/nxweb
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -86,8 +86,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(nxweb_SOURCES)
-DIST_SOURCES = $(nxweb_SOURCES)
+SOURCES = $(nodeserver_SOURCES)
+DIST_SOURCES = $(nodeserver_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -96,12 +96,12 @@ am__can_run_installinfo = \
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/missing --run aclocal-1.12
+ACLOCAL = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/missing --run aclocal-1.12
 AMTAR = $${TAR-tar}
 AR = ar
-AUTOCONF = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/missing --run automake-1.12
+AUTOCONF = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/missing --run automake-1.12
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -140,7 +140,7 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/missing --run makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /usr/bin/mkdir -p
 NM = /usr/bin/nm -B
@@ -152,11 +152,11 @@ OBJDUMP = objdump
 OBJEXT = o
 OTOOL = 
 OTOOL64 = 
-PACKAGE = indexserver
+PACKAGE = nodeserver
 PACKAGE_BUGREPORT = 
-PACKAGE_NAME = indexserver
-PACKAGE_STRING = indexserver 3.0.1
-PACKAGE_TARNAME = indexserver
+PACKAGE_NAME = nodeserver
+PACKAGE_STRING = nodeserver 3.0.1
+PACKAGE_TARNAME = nodeserver
 PACKAGE_URL = 
 PACKAGE_VERSION = 3.0.1
 PATH_SEPARATOR = :
@@ -170,10 +170,10 @@ SHELL = /bin/sh
 STRIP = strip
 VERSION = 3.0.1
 ZLIB_LIBS = -lz
-abs_builddir = /home/kevin/workspace/adfs-index_node/index-nxweb/src/bin
-abs_srcdir = /home/kevin/workspace/adfs-index_node/index-nxweb/src/bin
-abs_top_builddir = /home/kevin/workspace/adfs-index_node/index-nxweb
-abs_top_srcdir = /home/kevin/workspace/adfs-index_node/index-nxweb
+abs_builddir = /home/kevin/workspace/adfs-index_node/node-nxweb/src/bin
+abs_srcdir = /home/kevin/workspace/adfs-index_node/node-nxweb/src/bin
+abs_top_builddir = /home/kevin/workspace/adfs-index_node/node-nxweb
+abs_top_srcdir = /home/kevin/workspace/adfs-index_node/node-nxweb
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
@@ -202,7 +202,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/kevin/workspace/adfs-index_node/index-nxweb/install-sh
+install_sh = ${SHELL} /home/kevin/workspace/adfs-index_node/node-nxweb/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -224,9 +224,9 @@ top_builddir = ../..
 top_srcdir = ../..
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = -pthread $(GNUTLS_CFLAGS) $(IMAGEMAGICK_CFLAGS)
-nxweb_SOURCES = main.c modules/benchmark.c modules/hello.c modules/upload.c modules/download.c modules/subrequests.c post_parser/multipart_parser.c post_parser/multipart_parser.h
-nxweb_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
-nxweb_LDFLAGS = -L$(top_builddir)/src/lib
+nodeserver_SOURCES = main.c modules/benchmark.c modules/hello.c modules/upload.c modules/download.c modules/subrequests.c post_parser/multipart_parser.c post_parser/multipart_parser.h
+nodeserver_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
+nodeserver_LDFLAGS = -L$(top_builddir)/src/lib
 all: all-am
 
 .SUFFIXES:
@@ -307,9 +307,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-nxweb$(EXEEXT): $(nxweb_OBJECTS) $(nxweb_DEPENDENCIES) $(EXTRA_nxweb_DEPENDENCIES) 
-	@rm -f nxweb$(EXEEXT)
-	$(nxweb_LINK) $(nxweb_OBJECTS) $(nxweb_LDADD) $(LIBS)
+nodeserver$(EXEEXT): $(nodeserver_OBJECTS) $(nodeserver_DEPENDENCIES) $(EXTRA_nodeserver_DEPENDENCIES) 
+	@rm -f nodeserver$(EXEEXT)
+	$(nodeserver_LINK) $(nodeserver_OBJECTS) $(nodeserver_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
