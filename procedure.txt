@@ -1,9 +1,23 @@
 index node 详细设计文档
 
-处理流程
+一 概述：
+1. index-node存储系统,逻辑上分为三个组成部分：index，node，sql-db。
+2. index只有一份实例，node有一份或多份实例。index与node之间为一对多关系，即任一index对应一个或多个node，任一node只隶属与一个index。
+3. index存储样本列表，node存储实际样本文件。
 
-一 主启动进程
-（1）启动程序，设置参数
+二 组成：
+1. index。
+	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
+2. node。
+	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
+3. sql-db。
+	（1）PostgreSQL 数据库。
+
+
+三 处理流程
+
+（一）主启动进程
+1. 启动程序，设置参数
 	"-l <ip_addr>  interface to listen on, default is 0.0.0.0\n"
 	"-p <num>      TCP port number to listen on (default: 1218)\n"
 	"-m            max upload file buffer, default is 10m, input is mb base\n"
@@ -12,14 +26,14 @@ index node 详细设计文档
 	"-d            run as a daemon.\n"
 	"-v            print version\n\n\n"
 	"-h            print this help and exit\n";
-（2）设置若干信号的响应函数
+2. 设置若干信号的响应函数
 	SIGINT, SIGKILL（无效）, SIGQUIT, SIGHUP, SIGTERM
-（3）根据 -d 参数，确定是否创建后台进程。fork实现。
-（4）根据 -u 参数，确定是否创建 pid 文件。
-（5）启动 http 服务器。
+3. 根据 -d 参数，确定是否创建后台进程。fork实现。
+4. 根据 -u 参数，确定是否创建 pid 文件。
+5. 启动 http 服务器。
 
-二 http响应函数
-1	"upload"		cb_UploadFile
+（二）http接口函数
+1. "upload"		cb_UploadFile
 （1）查找是否设置 overwirte 参数。
 （2）判断文件大小是否超过上限，如果超过则【return】。
 略：判断 http_header : checksum。
@@ -29,21 +43,21 @@ index node 详细设计文档
 	没有：【return】
 （5）没有设置 overwrite 参数，且当前样本已存在，【return】
 （6）设置 overwrite 参数，且当前样本已存在。随机选择node，存入样本
-（7）
+（7）样本不存在，则保存到node。
 
-2	"uploadkey"		cb_UploadData
-3	"download"		cb_Download
-4	"status"		cb_Status
-5	"config"		cb_Config
-6	"manage"		cb_Manage
-7	"retnNode"		cb_Retnnode
-8	"retn"		cb_RetnIndex
-9	"monitor"		cb_Monitor
-10	"view"		cb_ViewConfig
-11	"delete"		cb_DeleteKey
-12	"history"		cb_History
-13	"gethistory"	cb_GetHistory
-14	"exists"		cb_Exists
-15	""			cb_Index
+2. "uploadkey"	cb_UploadData
+3. "download"	cb_Download
+11. "delete"	cb_DeleteKey
 
+4. "status"		cb_Status
+5. "config"		cb_Config
+6. "manage"		cb_Manage
+7. "retnNode"	cb_Retnnode
+8. "retn"		cb_RetnIndex
+9. "monitor"	cb_Monitor
+10. "view"		cb_ViewConfig
+12. "history"	cb_History
+13. "gethistory"	cb_GetHistory
+14. "exists"	cb_Exists
+15. ""		cb_Index
 

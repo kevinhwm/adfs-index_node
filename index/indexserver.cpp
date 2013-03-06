@@ -1065,10 +1065,8 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )
     {
         if(start)
         {
-
             if( strlen( suburi ) == 0 )
             {
-
                 log_access->notice("url error:%s","<br/>Example: http://host/download/yourfilename.");
                 evhttp_send_error( req, HTTP_NOTFOUND, "url error. <br/>Example: http://host/download/yourfilename." );
                 evbuffer_free(returnbuffer);
@@ -1125,7 +1123,6 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )
                     it != ConvertVec.end();
                     it++ )
             {
-
                 json_url.append(name2url[*it]);
                 json_url.append("|");
             }

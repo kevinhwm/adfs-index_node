@@ -65,8 +65,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_indexserver_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) \
-	hello.$(OBJEXT) upload.$(OBJEXT) download.$(OBJEXT) \
-	subrequests.$(OBJEXT) multipart_parser.$(OBJEXT)
+	hello.$(OBJEXT) subrequests.$(OBJEXT) upload.$(OBJEXT) \
+	download.$(OBJEXT) multipart_parser.$(OBJEXT)
 indexserver_OBJECTS = $(am_indexserver_OBJECTS)
 am__DEPENDENCIES_1 =
 indexserver_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -224,7 +224,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = -pthread $(GNUTLS_CFLAGS) $(IMAGEMAGICK_CFLAGS)
-indexserver_SOURCES = main.c modules/benchmark.c modules/hello.c modules/upload.c modules/download.c modules/subrequests.c post_parser/multipart_parser.c post_parser/multipart_parser.h
+indexserver_SOURCES = main.c modules/benchmark.c modules/hello.c modules/subrequests.c modules/upload.c modules/download.c post_parser/multipart_parser.c post_parser/multipart_parser.h
 indexserver_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
 indexserver_LDFLAGS = -L$(top_builddir)/src/lib
 all: all-am
@@ -374,6 +374,20 @@ hello.obj: modules/hello.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o hello.obj `if test -f 'modules/hello.c'; then $(CYGPATH_W) 'modules/hello.c'; else $(CYGPATH_W) '$(srcdir)/modules/hello.c'; fi`
 
+subrequests.o: modules/subrequests.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.o -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
+
+subrequests.obj: modules/subrequests.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.obj -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
+
 upload.o: modules/upload.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT upload.o -MD -MP -MF $(DEPDIR)/upload.Tpo -c -o upload.o `test -f 'modules/upload.c' || echo '$(srcdir)/'`modules/upload.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/upload.Tpo $(DEPDIR)/upload.Po
@@ -401,20 +415,6 @@ download.obj: modules/download.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/download.c' object='download.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o download.obj `if test -f 'modules/download.c'; then $(CYGPATH_W) 'modules/download.c'; else $(CYGPATH_W) '$(srcdir)/modules/download.c'; fi`
-
-subrequests.o: modules/subrequests.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.o -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
-
-subrequests.obj: modules/subrequests.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.obj -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
 
 multipart_parser.o: post_parser/multipart_parser.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT multipart_parser.o -MD -MP -MF $(DEPDIR)/multipart_parser.Tpo -c -o multipart_parser.o `test -f 'post_parser/multipart_parser.c' || echo '$(srcdir)/'`post_parser/multipart_parser.c

@@ -1,21 +1,3 @@
-/*
- * Copyright (c) 2011-2012 Yaroslav Stavnichiy <yarosla@gmail.com>
- *
- * This file is part of NXWEB.
- *
- * NXWEB is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
- *
- * NXWEB is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with NXWEB. If not, see <http://www.gnu.org/licenses/>.
- */
 
 #include "nxweb/nxweb.h"
 #include "../post_parser/multipart_parser.h"
@@ -30,7 +12,6 @@ static const char upload_handler_key; // variable's address only matters
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
 extern KCDB* g_kcdb;
-//extern int g_kcrecord_header;
 extern g_MaxUploadSize;
 
 typedef struct _upload_file_object
@@ -74,14 +55,16 @@ on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
     //printf("recv header_value: length:%lu\ndata is:%s\n------end------\n\n", length, buff );
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     char *pfname = strstr( buff, "filename=\"" );
-    if( pfname == NULL )
+    if ( pfname == NULL )
     {
-        if( strstr( buff, "name=\"upname\"" ) ){
+        if ( strstr( buff, "name=\"upname\"" ) )
+        {
             pufo->filename_ready_to_receive = 1;
             pufo->file_ready_to_receive = 0;
             return 0;
         }
-        else{
+        else
+        {
             //printf("Not found filename.\n");
             return 0;
         }
@@ -96,36 +79,22 @@ on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 }
 
 
-static int on_post_body( multipart_parser *mp_obj, const char *at, size_t len )
+static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
-    int length = len;
-    int i;
-    //printf("recv post body:length: %d\n", length );
-
-    /*
-    if( length < 100 )
-    {
-        char buff[1024] = {0};
-        strncpy( buff, at, length+4 );
-        printf("recv post body:%s\n-------------------end-----------------\n\n", buff );
-    }
-    */
-
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->filename_ready_to_receive == 1 ){
+    if ( pufo->filename_ready_to_receive == 1 )
+    {
         strncpy( pufo->filename, at, length );
         pufo->filename_ready_to_receive = 0;
-        //printf("Found filename:%s\n", pufo->filename );
         pufo->file_ready_to_receive = 1;
         return 0;
     }
-    if ( pufo->file_ready_to_receive ){
-        if ( pufo->ffilemem == NULL ) {
+    if ( pufo->file_ready_to_receive )
+    {
+        if ( pufo->ffilemem == NULL ) 
             return 0;
-        }
         if ( pufo->ffilemem )
             fwrite( at, 1, length, pufo->ffilemem);
-        //printf("Write to file body %d.", length );
     }
     return 0;
 }
@@ -140,7 +109,6 @@ int on_post_finished (multipart_parser * mp_obj)
         pufo->file_complete = 1;
         pufo->ffilemem=NULL;
     }
-    //printf("Post finished.\n" );
     return 0;
 }
 
@@ -182,11 +150,8 @@ static nxweb_result upload_on_request(
 
         if ( strlen( ufo->filename ) > 0 && ufo->file_complete )
         {
-            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), 
-                        ufo->file_ptr, ufo->file_len ) )
-            {
+            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
                 nxweb_response_printf( resp, "store backend db failed.\n" );
-            }
             else
             {
                 nxweb_response_printf( resp, "OK\n");
@@ -204,17 +169,23 @@ static nxweb_result upload_on_request(
         }
     }
 
-    nxweb_response_printf(resp, "<form method='post' enctype='multipart/form-data'>File(s) to upload: <input type='file' multiple name='uploadedfile' /> </br>  <input type='submit' value='UploadFile!' /></form>\n");
+    nxweb_response_printf(resp, 
+            "<form method='post' enctype='multipart/form-data'>File to upload: "
+            "<input type='file' multiple name='uploadedfile' /> "
+            "<br/> "
+            "<input type='submit' value='UploadFile!' />"
+            "</form>\n");
+
     nxweb_response_printf(resp, ""
-            "<form method=\"POST\" enctype=\"multipart/form-data\" action=\"\">"
-            "upname:<br />"
+            "<form method=\"post\" enctype=\"multipart/form-data\" action=\"\">"
+            "upname:<br/>"
             "<input type=\"text\" name=\"upname\" />"
-            "</br>"
+            "<br/>"
             "data:<br/>"
-            "<textarea name=\"data\" cols=100 rows=20 >"
+            "<textarea name=\"data\" cols=100 rows=20>"
             "input your data here..."
             "</textarea>"
-            "<br />"
+            "<br/>"
             "<input type=\"submit\" value=\'UploadForm\' />"
             "</form>"
             );

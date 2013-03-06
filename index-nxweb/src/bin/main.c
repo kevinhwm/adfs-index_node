@@ -117,8 +117,8 @@ static int ssl_port=8056;
 
 // Server main():
 
-static void server_main() {
-
+static void server_main() 
+{
     // Bind listening interfaces:
     char host_and_port[32];
     snprintf(host_and_port, sizeof(host_and_port), ":%d", port);
@@ -136,9 +136,9 @@ static void server_main() {
     // make sure the timeout less than 5 seconds. be sure to void receive SIGALRM to shutdown the db brute.
     nxweb_set_timeout(NXWEB_TIMER_KEEP_ALIVE, 3000000);
 
-
     // Go!
     nxweb_run();
+
     if( g_kcdb)
     {
         kcdbclose( g_kcdb );
@@ -150,15 +150,16 @@ static void server_main() {
 
 // Utility stuff:
 
-static void show_help(void) {
+static void show_help(void) 
+{
     printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
-            " -s       shutdown nxweb\n"
+            " -s       shutdown indexserver\n"
             " -m mem   set memory map size in MB (default: 64)\n"
             " -M fMax  set file max size in MB   (default: 80)\n"
             " -w dir   set work dir    (default: ./)\n"
-            " -l file  set log file    (default: stderr or nxweb_error_log for daemon)\n"
-            " -p file  set pid file    (default: nxweb.pid)\n"
+            " -l file  set log file    (default: stderr or indexserver_error_log for daemon)\n"
+            " -p file  set pid file    (default: indexserver.pid)\n"
             " -u user  set process uid\n"
             " -g group set process gid\n"
             " -P port  set http port\n"
@@ -169,7 +170,6 @@ static void show_help(void) {
             " -h       show this help\n"
             " -v       show version\n"
             "\n"
-            "example:  nxweb -d -l nxweb_error_log\n\n"
           );
 }
 
@@ -178,15 +178,17 @@ int main(int argc, char** argv) {
     int shutdown=0;
     const char* work_dir=0;
     const char* log_file=0;
-    const char* pid_file="nxweb.pid";
+    const char* pid_file="indexserver.pid";
     const char* dbpath="./store.kch";
 
     int mem_size = 64;
     int max_file_size = 80;
 
     int c;
-    while ((c=getopt(argc, argv, ":hvdsm:M:w:l:p:u:g:P:x:S:"))!=-1) {
-        switch (c) {
+    while ((c=getopt(argc, argv, ":hvdsm:M:w:l:p:u:g:P:x:S:"))!=-1) 
+    {
+        switch (c) 
+        {
             case 'h':
                 show_help();
                 return 0;
@@ -264,8 +266,8 @@ int main(int argc, char** argv) {
     char path[1024] = {0};
     mem_size *= 1024*1024;
     max_file_size *= 1024*1024;
-    sprintf(path, "%s#apow=%d#fpow=%d#msiz=%d#dfunit=%d",
-            dbpath, 10, 10, mem_size, 8);
+    sprintf(path, "%s#apow=%d#fpow=%d#msiz=%d#d",
+            dbpath, 10, 10, mem_size);
 
     int32_t succ = kcdbopen( g_kcdb, path, KCOWRITER|KCOCREATE);
     if( succ )
@@ -276,7 +278,7 @@ int main(int argc, char** argv) {
     }
 
     if (daemon) {
-        if (!log_file) log_file="nxweb_error_log";
+        if (!log_file) log_file="indexserver_error_log";
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
     else {
