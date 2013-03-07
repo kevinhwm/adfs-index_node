@@ -16,7 +16,8 @@ static const char upload_handler_key;
 extern KCDB* g_kcdb;
 //extern int g_kcrecord_header;
 
-typedef struct KC_DATA{
+typedef struct KC_DATA
+{
     void * data_ptr;
 }KC_DATA;
 
@@ -135,7 +136,8 @@ static nxweb_result fetch_on_request(nxweb_http_server_connection* conn, nxweb_h
     char *strip_args = strstr( fname, "?" );
     int fname_len = strip_args ? (strip_args-fname) : strlen( fname );
     char fname_with_space[1024]= {0};
-    if( strlen( url ) > sizeof( fname_with_space )-1 ){
+    if( strlen( url ) > sizeof( fname_with_space )-1 )
+    {
         char err_msg[1024] = {0};
         snprintf( err_msg, sizeof(err_msg)-1, "File not found<br/>namespace:%s<br/>filename:%.*s" , name_space, fname_len, fname);
         nxweb_send_http_error( resp, 404, err_msg );
@@ -151,7 +153,8 @@ static nxweb_result fetch_on_request(nxweb_http_server_connection* conn, nxweb_h
 
     size_t file_size = 0;
     void *pfile_data = kcdbseize( g_kcdb, fname_with_space, strlen( fname_with_space), &file_size );
-    if( pfile_data == NULL ){
+    if( pfile_data == NULL )
+    {
         char err_msg[1024] = {0};
         snprintf( err_msg, sizeof(err_msg)-1, "File not found<br/>namespace:%s<br/>filename:%.*s", name_space, fname_len, fname);
         nxweb_send_http_error( resp, 404, err_msg );
@@ -194,7 +197,8 @@ static nxweb_result delete_on_request(nxweb_http_server_connection* conn, nxweb_
     char *strip_args = strstr( fname, "?" );
     int fname_len = strip_args?strip_args - fname:strlen( fname );
     char fname_with_space[1024]= {0};
-    if( strlen( url ) > sizeof( fname_with_space )-1 ){
+    if( strlen( url ) > sizeof( fname_with_space )-1 )
+    {
         char err_msg[1024] = {0};
         snprintf( err_msg, sizeof(err_msg)-1, "File not found<br/>namespace:%s<br/>filename:%.*s", name_space, fname_len, fname);
         nxweb_send_http_error( resp, 404, err_msg );
@@ -227,7 +231,8 @@ static nxweb_result delete_batch_on_request(nxweb_http_server_connection* conn, 
     nxweb_parse_request_parameters( req, 0 );
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
     const char *fname_raw = nx_simple_map_get_nocase( req->parameters, "names" );
-    if (!fname_raw) {
+    if (!fname_raw) 
+    {
         nxweb_response_printf(resp, "url error\nexample: http://127.0.0.1:8055/deletefiles?names=f1[:f2][&namespace=np]\n");
         return NXWEB_ERROR;
     }
@@ -239,14 +244,17 @@ static nxweb_result delete_batch_on_request(nxweb_http_server_connection* conn, 
     int fname_len = 0;
     do{
         char *pT = strstr( pC, ":" );
-        if( pT ){
+        if( pT )
+        {
             fname_len = pT - pC;
             pT++;
         }
-        else{
+        else
+        {
             fname_len = strlen( pC );
         }
-        if( fname_len == 0 ){
+        if( fname_len == 0 )
+        {
             pC = pT;
             continue;
         }
@@ -262,7 +270,8 @@ static nxweb_result delete_batch_on_request(nxweb_http_server_connection* conn, 
     } while(pC);
 
     int i = 0;
-    for( ; i< fname_cnt; i++ ){
+    for( ; i< fname_cnt; i++ )
+    {
         char pBuf[1024] = {0};
         memcpy( pBuf,  kc_fnames[i].buf, kc_fnames[i].size );
         printf("Found filename:%s from %s\n", pBuf, fnames_with_space[i] );
@@ -288,12 +297,15 @@ static nxweb_result status_on_request(nxweb_http_server_connection* conn, nxweb_
     memset(buf, 0, len);
 
     int i=0, j=0;
-    for (i=0; i<strlen(status); i++) {
-        if (status[i] == '\t') {
+    for (i=0; i<strlen(status); i++) 
+    {
+        if (status[i] == '\t') 
+        {
             strcat(buf, ": ");
             j += 2;
         }
-        else {
+        else 
+        {
             buf[j] = status[i];
             j++;
         }
