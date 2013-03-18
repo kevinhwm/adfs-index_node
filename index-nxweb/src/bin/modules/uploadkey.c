@@ -8,8 +8,8 @@
 #include <stdio.h>
 
 
-static const char upload_handler_key; // variable's address only matters
-#define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
+static const char uploadkey_handler_key; // variable's address only matters
+#define UPLOADKEY_HANDLER_KEY ((nxe_data)&uploadkey_handler_key)
 
 extern KCDB* g_kcdb;
 extern g_MaxUploadSize;
@@ -103,7 +103,7 @@ int on_post_finished (multipart_parser * mp_obj)
 }
 
 
-static nxweb_result upload_on_request(
+static nxweb_result uploadkey_on_request(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp)
@@ -116,7 +116,7 @@ static nxweb_result upload_on_request(
     nxweb_response_append_str(resp, 
             "<html><head><title>Upload Module</title></head><body>\n");
 
-    upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
+    upload_file_object *ufo = nxweb_get_request_data(req, UPLOADKEY_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
     if (fwb) 
@@ -184,7 +184,7 @@ static nxweb_result upload_on_request(
 
 
 static void 
-upload_request_data_finalize(
+uploadkey_request_data_finalize(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp, 
@@ -208,7 +208,7 @@ upload_request_data_finalize(
 }
 
 static nxweb_result 
-upload_on_post_data(
+uploadkey_on_post_data(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
@@ -227,7 +227,7 @@ upload_on_post_data(
     memset( ufo, 0, sizeof( upload_file_object ) );
 
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, 
+    nxweb_set_request_data(req, UPLOADKEY_HANDLER_KEY, (nxe_data)(void*)ufo, 
             upload_request_data_finalize);
 
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
@@ -244,7 +244,7 @@ upload_on_post_data(
 
 
 static nxweb_result 
-upload_on_post_data_complete(
+uploadkey_on_post_data_complete(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
@@ -255,7 +255,7 @@ upload_on_post_data_complete(
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this
     // as any other callbacks might not be invoked under error conditions.
-    upload_file_object* ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
+    upload_file_object* ufo = nxweb_get_request_data(req, UPLOADKEY_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     fclose((FILE *)fwb->fd);
     fwb->fd=0;
@@ -263,9 +263,9 @@ upload_on_post_data_complete(
     return NXWEB_OK;
 }
 
-nxweb_handler upload_file_handler={
-    .on_request = upload_on_request,
-    .on_post_data = upload_on_post_data,
-    .on_post_data_complete = upload_on_post_data_complete,
+nxweb_handler uploadkey_file_handler={
+    .on_request = uploadkey_on_request,
+    .on_post_data = uploadkey_on_post_data,
+    .on_post_data_complete = uploadkey_on_post_data_complete,
     .flags = NXWEB_HANDLE_ANY};
 

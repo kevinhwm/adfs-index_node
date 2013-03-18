@@ -1,21 +1,3 @@
-/*
- * Copyright (c) 2011-2012 Yaroslav Stavnichiy <yarosla@gmail.com>
- *
- * This file is part of NXWEB.
- *
- * NXWEB is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
- *
- * NXWEB is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with NXWEB. If not, see <http://www.gnu.org/licenses/>.
- */
 
 #include "nxweb/nxweb.h"
 #include <stdio.h>
@@ -41,29 +23,18 @@
 // Setup modules & handlers (this can be done from any file linked to nxweb):
 
 extern nxweb_handler hello_handler;
-extern nxweb_handler benchmark_handler;
-extern nxweb_handler benchmark_handler_inworker;
-extern nxweb_handler test_handler;
-extern nxweb_handler sendfile_handler;
 
-extern nxweb_handler upload_file_handler;
+extern nxweb_handler upload_handler;
+extern nxweb_handler uploadkey_handler;
 extern nxweb_handler download_handler;
-extern nxweb_handler fetch_handler;
 extern nxweb_handler delete_handler;
-extern nxweb_handler delete_batch_handler;
 extern nxweb_handler status_handler;
-extern nxweb_handler list_handler;
 
 
 KCDB* g_kcdb;
 int g_kcrecord_header = 4;
 int g_MaxUploadSize = 1048576 * 200;
 
-
-// These are benchmarking handlers (see modules/benchmark.c):
-NXWEB_SET_HANDLER(benchmark, "/benchmark-inprocess", &benchmark_handler, .priority=100);
-NXWEB_SET_HANDLER(benchmark_inworker, "/benchmark-inworker", &benchmark_handler_inworker, .priority=100);
-NXWEB_SET_HANDLER(test, "/test", &test_handler, .priority=900);
 
 // This is sample handler (see modules/hello.c):
 NXWEB_SET_HANDLER(hello, "/hello", &hello_handler, .priority=1000, .filters={
@@ -73,39 +44,26 @@ NXWEB_SET_HANDLER(hello, "/hello", &hello_handler, .priority=1000, .filters={
         });
 
 // This is sample handler (see modules/upload.c):
-NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
-NXWEB_SET_HANDLER(upload_keyvalue, "/upload_key", &upload_file_handler, .priority=1000);
+NXWEB_SET_HANDLER(upload, "/upload", &upload_handler, .priority=1000);
+NXWEB_SET_HANDLER(uploadkey, "/uploadkey", &uploadkey_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000);
-NXWEB_SET_HANDLER(fetch, "/fetch", &fetch_handler, .priority=1000);
-NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
-NXWEB_SET_HANDLER(deletefiles, "/deletefiles", &delete_batch_handler, .priority=1000);
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
-NXWEB_SET_HANDLER(list, "/list", &list_handler, .priority=1000);
+NXWEB_SET_HANDLER(config, "/config", &config_handler, .priority=1000);
+NXWEB_SET_HANDLER(manage, "/manage", &manage_handler, .priority=1000);
+NXWEB_SET_HANDLER(retnNode, "/retnNode", &retnNode_handler, .priority=1000);
+NXWEB_SET_HANDLER(retn, "/retn", &retn_handler, .priority=1000);
+NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
+NXWEB_SET_HANDLER(view, "/view", &view_handler, .priority=1000);
+NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 
-// This proxies requests to backend with index 0 (see proxy setup further below):
-NXWEB_SET_HANDLER(backend1, "/backend1", &nxweb_http_proxy_handler, .priority=10000, .idx=0, .uri="",
-        .filters={ &file_cache_filter, &templates_filter, &ssi_filter },
-        .file_cache_dir="www/cache/proxy");
+NXWEB_SET_HANDLER(history, "/history", &history_handler, .priority=1000);
+NXWEB_SET_HANDLER(gethistory, "/gethistory", &gethistory_handler, .priority=1000);
+NXWEB_SET_HANDLER(exists, "/exists", &exists_handler, .priority=1000);
+NXWEB_SET_HANDLER(index, "/", &index_handler, .priority=1000);
 
-// This proxies requests to backend with index 1 (see proxy setup further below):
-NXWEB_SET_HANDLER(backend2, "/backend2", &nxweb_http_proxy_handler, .priority=10000, .idx=1, .uri="",
-        .filters={ &file_cache_filter, &templates_filter, &ssi_filter },
-        .file_cache_dir="www/cache/proxy");
-
-// This serves static files from $(work_dir)/www/root directory:
-NXWEB_SET_HANDLER(sendfile, 0, &sendfile_handler, .priority=900000,
-        .filters={
-        &templates_filter,
-        &ssi_filter,
-#ifdef WITH_IMAGEMAGICK
-        &image_filter,
-#endif
-#ifdef WITH_ZLIB
-        &gzip_filter
-#endif
-        }, .dir="www/root",
-        .charset=NXWEB_DEFAULT_CHARSET, .index_file=NXWEB_DEFAULT_INDEX_FILE,
-        .gzip_dir="www/cache/gzip", .img_dir="www/cache/img", .cache=1);
+//NXWEB_SET_HANDLER(fetch, "/fetch", &fetch_handler, .priority=1000);
+//NXWEB_SET_HANDLER(deletefiles, "/deletefiles", &delete_batch_handler, .priority=1000);
+//NXWEB_SET_HANDLER(list, "/list", &list_handler, .priority=1000);
 
 
 // Command-line options:

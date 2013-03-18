@@ -64,9 +64,12 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_indexserver_OBJECTS = main.$(OBJEXT) benchmark.$(OBJEXT) \
-	hello.$(OBJEXT) subrequests.$(OBJEXT) upload.$(OBJEXT) \
-	download.$(OBJEXT) multipart_parser.$(OBJEXT)
+am_indexserver_OBJECTS = main.$(OBJEXT) multipart_parser.$(OBJEXT) \
+	hello.$(OBJEXT) upload.$(OBJEXT) uploadkey.$(OBJEXT) \
+	download.$(OBJEXT) delete.$(OBJEXT) status.$(OBJEXT) \
+	config.$(OBJEXT) manage.$(OBJEXT) retnNode.$(OBJEXT) \
+	retn.$(OBJEXT) monitor.$(OBJEXT) view.$(OBJEXT) \
+	history.$(OBJEXT) gethistory.$(OBJEXT) exists.$(OBJEXT)
 indexserver_OBJECTS = $(am_indexserver_OBJECTS)
 am__DEPENDENCIES_1 =
 indexserver_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -224,7 +227,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = -pthread $(GNUTLS_CFLAGS) $(IMAGEMAGICK_CFLAGS)
-indexserver_SOURCES = main.c modules/benchmark.c modules/hello.c modules/subrequests.c modules/upload.c modules/download.c post_parser/multipart_parser.c post_parser/multipart_parser.h
+indexserver_SOURCES = main.c post_parser/multipart_parser.c post_parser/multipart_parser.h \
+					  modules/hello.c modules/upload.c modules/uploadkey.c modules/download.c \
+					  modules/delete.c modules/status.c modules/config.c modules/manage.c \
+					  modules/retnNode.c modules/retn.c modules/monitor.c modules/view.c \
+					  modules/history.c modules/gethistory.c modules/exists.c
+
 indexserver_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
 indexserver_LDFLAGS = -L$(top_builddir)/src/lib
 all: all-am
@@ -317,13 +325,23 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/benchmark.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/delete.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/download.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exists.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethistory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/history.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/manage.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/monitor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/multipart_parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/subrequests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/retn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/retnNode.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/status.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/upload.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uploadkey.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/view.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -346,19 +364,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-benchmark.o: modules/benchmark.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT benchmark.o -MD -MP -MF $(DEPDIR)/benchmark.Tpo -c -o benchmark.o `test -f 'modules/benchmark.c' || echo '$(srcdir)/'`modules/benchmark.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/benchmark.Tpo $(DEPDIR)/benchmark.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/benchmark.c' object='benchmark.o' libtool=no @AMDEPBACKSLASH@
+multipart_parser.o: post_parser/multipart_parser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT multipart_parser.o -MD -MP -MF $(DEPDIR)/multipart_parser.Tpo -c -o multipart_parser.o `test -f 'post_parser/multipart_parser.c' || echo '$(srcdir)/'`post_parser/multipart_parser.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/multipart_parser.Tpo $(DEPDIR)/multipart_parser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='post_parser/multipart_parser.c' object='multipart_parser.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o benchmark.o `test -f 'modules/benchmark.c' || echo '$(srcdir)/'`modules/benchmark.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o multipart_parser.o `test -f 'post_parser/multipart_parser.c' || echo '$(srcdir)/'`post_parser/multipart_parser.c
 
-benchmark.obj: modules/benchmark.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT benchmark.obj -MD -MP -MF $(DEPDIR)/benchmark.Tpo -c -o benchmark.obj `if test -f 'modules/benchmark.c'; then $(CYGPATH_W) 'modules/benchmark.c'; else $(CYGPATH_W) '$(srcdir)/modules/benchmark.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/benchmark.Tpo $(DEPDIR)/benchmark.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/benchmark.c' object='benchmark.obj' libtool=no @AMDEPBACKSLASH@
+multipart_parser.obj: post_parser/multipart_parser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT multipart_parser.obj -MD -MP -MF $(DEPDIR)/multipart_parser.Tpo -c -o multipart_parser.obj `if test -f 'post_parser/multipart_parser.c'; then $(CYGPATH_W) 'post_parser/multipart_parser.c'; else $(CYGPATH_W) '$(srcdir)/post_parser/multipart_parser.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/multipart_parser.Tpo $(DEPDIR)/multipart_parser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='post_parser/multipart_parser.c' object='multipart_parser.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o benchmark.obj `if test -f 'modules/benchmark.c'; then $(CYGPATH_W) 'modules/benchmark.c'; else $(CYGPATH_W) '$(srcdir)/modules/benchmark.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o multipart_parser.obj `if test -f 'post_parser/multipart_parser.c'; then $(CYGPATH_W) 'post_parser/multipart_parser.c'; else $(CYGPATH_W) '$(srcdir)/post_parser/multipart_parser.c'; fi`
 
 hello.o: modules/hello.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT hello.o -MD -MP -MF $(DEPDIR)/hello.Tpo -c -o hello.o `test -f 'modules/hello.c' || echo '$(srcdir)/'`modules/hello.c
@@ -374,20 +392,6 @@ hello.obj: modules/hello.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o hello.obj `if test -f 'modules/hello.c'; then $(CYGPATH_W) 'modules/hello.c'; else $(CYGPATH_W) '$(srcdir)/modules/hello.c'; fi`
 
-subrequests.o: modules/subrequests.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.o -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.o `test -f 'modules/subrequests.c' || echo '$(srcdir)/'`modules/subrequests.c
-
-subrequests.obj: modules/subrequests.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT subrequests.obj -MD -MP -MF $(DEPDIR)/subrequests.Tpo -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/subrequests.Tpo $(DEPDIR)/subrequests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/subrequests.c' object='subrequests.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o subrequests.obj `if test -f 'modules/subrequests.c'; then $(CYGPATH_W) 'modules/subrequests.c'; else $(CYGPATH_W) '$(srcdir)/modules/subrequests.c'; fi`
-
 upload.o: modules/upload.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT upload.o -MD -MP -MF $(DEPDIR)/upload.Tpo -c -o upload.o `test -f 'modules/upload.c' || echo '$(srcdir)/'`modules/upload.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/upload.Tpo $(DEPDIR)/upload.Po
@@ -401,6 +405,20 @@ upload.obj: modules/upload.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/upload.c' object='upload.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o upload.obj `if test -f 'modules/upload.c'; then $(CYGPATH_W) 'modules/upload.c'; else $(CYGPATH_W) '$(srcdir)/modules/upload.c'; fi`
+
+uploadkey.o: modules/uploadkey.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT uploadkey.o -MD -MP -MF $(DEPDIR)/uploadkey.Tpo -c -o uploadkey.o `test -f 'modules/uploadkey.c' || echo '$(srcdir)/'`modules/uploadkey.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/uploadkey.Tpo $(DEPDIR)/uploadkey.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/uploadkey.c' object='uploadkey.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o uploadkey.o `test -f 'modules/uploadkey.c' || echo '$(srcdir)/'`modules/uploadkey.c
+
+uploadkey.obj: modules/uploadkey.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT uploadkey.obj -MD -MP -MF $(DEPDIR)/uploadkey.Tpo -c -o uploadkey.obj `if test -f 'modules/uploadkey.c'; then $(CYGPATH_W) 'modules/uploadkey.c'; else $(CYGPATH_W) '$(srcdir)/modules/uploadkey.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/uploadkey.Tpo $(DEPDIR)/uploadkey.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/uploadkey.c' object='uploadkey.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o uploadkey.obj `if test -f 'modules/uploadkey.c'; then $(CYGPATH_W) 'modules/uploadkey.c'; else $(CYGPATH_W) '$(srcdir)/modules/uploadkey.c'; fi`
 
 download.o: modules/download.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT download.o -MD -MP -MF $(DEPDIR)/download.Tpo -c -o download.o `test -f 'modules/download.c' || echo '$(srcdir)/'`modules/download.c
@@ -416,19 +434,159 @@ download.obj: modules/download.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o download.obj `if test -f 'modules/download.c'; then $(CYGPATH_W) 'modules/download.c'; else $(CYGPATH_W) '$(srcdir)/modules/download.c'; fi`
 
-multipart_parser.o: post_parser/multipart_parser.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT multipart_parser.o -MD -MP -MF $(DEPDIR)/multipart_parser.Tpo -c -o multipart_parser.o `test -f 'post_parser/multipart_parser.c' || echo '$(srcdir)/'`post_parser/multipart_parser.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/multipart_parser.Tpo $(DEPDIR)/multipart_parser.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='post_parser/multipart_parser.c' object='multipart_parser.o' libtool=no @AMDEPBACKSLASH@
+delete.o: modules/delete.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT delete.o -MD -MP -MF $(DEPDIR)/delete.Tpo -c -o delete.o `test -f 'modules/delete.c' || echo '$(srcdir)/'`modules/delete.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/delete.Tpo $(DEPDIR)/delete.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/delete.c' object='delete.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o multipart_parser.o `test -f 'post_parser/multipart_parser.c' || echo '$(srcdir)/'`post_parser/multipart_parser.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o delete.o `test -f 'modules/delete.c' || echo '$(srcdir)/'`modules/delete.c
 
-multipart_parser.obj: post_parser/multipart_parser.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT multipart_parser.obj -MD -MP -MF $(DEPDIR)/multipart_parser.Tpo -c -o multipart_parser.obj `if test -f 'post_parser/multipart_parser.c'; then $(CYGPATH_W) 'post_parser/multipart_parser.c'; else $(CYGPATH_W) '$(srcdir)/post_parser/multipart_parser.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/multipart_parser.Tpo $(DEPDIR)/multipart_parser.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='post_parser/multipart_parser.c' object='multipart_parser.obj' libtool=no @AMDEPBACKSLASH@
+delete.obj: modules/delete.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT delete.obj -MD -MP -MF $(DEPDIR)/delete.Tpo -c -o delete.obj `if test -f 'modules/delete.c'; then $(CYGPATH_W) 'modules/delete.c'; else $(CYGPATH_W) '$(srcdir)/modules/delete.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/delete.Tpo $(DEPDIR)/delete.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/delete.c' object='delete.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o multipart_parser.obj `if test -f 'post_parser/multipart_parser.c'; then $(CYGPATH_W) 'post_parser/multipart_parser.c'; else $(CYGPATH_W) '$(srcdir)/post_parser/multipart_parser.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o delete.obj `if test -f 'modules/delete.c'; then $(CYGPATH_W) 'modules/delete.c'; else $(CYGPATH_W) '$(srcdir)/modules/delete.c'; fi`
+
+status.o: modules/status.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT status.o -MD -MP -MF $(DEPDIR)/status.Tpo -c -o status.o `test -f 'modules/status.c' || echo '$(srcdir)/'`modules/status.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/status.Tpo $(DEPDIR)/status.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/status.c' object='status.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o status.o `test -f 'modules/status.c' || echo '$(srcdir)/'`modules/status.c
+
+status.obj: modules/status.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT status.obj -MD -MP -MF $(DEPDIR)/status.Tpo -c -o status.obj `if test -f 'modules/status.c'; then $(CYGPATH_W) 'modules/status.c'; else $(CYGPATH_W) '$(srcdir)/modules/status.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/status.Tpo $(DEPDIR)/status.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/status.c' object='status.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o status.obj `if test -f 'modules/status.c'; then $(CYGPATH_W) 'modules/status.c'; else $(CYGPATH_W) '$(srcdir)/modules/status.c'; fi`
+
+config.o: modules/config.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT config.o -MD -MP -MF $(DEPDIR)/config.Tpo -c -o config.o `test -f 'modules/config.c' || echo '$(srcdir)/'`modules/config.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/config.Tpo $(DEPDIR)/config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/config.c' object='config.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o config.o `test -f 'modules/config.c' || echo '$(srcdir)/'`modules/config.c
+
+config.obj: modules/config.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT config.obj -MD -MP -MF $(DEPDIR)/config.Tpo -c -o config.obj `if test -f 'modules/config.c'; then $(CYGPATH_W) 'modules/config.c'; else $(CYGPATH_W) '$(srcdir)/modules/config.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/config.Tpo $(DEPDIR)/config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/config.c' object='config.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o config.obj `if test -f 'modules/config.c'; then $(CYGPATH_W) 'modules/config.c'; else $(CYGPATH_W) '$(srcdir)/modules/config.c'; fi`
+
+manage.o: modules/manage.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT manage.o -MD -MP -MF $(DEPDIR)/manage.Tpo -c -o manage.o `test -f 'modules/manage.c' || echo '$(srcdir)/'`modules/manage.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/manage.Tpo $(DEPDIR)/manage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/manage.c' object='manage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o manage.o `test -f 'modules/manage.c' || echo '$(srcdir)/'`modules/manage.c
+
+manage.obj: modules/manage.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT manage.obj -MD -MP -MF $(DEPDIR)/manage.Tpo -c -o manage.obj `if test -f 'modules/manage.c'; then $(CYGPATH_W) 'modules/manage.c'; else $(CYGPATH_W) '$(srcdir)/modules/manage.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/manage.Tpo $(DEPDIR)/manage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/manage.c' object='manage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o manage.obj `if test -f 'modules/manage.c'; then $(CYGPATH_W) 'modules/manage.c'; else $(CYGPATH_W) '$(srcdir)/modules/manage.c'; fi`
+
+retnNode.o: modules/retnNode.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT retnNode.o -MD -MP -MF $(DEPDIR)/retnNode.Tpo -c -o retnNode.o `test -f 'modules/retnNode.c' || echo '$(srcdir)/'`modules/retnNode.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/retnNode.Tpo $(DEPDIR)/retnNode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/retnNode.c' object='retnNode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o retnNode.o `test -f 'modules/retnNode.c' || echo '$(srcdir)/'`modules/retnNode.c
+
+retnNode.obj: modules/retnNode.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT retnNode.obj -MD -MP -MF $(DEPDIR)/retnNode.Tpo -c -o retnNode.obj `if test -f 'modules/retnNode.c'; then $(CYGPATH_W) 'modules/retnNode.c'; else $(CYGPATH_W) '$(srcdir)/modules/retnNode.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/retnNode.Tpo $(DEPDIR)/retnNode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/retnNode.c' object='retnNode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o retnNode.obj `if test -f 'modules/retnNode.c'; then $(CYGPATH_W) 'modules/retnNode.c'; else $(CYGPATH_W) '$(srcdir)/modules/retnNode.c'; fi`
+
+retn.o: modules/retn.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT retn.o -MD -MP -MF $(DEPDIR)/retn.Tpo -c -o retn.o `test -f 'modules/retn.c' || echo '$(srcdir)/'`modules/retn.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/retn.Tpo $(DEPDIR)/retn.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/retn.c' object='retn.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o retn.o `test -f 'modules/retn.c' || echo '$(srcdir)/'`modules/retn.c
+
+retn.obj: modules/retn.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT retn.obj -MD -MP -MF $(DEPDIR)/retn.Tpo -c -o retn.obj `if test -f 'modules/retn.c'; then $(CYGPATH_W) 'modules/retn.c'; else $(CYGPATH_W) '$(srcdir)/modules/retn.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/retn.Tpo $(DEPDIR)/retn.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/retn.c' object='retn.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o retn.obj `if test -f 'modules/retn.c'; then $(CYGPATH_W) 'modules/retn.c'; else $(CYGPATH_W) '$(srcdir)/modules/retn.c'; fi`
+
+monitor.o: modules/monitor.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT monitor.o -MD -MP -MF $(DEPDIR)/monitor.Tpo -c -o monitor.o `test -f 'modules/monitor.c' || echo '$(srcdir)/'`modules/monitor.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/monitor.Tpo $(DEPDIR)/monitor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/monitor.c' object='monitor.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o monitor.o `test -f 'modules/monitor.c' || echo '$(srcdir)/'`modules/monitor.c
+
+monitor.obj: modules/monitor.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT monitor.obj -MD -MP -MF $(DEPDIR)/monitor.Tpo -c -o monitor.obj `if test -f 'modules/monitor.c'; then $(CYGPATH_W) 'modules/monitor.c'; else $(CYGPATH_W) '$(srcdir)/modules/monitor.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/monitor.Tpo $(DEPDIR)/monitor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/monitor.c' object='monitor.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o monitor.obj `if test -f 'modules/monitor.c'; then $(CYGPATH_W) 'modules/monitor.c'; else $(CYGPATH_W) '$(srcdir)/modules/monitor.c'; fi`
+
+view.o: modules/view.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT view.o -MD -MP -MF $(DEPDIR)/view.Tpo -c -o view.o `test -f 'modules/view.c' || echo '$(srcdir)/'`modules/view.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/view.Tpo $(DEPDIR)/view.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/view.c' object='view.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o view.o `test -f 'modules/view.c' || echo '$(srcdir)/'`modules/view.c
+
+view.obj: modules/view.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT view.obj -MD -MP -MF $(DEPDIR)/view.Tpo -c -o view.obj `if test -f 'modules/view.c'; then $(CYGPATH_W) 'modules/view.c'; else $(CYGPATH_W) '$(srcdir)/modules/view.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/view.Tpo $(DEPDIR)/view.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/view.c' object='view.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o view.obj `if test -f 'modules/view.c'; then $(CYGPATH_W) 'modules/view.c'; else $(CYGPATH_W) '$(srcdir)/modules/view.c'; fi`
+
+history.o: modules/history.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT history.o -MD -MP -MF $(DEPDIR)/history.Tpo -c -o history.o `test -f 'modules/history.c' || echo '$(srcdir)/'`modules/history.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/history.Tpo $(DEPDIR)/history.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/history.c' object='history.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o history.o `test -f 'modules/history.c' || echo '$(srcdir)/'`modules/history.c
+
+history.obj: modules/history.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT history.obj -MD -MP -MF $(DEPDIR)/history.Tpo -c -o history.obj `if test -f 'modules/history.c'; then $(CYGPATH_W) 'modules/history.c'; else $(CYGPATH_W) '$(srcdir)/modules/history.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/history.Tpo $(DEPDIR)/history.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/history.c' object='history.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o history.obj `if test -f 'modules/history.c'; then $(CYGPATH_W) 'modules/history.c'; else $(CYGPATH_W) '$(srcdir)/modules/history.c'; fi`
+
+gethistory.o: modules/gethistory.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT gethistory.o -MD -MP -MF $(DEPDIR)/gethistory.Tpo -c -o gethistory.o `test -f 'modules/gethistory.c' || echo '$(srcdir)/'`modules/gethistory.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/gethistory.Tpo $(DEPDIR)/gethistory.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/gethistory.c' object='gethistory.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o gethistory.o `test -f 'modules/gethistory.c' || echo '$(srcdir)/'`modules/gethistory.c
+
+gethistory.obj: modules/gethistory.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT gethistory.obj -MD -MP -MF $(DEPDIR)/gethistory.Tpo -c -o gethistory.obj `if test -f 'modules/gethistory.c'; then $(CYGPATH_W) 'modules/gethistory.c'; else $(CYGPATH_W) '$(srcdir)/modules/gethistory.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/gethistory.Tpo $(DEPDIR)/gethistory.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/gethistory.c' object='gethistory.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o gethistory.obj `if test -f 'modules/gethistory.c'; then $(CYGPATH_W) 'modules/gethistory.c'; else $(CYGPATH_W) '$(srcdir)/modules/gethistory.c'; fi`
+
+exists.o: modules/exists.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exists.o -MD -MP -MF $(DEPDIR)/exists.Tpo -c -o exists.o `test -f 'modules/exists.c' || echo '$(srcdir)/'`modules/exists.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/exists.Tpo $(DEPDIR)/exists.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/exists.c' object='exists.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exists.o `test -f 'modules/exists.c' || echo '$(srcdir)/'`modules/exists.c
+
+exists.obj: modules/exists.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exists.obj -MD -MP -MF $(DEPDIR)/exists.Tpo -c -o exists.obj `if test -f 'modules/exists.c'; then $(CYGPATH_W) 'modules/exists.c'; else $(CYGPATH_W) '$(srcdir)/modules/exists.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/exists.Tpo $(DEPDIR)/exists.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/exists.c' object='exists.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exists.obj `if test -f 'modules/exists.c'; then $(CYGPATH_W) 'modules/exists.c'; else $(CYGPATH_W) '$(srcdir)/modules/exists.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
