@@ -27,9 +27,17 @@ extern nxweb_handler hello_handler;
 extern nxweb_handler upload_handler;
 extern nxweb_handler uploadkey_handler;
 extern nxweb_handler download_handler;
-extern nxweb_handler delete_handler;
 extern nxweb_handler status_handler;
-
+extern nxweb_handler config_handler;
+extern nxweb_handler manage_handler;
+extern nxweb_handler retnNode_handler;
+extern nxweb_handler retn_handler;
+extern nxweb_handler monitor_handler;
+extern nxweb_handler view_handler;
+extern nxweb_handler delete_handler;
+extern nxweb_handler history_handler;
+extern nxweb_handler gethistory_handler;
+extern nxweb_handler exists_handler;
 
 KCDB* g_kcdb;
 int g_kcrecord_header = 4;
@@ -59,7 +67,6 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(history, "/history", &history_handler, .priority=1000);
 NXWEB_SET_HANDLER(gethistory, "/gethistory", &gethistory_handler, .priority=1000);
 NXWEB_SET_HANDLER(exists, "/exists", &exists_handler, .priority=1000);
-NXWEB_SET_HANDLER(index, "/", &index_handler, .priority=1000);
 
 //NXWEB_SET_HANDLER(fetch, "/fetch", &fetch_handler, .priority=1000);
 //NXWEB_SET_HANDLER(deletefiles, "/deletefiles", &delete_batch_handler, .priority=1000);

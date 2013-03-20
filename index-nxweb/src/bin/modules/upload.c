@@ -1,4 +1,3 @@
-
 #include "nxweb/nxweb.h"
 #include "../post_parser/multipart_parser.h"
 #include <kclangc.h>
@@ -34,15 +33,13 @@ typedef struct _upload_file_object
 
 
 
-static int 
-on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
     return 0;
 }
 
 
-static int 
-on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
     char buff[1024] = {0};
     strncpy( buff, at, length );
@@ -108,13 +105,10 @@ static nxweb_result upload_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
-    printf("--- upload_on_request\n");
-
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
 
-    nxweb_response_append_str(resp, 
-            "<html><head><title>Upload Module</title></head><body>\n");
+    nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
@@ -126,8 +120,7 @@ static nxweb_result upload_on_request(
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
 
-        ufo->parser = multipart_parser_init( 
-                ufo->post_boundary, &ufo->parser_settings );
+        ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
         nxweb_parse_request_parameters( req, 0 );
         const char * over_write = nx_simple_map_get_nocase( req->parameters, "overwrite" );
@@ -183,15 +176,12 @@ static nxweb_result upload_on_request(
 }
 
 
-static void 
-upload_request_data_finalize(
+static void upload_request_data_finalize(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp, 
         nxe_data data) 
 {
-    printf("--- upload_request_data_finalize\n");
-
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) 
@@ -207,14 +197,12 @@ upload_request_data_finalize(
     }
 }
 
-static nxweb_result 
-upload_on_post_data(
+
+static nxweb_result upload_on_post_data(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data\n");
-
     if (req->content_length > g_MaxUploadSize) 
     {
         nxweb_send_http_error(resp, 413, "Request Entity Too Large");
@@ -243,14 +231,11 @@ upload_on_post_data(
 }
 
 
-static nxweb_result 
-upload_on_post_data_complete(
+static nxweb_result upload_on_post_data_complete(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data_complete\n");
-    
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this
@@ -263,9 +248,10 @@ upload_on_post_data_complete(
     return NXWEB_OK;
 }
 
-nxweb_handler upload_file_handler={
+nxweb_handler upload_handler={
     .on_request = upload_on_request,
     .on_post_data = upload_on_post_data,
     .on_post_data_complete = upload_on_post_data_complete,
-    .flags = NXWEB_HANDLE_ANY};
+    .flags = NXWEB_HANDLE_ANY
+};
 

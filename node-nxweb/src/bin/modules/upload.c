@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2011-2012 Yaroslav Stavnichiy <yarosla@gmail.com>
- *
- * This file is part of NXWEB.
- *
- * NXWEB is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
- *
- * NXWEB is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with NXWEB. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "nxweb/nxweb.h"
 #include "../post_parser/multipart_parser.h"
 #include <kclangc.h>
@@ -30,7 +11,6 @@ static const char upload_handler_key; // variable's address only matters
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
 extern KCDB* g_kcdb;
-//extern int g_kcrecord_header;
 extern g_MaxUploadSize;
 
 typedef struct _upload_file_object
@@ -56,33 +36,29 @@ typedef struct _upload_file_object
 
 
 
-static int 
-on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
-    char buf[1024] = {0};
-    strncpy( buf, at, length );
-    //printf("recv header_field: length:%lu \ndata is:%s\n-----end------\n\n", length, buf );
     return 0;
 }
 
 
-static int 
-on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
     char buff[1024] = {0};
     strncpy( buff, at, length );
-    //printf("recv header_value: length:%lu\ndata is:%s\n------end------\n\n", length, buff );
+
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     char *pfname = strstr( buff, "filename=\"" );
     if( pfname == NULL )
     {
-        if( strstr( buff, "name=\"upname\"" ) ){
+        if( strstr( buff, "name=\"upname\"" ) )
+        {
             pufo->filename_ready_to_receive = 1;
             pufo->file_ready_to_receive = 0;
             return 0;
         }
-        else{
-            //printf("Not found filename.\n");
+        else
+        {
             return 0;
         }
     }
@@ -90,42 +66,27 @@ on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
     pfname += 10;
     char *pfname_end = strstr( pfname+1, "\"" );
     strncpy( pufo->filename, pfname, pfname_end - pfname );
-    //printf( "Found filename:\"%s\"\n", pufo->filename );
     pufo->file_ready_to_receive = 1;
     return 0;
 }
 
 
-static int on_post_body( multipart_parser *mp_obj, const char *at, size_t len )
+static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
-    int length = len;
-    int i;
-    //printf("recv post body:length: %d\n", length );
-
-    /*
-    if( length < 100 )
-    {
-        char buff[1024] = {0};
-        strncpy( buff, at, length+4 );
-        printf("recv post body:%s\n-------------------end-----------------\n\n", buff );
-    }
-    */
-
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->filename_ready_to_receive == 1 ){
+    if ( pufo->filename_ready_to_receive == 1 )
+    {
         strncpy( pufo->filename, at, length );
         pufo->filename_ready_to_receive = 0;
-        //printf("Found filename:%s\n", pufo->filename );
         pufo->file_ready_to_receive = 1;
         return 0;
     }
-    if ( pufo->file_ready_to_receive ){
-        if ( pufo->ffilemem == NULL ) {
+    if ( pufo->file_ready_to_receive )
+    {
+        if ( pufo->ffilemem == NULL ) 
             return 0;
-        }
         if ( pufo->ffilemem )
             fwrite( at, 1, length, pufo->ffilemem);
-        //printf("Write to file body %d.", length );
     }
     return 0;
 }
@@ -140,7 +101,6 @@ int on_post_finished (multipart_parser * mp_obj)
         pufo->file_complete = 1;
         pufo->ffilemem=NULL;
     }
-    //printf("Post finished.\n" );
     return 0;
 }
 
@@ -155,8 +115,7 @@ static nxweb_result upload_on_request(
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
 
-    nxweb_response_append_str(resp, 
-            "<html><head><title>Upload Module</title></head><body>\n");
+    nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
@@ -168,12 +127,10 @@ static nxweb_result upload_on_request(
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
 
-        ufo->parser = multipart_parser_init( 
-                ufo->post_boundary, &ufo->parser_settings );
+        ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
         nxweb_parse_request_parameters( req, 0 );
-        const char * over_write = nx_simple_map_get_nocase( 
-                req->parameters, "overwrite" );
+        const char * over_write = nx_simple_map_get_nocase( req->parameters, "overwrite" );
 
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
@@ -182,8 +139,7 @@ static nxweb_result upload_on_request(
 
         if ( strlen( ufo->filename ) > 0 && ufo->file_complete )
         {
-            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), 
-                        ufo->file_ptr, ufo->file_len ) )
+            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
             {
                 nxweb_response_printf( resp, "store backend db failed.\n" );
             }
@@ -223,8 +179,7 @@ static nxweb_result upload_on_request(
 }
 
 
-static void 
-upload_request_data_finalize(
+static void upload_request_data_finalize(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp, 
@@ -247,8 +202,7 @@ upload_request_data_finalize(
     }
 }
 
-static nxweb_result 
-upload_on_post_data(
+static nxweb_result upload_on_post_data(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
@@ -273,7 +227,6 @@ upload_on_post_data(
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0]='-';
     ufo->post_boundary[1]='-';
-    //printf("boundary=%s\n\n", ufo->post_boundary );
 
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
     nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxUploadSize);
@@ -283,8 +236,7 @@ upload_on_post_data(
 }
 
 
-static nxweb_result 
-upload_on_post_data_complete(
+static nxweb_result upload_on_post_data_complete(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
@@ -303,8 +255,11 @@ upload_on_post_data_complete(
     return NXWEB_OK;
 }
 
+
 nxweb_handler upload_file_handler={
     .on_request = upload_on_request,
     .on_post_data = upload_on_post_data,
     .on_post_data_complete = upload_on_post_data_complete,
-    .flags = NXWEB_HANDLE_ANY};
+    .flags = NXWEB_HANDLE_ANY
+};
+

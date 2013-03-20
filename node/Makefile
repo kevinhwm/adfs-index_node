@@ -1,7 +1,7 @@
 OBJS=Exception.o Field.o Parser.o kc_class.o nodeweb.o
 
 all: $(OBJS)
-	g++ -m64 $(OBJS) -o nodeweb -levent -llog4cpp -lkyotocabinet 
+	g++ -m64 $(OBJS) -o nodeweb -levent -lkyotocabinet 
 
 nodeweb.o: nodeweb.cpp
 Exception.o: Exception.cpp

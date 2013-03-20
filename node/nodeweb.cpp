@@ -3,30 +3,19 @@
 #include <string>
 #include <map>
 #include <getopt.h>
-//#include "BinString.h"
 #include <event.h>
 #include <evhttp.h>
 #include <kchashdb.h>
 #include <kccachedb.h>
 #include "Parser.h"
 #include "kc_class.h"
-//#include <openssl/md5.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
-#include<iostream>
+#include <iostream>
 #include <dirent.h>
-#include <log4cpp/Category.hh>
-#include <log4cpp/FileAppender.hh>
-#include <log4cpp/SimpleLayout.hh>
-#include <log4cpp/PropertyConfigurator.hh>
-#include "log4cpp/CategoryStream.hh"
 
 using namespace std; 
-using namespace log4cpp;
-
-log4cpp::Category *log_access;
-log4cpp::Category *log_err;
 
 
 long MaxBufferLength = 1048576*10; 
@@ -56,78 +45,33 @@ kc_class kc_connector;
 std::map<string, cmd_callback > g_urimap;
 char *g_pidfile = NULL;
 
-/*
-   char * rand_str(int in_len) //Random generation string function
-   { 
-   char *__r = (char *)malloc(in_len + 1); 
-   int i; 
-   if (__r == 0) 
-   { 
-   return 0; 
-   } 
-   srand(time(NULL) + rand());    
-   for (i = 0; i  < in_len; i++) 
-   { 
-//__r[i] = rand()%94+32;      
-__r[i] = rand()%26+65;     
-} 
-__r[i] = 0; 
-return __r; 
-} 
-*/
 
-int log_init(const char *conf_file)
-{
-    try
-    {
-        log4cpp::PropertyConfigurator::configure(conf_file);
-        log4cpp::Category& log1 = log4cpp::Category::getInstance(string("err"));
-        log_err = &log1;
-        log4cpp::Category& log2 = log4cpp::Category::getInstance(string("access"));
-        log_access = &log2;
-        return 0;
-    }
-    catch(log4cpp::ConfigureFailure& f)
-    {
-        std::cout << "Configure Problem:" << f.what() << std::endl;
-        return 255;
-    }
-
-}
 int count_kch(string srcip)//count how many  kchfile in a folder
 {
     int total_count=0;
+
     DIR* dirp;
     struct dirent* direntp;
+
     dirp = opendir( srcip.c_str() );
-    if( dirp != NULL ) {
-        for(;;) {
+    if( dirp != NULL ) 
+    {
+        for(;;) 
+        {
             direntp = readdir( dirp );
             if( direntp == NULL ) 
                 break;
-            string filename=direntp->d_name;
-            //cout<<filename<<endl;
-            if (filename.length()>4)
+            string filename = direntp->d_name;
+            if (filename.length() > 4)
             {
-                try
+                if(filename.substr(filename.rfind(".")+1,3)=="kch")
                 {
-
-                    if(filename.substr(filename.rfind(".")+1,3)=="kch")
-                    {
-                        //cout<<filename.substr(0,filename.rfind(".")).c_str()<<endl;
-                        int temp_num=::atoi(filename.substr(0,filename.rfind(".")).c_str());
-                        if(temp_num!=0)
-                            total_count++;
-                    }
-                }
-                catch(...)
-                {
-                    cout<<"continue"<<endl;
+                    int temp_num = ::atoi(filename.substr(0, filename.rfind(".")).c_str());
+                    if (temp_num != 0)
+                        total_count++;
                 }
 
             }
-            //printf( "%s\n", direntp->d_name );
-
         }
         closedir( dirp );
         if (total_count>0)
@@ -137,22 +81,8 @@ int count_kch(string srcip)//count how many  kchfile in a folder
     }
     return 0;
 }
-/*char * time_combine() //get current time,such as:201205111200
-  {
-  char *__r = (char *)malloc(20); 
-  now=time(0);
-  tnow = localtime(&now);
-//char now_time_str[20];
-sprintf(__r,"%4d%02d%02d%02d%02d%02d\0",
-1900+tnow->tm_year, 
-1+tnow->tm_mon, 
-tnow->tm_mday, 
-tnow->tm_hour, 
-tnow->tm_min, 
-tnow->tm_sec); 
-return __r;
-}
-*/
+
+
 int time_split(string datetime) //get the total minites time 
 {
     int time_hour=::atoi( datetime.substr(8,2).c_str() );
@@ -170,7 +100,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
     const char *content = evhttp_find_header( headerinfo, "Content-Type" );
     struct evbuffer *pInBuffer = evhttp_request_get_input_buffer( req );
     long buffer_data_len = EVBUFFER_LENGTH( pInBuffer );
-    string loginfo="";
     bool succ = false;
     string fname;
     //CBinString fmd5;
@@ -181,20 +110,12 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
             //cout<<"flength"<<flength<<endl;
             if(flength>=MaxBufferLength)
             {
-                loginfo.append(this_port_name);
-                loginfo.append(fname);
-                loginfo.append(" upload failure,data is too big!");
-                log_err->error(loginfo);
                 evhttp_send_error( req, HTTP_INTERNAL, " upload failure,data is too big!" );
                 evbuffer_free(returnbuffer);
                 return;   
             }
             else if (flength==0)
             {   
-                loginfo.append(this_port_name);
-                loginfo.append(fname);
-                loginfo.append(" upload failure,upload file is empty ,please checkout");
-                log_err->error(loginfo);
                 evhttp_send_error( req, HTTP_NOTFOUND, "upload failure,upload file is empty ,please checkout" );
                 evbuffer_free(returnbuffer);
                 return; 
@@ -253,10 +174,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                    */
                 if (fSize==0)
                 {   
-                    loginfo.append(this_port_name);
-                    loginfo.append(fname);
-                    loginfo.append(" upload failure,upload file is empty ,please checkout");
-                    log_err->error(loginfo);
                     evhttp_send_error( req, HTTP_NOTFOUND, "upload failure,upload file is empty ,please checkout" );
                     evbuffer_free(returnbuffer);
                     return;      
@@ -265,30 +182,18 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                 //cout<<upload_ans<<endl;
                 if (upload_ans==-1)
                 {
-                    loginfo.append(this_port_name);
-                    loginfo.append(fname);
-                    loginfo.append(" upload failure,nodeweb is read only database");
-                    log_err->info(loginfo);
                     evhttp_send_error( req, HTTP_NOTFOUND, "nodeweb is read only database" );
                     evbuffer_free(returnbuffer);
                     return;
                 }
                 else if (upload_ans==-3)
                 {
-                    loginfo.append(this_port_name);
-                    loginfo.append(fname);
-                    loginfo.append(" upload failure,nodeweb is stop mode");
-                    log_err->info(loginfo);
                     evhttp_send_error( req, HTTP_NOTFOUND, "nodeweb is stop mode" );
                     evbuffer_free(returnbuffer);
                     return;
                 }
                 else if (upload_ans==-2)
                 {
-                    loginfo.append(this_port_name);
-                    loginfo.append(fname);
-                    loginfo.append(" upload failure,database already closed");
-                    log_err->info(loginfo);
                     evhttp_send_error( req, HTTP_NOTFOUND, "database already closed" );
                     evbuffer_free(returnbuffer);
                     return;           
@@ -301,10 +206,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                 }
                 else
                 {
-                    loginfo.append(this_port_name);
-                    loginfo.append(fname);
-                    loginfo.append(" upload faile");
-                    log_err->info(loginfo);
                     evhttp_send_error( req, HTTP_NOTFOUND, "upload faile" );
                     evbuffer_free(returnbuffer);
                     return;
@@ -315,10 +216,7 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
             printf("Error:%s\n", e.GetError().c_str()); 
             evhttp_send_error( req, HTTP_INTERNAL, e.GetError().c_str() );
             evbuffer_free(returnbuffer);
-            loginfo.append(this_port_name);
-            loginfo.append(fname);
-            loginfo.append(" upload faile");
-            log_err->info(loginfo);
+            
             return;
         }
     }
@@ -346,10 +244,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
         evbuffer_free(returnbuffer);
     }
 
-    loginfo.append(this_port_name);
-    loginfo.append(fname);
-    loginfo.append(" upload success!");
-    log_access->info(loginfo);
     return;
 }
 
@@ -460,13 +354,8 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )  /
     const struct evhttp_uri *pUriRaw = evhttp_request_get_evhttp_uri( req );
     //const char *pUri = evhttp_request_get_uri( req );
     evkeyvalq *headerinfo = evhttp_request_get_input_headers( req );
-    string loginfo="";
     if( strlen( suburi ) == 0 )
     {
-        loginfo.append(this_port_name);
-        loginfo.append(suburi);
-        loginfo.append(" download failure,url error.");
-        log_err->error(loginfo);
         evhttp_send_error( req, HTTP_NOTFOUND, "url error. <br/>Example: http://host/download/yourfilename." );
         evbuffer_free(returnbuffer);
         return;
@@ -479,40 +368,24 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )  /
     //int len = g_cachedb.get( pname, strlen( pname) +1, pFileBuffer, MaxBufferLength );
     if( get_ans == -2 )
     {
-        loginfo.append(this_port_name);
-        loginfo.append(pname);
-        loginfo.append(" download failure,data is too big.");
-        log_err->error(loginfo);
         evhttp_send_error( req, HTTP_INTERNAL, "data is too big." );
         evbuffer_free(returnbuffer);
         return;
     }
     else if( get_ans == -1 )
     {
-        loginfo.append(this_port_name);
-        loginfo.append(pname);
-        loginfo.append(" download failure,File not found");
-        log_err->error(loginfo); 
         evhttp_send_error( req, HTTP_NOTFOUND, "File not found\n." );
         evbuffer_free(returnbuffer);
         return;
     }
     else if (get_ans == -3)
     {
-        loginfo.append(this_port_name);
-        loginfo.append(pname);
-        loginfo.append(" download failure,datebase already closed");
-        log_err->error(loginfo); 
         evhttp_send_error( req, HTTP_NOTFOUND, "datebase already closed" );
         evbuffer_free(returnbuffer);
         return;
     }
     else if (get_ans ==-4)
     {
-        loginfo.append(this_port_name);
-        loginfo.append(pname);
-        loginfo.append(" download failure,datebase is stop mode");
-        log_err->error(loginfo); 
         evhttp_send_error( req, HTTP_NOTFOUND, "datebase is stop mode" );
         evbuffer_free(returnbuffer);
         return;
@@ -525,10 +398,7 @@ void cb_Download( struct evhttp_request *req, void *arg, const char *suburi )  /
     evbuffer_add( returnbuffer, pFileBuffer, get_ans );
     evhttp_send_reply( req, HTTP_OK, pname, returnbuffer );
     evbuffer_free(returnbuffer);
-    loginfo.append(this_port_name);
-    loginfo.append(pname);
-    loginfo.append(" download success!");
-    log_access->info(loginfo);
+
     return;
 
 }
@@ -564,11 +434,6 @@ void cb_Delete(struct evhttp_request *req, void *arg, const char *suburi)//delet
     evbuffer_add_printf( returnbuffer, "Deleted" );
     evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
     evbuffer_free(returnbuffer);
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append(pname);
-    loginfo.append(" delete success!");
-    log_access->info(loginfo);
     return;
 }
 void cb_Exist(struct evhttp_request *req, void *arg, const char *suburi)//exist file function,whether the data in the database.
@@ -609,10 +474,7 @@ void cb_Exist(struct evhttp_request *req, void *arg, const char *suburi)//exist 
     evbuffer_add_printf( returnbuffer, "YES" );
     evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
     evbuffer_free(returnbuffer);
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append(pname);
-    log_access->info(loginfo);
+    
     return;
 }
 void cb_History(struct evhttp_request *req, void *arg, const char *suburi)//return  a file all history  list
@@ -719,11 +581,7 @@ void cb_Gethistory( struct evhttp_request *req, void *arg, const char *suburi ) 
     evbuffer_add( returnbuffer, pFileBuffer, get_ans );
     evhttp_send_reply( req, HTTP_OK, pname, returnbuffer );
     evbuffer_free(returnbuffer);
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append(pname);
-    loginfo.append(" Gethistory");
-    log_access->info(loginfo);
+    
     return;
 
 }
@@ -748,10 +606,7 @@ void cb_Monitor( struct evhttp_request *req, void *arg, const char *suburi ) //c
     evhttp_add_header( req->output_headers, "Content-Type", "text/plain" );
     evhttp_send_reply( req, HTTP_OK, "monitor", returnbuffer );
     evbuffer_free(returnbuffer);
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append(" Monitor");
-    log_access->info(loginfo);
+    
     return;
 }
 void cb_Isalive( struct evhttp_request *req, void *arg, const char *suburi ) //Whether the server abnormal 
@@ -845,11 +700,7 @@ void cb_Status( struct evhttp_request *req, void *arg, const char *suburi ) //vi
     evhttp_add_header( req->output_headers, "Content-Type", "text/plain" );
     evhttp_send_reply( req, HTTP_OK, "Status", returnbuffer );
     evbuffer_free(returnbuffer);
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append(suburi);
-    loginfo.append(" Status");
-    log_access->info(loginfo);
+    
     return;
 }
 
@@ -862,18 +713,13 @@ void request_handler(struct evhttp_request *req, void *arg) //deal the handler t
     const char *suburi = uri+1;
     for( ; *suburi!='/' && *suburi; suburi++,p++ )
         *p = *suburi;
-    *p='\0';
-    //	printf("cmd:%s\n", cmd );
-    //	printf("suburi:%s\n", suburi );
+    *p = '\0';
+
     map<string, cmd_callback>::iterator it = g_urimap.find( cmd ); 
     if( it != g_urimap.end() )
-    {
         (*it->second)(req, arg, suburi );
-    }
     else
-    {
         printf("Unknown cmd:%s\n", cmd );
-    }
 }
 
 
@@ -889,23 +735,16 @@ void init_urimap() //handler corresponding  function
     g_urimap[ "exist" ] = cb_Exist;
     g_urimap[ "gethistory" ] = cb_Gethistory;
     g_urimap[ "history" ] = cb_History;
-
-
 }
+
 
 static void quit_safely(const int sig )//quit the server 
 {
     kc_connector.close();
 
     if( g_pidfile )
-    {
         remove( g_pidfile );
-    }
-    string loginfo="";
-    loginfo.append(this_port_name);
-    loginfo.append("close the database safely ");
-    log_access->info(loginfo);
-    printf("Bye...\n");
+    
     exit(0);
 }
 
@@ -935,7 +774,6 @@ int main(int argc, char *argv[], char *envp[])
 {
     short           http_port = 8080;
     char            http_addr[128] = "0.0.0.0";
-    char            CONFPATH[120]="/usr/local/adfszone/nodeserver/conf/log.conf";
     struct evhttp  *http_server = NULL;
     bool    	daemon = false;
     int random_count=10000;
@@ -945,12 +783,9 @@ int main(int argc, char *argv[], char *envp[])
     /*  process command line arguments.  */
 
     int c;
-    while ((c = getopt(argc, argv, "L:l:p:x:s:M:m:n:b:u:dchiv")) != -1)    //deal the  coefficient
+    while ((c = getopt(argc, argv, "l:p:x:s:M:m:n:b:u:dchiv")) != -1)    //deal the  coefficient
     {
         switch (c) {
-            case 'L':
-                strcpy( CONFPATH, optarg  );
-                break;       
             case 'l':
                 strcpy( http_addr, optarg  );
                 break;
@@ -996,54 +831,23 @@ int main(int argc, char *argv[], char *envp[])
         }
     }
     sprintf(this_port_name, "[port:%d]", http_port );
-    int res = log_init(CONFPATH);
-    if(res!=0)
-    {
-        cout<<"please check config file"<<endl;
-        return 0;
-    }
+    
     /*   start file store database     */
-    //cout<<MaxBufferLength<<endl;
     pFileBuffer =  (char *)malloc(MaxBufferLength);
-    kt_status["index_path"] =indexpath;
+
+    kt_status["index_path"] = indexpath;
     kt_status["node_path"] = dbpath;
     kt_status["node_num"] = "1";
-    int node_nums=count_kch(dbpath);
-    signal( SIGINT,  quit_safely );
-    signal( SIGKILL, quit_safely );
-    signal( SIGQUIT, quit_safely);
-    signal( SIGHUP,  quit_safely );
-    signal( SIGTERM, quit_safely );
 
-    pid_t pid;
-    if( daemon == true )
-    {
-        pid = fork();
-        if(pid < 0 ){
-            exit(EXIT_FAILURE);
-        }
+    int node_nums = count_kch(dbpath);
 
-        if( pid > 0 ){
-            exit(EXIT_SUCCESS );
-        }
-    }
-    if(g_pidfile )
-    {
-        FILE *fpid = fopen( g_pidfile, "w" );
-        fprintf( fpid, "%d\n", ::getpid() );
-        fclose( fpid );
-    }
-    kc_connector.init(dbpath,node_nums,'n',cache_size,kchfile_size,max_node_count,init_mode);
-
-    init_urimap();
-    event_init();
-    http_server = evhttp_start(http_addr, http_port);
-    evhttp_set_gencb(http_server, request_handler, NULL);
-    fprintf(stderr, "Server started on port %d, pid is %d\n", http_port, ::getpid() );
-    char startinfo[100]={0};
-    sprintf(startinfo, "%s Server started on port %d, pid is %d\n", this_port_name,http_port, ::getpid() );
-    log_access->info(startinfo);
-    event_dispatch();
-    evhttp_free(http_server );
+    kc_connector.init(
+            dbpath,
+            node_nums,
+            'n',
+            cache_size,
+            kchfile_size,
+            max_node_count,
+            init_mode);
 }
 

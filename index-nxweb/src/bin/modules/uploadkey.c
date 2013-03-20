@@ -34,15 +34,13 @@ typedef struct _upload_file_object
 
 
 
-static int 
-on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
     return 0;
 }
 
 
-static int 
-on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
     char buff[1024] = {0};
     strncpy( buff, at, length );
@@ -90,7 +88,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
 }
 
 
-int on_post_finished (multipart_parser * mp_obj)
+static int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     if ( pufo->ffilemem )
@@ -108,8 +106,6 @@ static nxweb_result uploadkey_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
-    printf("--- upload_on_request\n");
-
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
 
@@ -190,8 +186,6 @@ uploadkey_request_data_finalize(
         nxweb_http_response* resp, 
         nxe_data data) 
 {
-    printf("--- upload_request_data_finalize\n");
-
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) 
@@ -213,8 +207,6 @@ uploadkey_on_post_data(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data\n");
-
     if (req->content_length > g_MaxUploadSize) 
     {
         nxweb_send_http_error(resp, 413, "Request Entity Too Large");
@@ -228,7 +220,7 @@ uploadkey_on_post_data(
 
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     nxweb_set_request_data(req, UPLOADKEY_HANDLER_KEY, (nxe_data)(void*)ufo, 
-            upload_request_data_finalize);
+            uploadkey_request_data_finalize);
 
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0]='-';
@@ -249,8 +241,6 @@ uploadkey_on_post_data_complete(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data_complete\n");
-    
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this
@@ -263,7 +253,7 @@ uploadkey_on_post_data_complete(
     return NXWEB_OK;
 }
 
-nxweb_handler uploadkey_file_handler={
+nxweb_handler uploadkey_handler={
     .on_request = uploadkey_on_request,
     .on_post_data = uploadkey_on_post_data,
     .on_post_data_complete = uploadkey_on_post_data_complete,

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with NXWEB. If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT([nodeserver], [3.0.1])
+AC_INIT([adfsnode], [3.0.0])
 AC_CONFIG_HEADER(src/include/nxweb/config.h)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
