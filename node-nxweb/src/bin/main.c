@@ -220,16 +220,16 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    an_init(db_path, mem_size, max_file_num, max_node_num)
+    if (an_init(db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
+        return EXIT_FAILURE;
 
-    if (daemon) 
-    {
-        if (!log_file) 
+    if (daemon) {
+        if (!log_file) {
             log_file="adfsnode_error_log";
+        }
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
-    else 
-    {
+    else {
         nxweb_run_normal(work_dir, log_file, pid_file, server_main);
     }
     return EXIT_SUCCESS;

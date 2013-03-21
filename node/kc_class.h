@@ -35,15 +35,18 @@ class kc_class
             m_asi_num=0;
             m_kchfile_num=0;
             m_cache_size = 512* 1048576;
-            m_buckets_size = 1000000;
             m_dbpath="/opt/adfs/sdb1";
             m_asi_size =100; 
             m_kchfile_size=100000;
+
             m_tune_alignment_size=0;
             m_tune_fbp_size=10;
+            m_buckets_size = 1000000;
             m_tune_map_size=32 *1024*1024;
+
             m_cache_mode='n';
             m_max_node_count=55;
+
             now=time(0);
             tnow = localtime(&now);
             m_node_num=1;
