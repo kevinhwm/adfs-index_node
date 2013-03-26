@@ -20,6 +20,7 @@ typedef struct NodeDB
     char    path[1024];
 }NodeDB;
 
+
 #define NODE_INITIALIZED        0x55AA
 typedef struct NodeDBList
 {
@@ -33,10 +34,6 @@ typedef struct NodeDBList
     int (*create)(int, char *, int);
     void (*release)();
     void (*release_all)();
-    int (*push)();
-    int (*pop)();
     NodeDB * (*get)(int);
-}
-NodeDBList;
-
+}NodeDBList;
 

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <kclangc.h>
 
+
 // Note: see config.h for most nxweb #defined parameters
 #define NXWEB_LISTEN_HOST_AND_PORT ":8055"
 #define NXWEB_LISTEN_HOST_AND_PORT_SSL ":8056"
@@ -17,17 +18,18 @@
 
 #define SSL_PRIORITIES "NORMAL:+VERS-TLS-ALL:+COMP-ALL:-CURVE-ALL:+CURVE-SECP256R1"
 
+
 // Setup modules & handlers (this can be done from any file linked to nxweb):
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
 extern nxweb_handler status_handler;
-extern nxweb_handler isalive_handler;
-extern nxweb_handler monitor_handler;
+//extern nxweb_handler isalive_handler;
+//extern nxweb_handler monitor_handler;
 extern nxweb_handler delete_handler;
-extern nxweb_handler exist_handler;
-extern nxweb_handler gethistory_handler;
-extern nxweb_handler history_handler;
+//extern nxweb_handler exist_handler;
+//extern nxweb_handler gethistory_handler;
+//extern nxweb_handler history_handler;
 
 
 // This is sample handler (see modules/upload.c):
@@ -45,11 +47,9 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 // Command-line options:
 static const char* user_name=0;
 static const char* group_name=0;
-static int port=8055;
+static int port=9527;
 static int ssl_port=8056;
 
-KCDB* g_kcdb;
-int g_MaxUploadSize = 200 * 1024*1024;
 
 // Server main():
 
@@ -77,16 +77,13 @@ static void server_main()
 
     // Go!
     nxweb_run();
-    if( g_kcdb)
-    {
-        kcdbclose( g_kcdb );
-        g_kcdb = NULL;
-        printf("exit\n");
-    }
+
+    printf("exit\n");
 }
 
 
-static void show_help(void) {
+static void show_help(void) 
+{
     printf( "usage:    adfsnode <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
@@ -110,7 +107,7 @@ static void show_help(void) {
 
             "\n"
             "example:  adfsnode -d -l adfsnode_error_log\n\n"
-          );
+            );
 }
 
 
@@ -121,7 +118,7 @@ int main(int argc, char** argv)
     const char* work_dir=0;
     const char* log_file=0;
     const char* pid_file="adfsnode.pid";
-    
+
     unsigned long mem_size = 512;                   // memory size
     unsigned long max_file_size = 200 * 1024*1024;  // max file size per sample 
     char * db_path = "/opt/adfs/sdb1";
@@ -129,7 +126,6 @@ int main(int argc, char** argv)
     unsigned long max_file_num = 100000;            // max number of file in each kchfile
 
     int c;
-    //while ((c=getopt(argc, argv, "hvdsm:M:w:l:p:u:g:P:x:S:")) != -1) 
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:S:m:M:x:b:n:")) != -1) 
     {
         switch (c) 
@@ -211,11 +207,14 @@ int main(int argc, char** argv)
         }
     }
 
-    if ((argc-optind)>0) { fprintf(stderr, "too many arguments\n\n"); show_help();
+    if ((argc-optind)>0) 
+    {
+        fprintf(stderr, "too many arguments\n\n"); show_help();
         return EXIT_FAILURE;
     }
 
-    if (shutdown) {
+    if (shutdown) 
+    {
         nxweb_shutdown_daemon(work_dir, pid_file);
         return EXIT_SUCCESS;
     }
@@ -223,13 +222,15 @@ int main(int argc, char** argv)
     if (an_init(db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
         return EXIT_FAILURE;
 
-    if (daemon) {
-        if (!log_file) {
+    if (daemon) 
+    {
+        if (!log_file) 
             log_file="adfsnode_error_log";
-        }
+
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
-    else {
+    else 
+    {
         nxweb_run_normal(work_dir, log_file, pid_file, server_main);
     }
     return EXIT_SUCCESS;
