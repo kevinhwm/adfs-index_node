@@ -1,10 +1,10 @@
-#include "nxweb/nxweb.h"
-#include "../post_parser/multipart_parser.h"
-#include <kclangc.h>
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+
+#include "nxweb/nxweb.h"
+#include "../post_parser/multipart_parser.h"
+#include <kclangc.h>
 
 
 static const char upload_handler_key; // variable's address only matters
@@ -160,7 +160,14 @@ static nxweb_result upload_on_request(
         }
     }
 
-    nxweb_response_printf(resp, "<form method='post' enctype='multipart/form-data'>File(s) to upload: <input type='file' multiple name='uploadedfile' /> </br>  <input type='submit' value='UploadFile!' /></form>\n");
+    nxweb_response_printf(resp, ""
+            "<form method='post' enctype='multipart/form-data'>"
+            "File(s) to upload: "
+            "<input type='file' multiple name='uploadedfile' />"
+            "</br>"
+            "<input type='submit' value='UploadFile!' />"
+            "</form>\n");
+
     nxweb_response_printf(resp, ""
             "<form method=\"POST\" enctype=\"multipart/form-data\" action=\"\">"
             "upname:<br />"

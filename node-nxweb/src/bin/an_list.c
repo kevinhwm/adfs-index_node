@@ -152,6 +152,6 @@ static NodeDB * node_get(NodeDBList *this, int id)
         tmp = tmp->next;
     }
 
-    return ADFS_ERROR
+    return NULL;
 }
 
