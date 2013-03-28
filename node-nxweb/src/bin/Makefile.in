@@ -50,7 +50,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = nodeserver$(EXEEXT)
+bin_PROGRAMS = adfsnode$(EXEEXT)
 subdir = src/bin
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -64,14 +64,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_nodeserver_OBJECTS = main.$(OBJEXT) multipart_parser.$(OBJEXT) \
-	upload.$(OBJEXT) download.$(OBJEXT)
-nodeserver_OBJECTS = $(am_nodeserver_OBJECTS)
+am_adfsnode_OBJECTS = main.$(OBJEXT) multipart_parser.$(OBJEXT) \
+	an_list.$(OBJEXT) adfsnode.$(OBJEXT) upload.$(OBJEXT) \
+	download.$(OBJEXT)
+adfsnode_OBJECTS = $(am_adfsnode_OBJECTS)
 am__DEPENDENCIES_1 =
-nodeserver_DEPENDENCIES = $(am__DEPENDENCIES_1)
-nodeserver_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(nodeserver_LDFLAGS) $(LDFLAGS) -o $@
+adfsnode_DEPENDENCIES = $(am__DEPENDENCIES_1)
+adfsnode_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(adfsnode_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include/nxweb
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -85,8 +86,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(nodeserver_SOURCES)
-DIST_SOURCES = $(nodeserver_SOURCES)
+SOURCES = $(adfsnode_SOURCES)
+DIST_SOURCES = $(adfsnode_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -223,11 +224,11 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = -pthread $(GNUTLS_CFLAGS) $(IMAGEMAGICK_CFLAGS)
-nodeserver_SOURCES = main.c post_parser/multipart_parser.c post_parser/multipart_parser.h \
-	modules/upload.c modules/download.c
+adfsnode_SOURCES = main.c post_parser/multipart_parser.c post_parser/multipart_parser.h \
+	an_list.c adfsnode.c modules/upload.c modules/download.c
 
-nodeserver_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
-nodeserver_LDFLAGS = -L$(top_builddir)/src/lib
+adfsnode_LDADD = -lnxweb -lkyotocabinet $(NXWEB_EXT_LIBS)
+adfsnode_LDFLAGS = -L$(top_builddir)/src/lib
 all: all-am
 
 .SUFFIXES:
@@ -308,9 +309,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-nodeserver$(EXEEXT): $(nodeserver_OBJECTS) $(nodeserver_DEPENDENCIES) $(EXTRA_nodeserver_DEPENDENCIES) 
-	@rm -f nodeserver$(EXEEXT)
-	$(nodeserver_LINK) $(nodeserver_OBJECTS) $(nodeserver_LDADD) $(LIBS)
+adfsnode$(EXEEXT): $(adfsnode_OBJECTS) $(adfsnode_DEPENDENCIES) $(EXTRA_adfsnode_DEPENDENCIES) 
+	@rm -f adfsnode$(EXEEXT)
+	$(adfsnode_LINK) $(adfsnode_OBJECTS) $(adfsnode_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -318,6 +319,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adfsnode.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/an_list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/download.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/multipart_parser.Po@am__quote@
