@@ -41,6 +41,7 @@ unsigned long g_MaxUploadSize;
 
 KCDB * index_db = NULL;
 
+char nodedb_path[1024] = {0};
 unsigned long kc_apow = 0;              // sets the power of the alignment of record size
 unsigned long kc_fbp  = 10;             // sets the power of the capacity of the free block pool
 unsigned long kc_bnum = 1000000;        // sets the number of buckets of the hash table
@@ -68,6 +69,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
+    an_exit(g_node_list);
     printf("nodeserver Exit!\n");
 }
 
@@ -108,7 +110,7 @@ int main(int argc, char** argv)
 
     unsigned long mem_size = 512;                   // memory size
     unsigned long max_file_size = 200 * 1024*1024;  // max file size per sample 
-    char * db_path = "/opt/adfs/sdb1";
+    char * db_path = "./";
     unsigned long max_node_num = 55;                // max number of kchfile
     unsigned long max_file_num = 100000;            // max number of file in each kchfile
 
@@ -167,6 +169,11 @@ int main(int argc, char** argv)
                 }
             case 'x':
                 db_path = optarg;
+                if (strlen(db_path) > 256)
+                {
+                    printf("path is too long\n");
+                    return 0;
+                }
                 break;
             case 'b':
                 max_node_num = atoi(optarg);
@@ -199,6 +206,7 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
+    printf("call an_init\n");
     if (an_init(g_node_list, db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
         return EXIT_FAILURE;
 
