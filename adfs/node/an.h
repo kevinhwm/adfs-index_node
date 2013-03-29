@@ -41,7 +41,7 @@ typedef struct NodeDBList
     void (*release)(struct NodeDBList *, int);
     void (*release_all)(struct NodeDBList *);
     struct NodeDB * (*get)(struct NodeDBList *, int);
-    ADFS_RESULT switch_state(struct NodeDBList *, int, ADFS_NODE_STATE);
+    ADFS_RESULT (*switch_state)(struct NodeDBList *, int, ADFS_NODE_STATE);
 }NodeDBList;
 
 

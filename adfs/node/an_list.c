@@ -13,7 +13,7 @@ static NodeDB * node_get(NodeDBList * _this, int id);
 static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE state);
 
 // just function
-static ADFS_RESULT db_create(KCDBi * db, char * path, ADFS_NODE_STATE state);
+static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state);
 
 
 ADFS_RESULT InitNodeDBList(NodeDBList * _this)
@@ -170,14 +170,11 @@ static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE 
     NodeDB *tmp = node_get(_this, id);
     kcdbclose(tmp->db);
     tmp->state = state;
-    if (db_create(tmp->db, tmp->path, tmp->state) == ADFS_ERROR)
-        return ADFS_ERROR;
-
-    return ADFS_OK;
+    return (db_create(tmp->db, tmp->path, tmp->state));
 }
 
 
-static ADFS_RESULT db_create(KCDBi * db, char * path, ADFS_NODE_STATE state)
+static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state)
 {
     switch (state)
     {
@@ -186,10 +183,11 @@ static ADFS_RESULT db_create(KCDBi * db, char * path, ADFS_NODE_STATE state)
                 return ADFS_ERROR;
             break;
         case S_READ_WRITE:
-            if (!kcdbopen(db, path, KCOCREATE|KCOWRITE|KCOTRYLOCK))
+            if (!kcdbopen(db, path, KCOCREATE|KCOWRITER|KCOTRYLOCK))
                 return ADFS_ERROR;
             break;
     }
 
     return ADFS_OK;
 }
+
