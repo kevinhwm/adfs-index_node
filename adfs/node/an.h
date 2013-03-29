@@ -34,7 +34,6 @@ typedef struct NodeDBList
     struct NodeDB * head;
     struct NodeDB * tail;
     long number;
-    long initialized;
 
     // functions
     ADFS_RESULT (*create)(struct NodeDBList *, int, char *, int, ADFS_NODE_STATE);
@@ -42,21 +41,20 @@ typedef struct NodeDBList
     void (*release_all)(struct NodeDBList *);
     struct NodeDB * (*get)(struct NodeDBList *, int);
     ADFS_RESULT (*switch_state)(struct NodeDBList *, int, ADFS_NODE_STATE);
+
+    // private
+    long initialized;
 }NodeDBList;
 
 
-// function.c
-int count_kch(char * dir);
-ADFS_RESULT check_name(char * name);
-
-
 // an_list.c
-ADFS_RESULT InitNodeDBList(NodeDBList *_this);
-
+ADFS_RESULT init_nodedb_list(NodeDBList *_this);
 
 // an.c
-ADFS_RESULT an_init(NodeDBList *node_list, char *dbpath, unsigned long cache_size, 
+ADFS_RESULT an_init(NodeDBList * node_list, char *dbpath, unsigned long cache_size, 
         unsigned long kchfile_size, unsigned long max_node_count);
+
+void an_exit(NodeDBList * node_list);
 
 ADFS_RESULT split_db(NodeDBList * node_list, int max_node_num);
 

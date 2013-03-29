@@ -10,13 +10,13 @@ static ADFS_RESULT node_create(NodeDBList * _this, int id, char *path, int path_
 static void node_release(NodeDBList * _this, int id);
 static void node_release_all(NodeDBList * _this);
 static NodeDB * node_get(NodeDBList * _this, int id);
-static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE state);
+static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE des_state);
 
 // just function
 static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state);
 
 
-ADFS_RESULT InitNodeDBList(NodeDBList * _this)
+ADFS_RESULT init_nodedb_list(NodeDBList * _this)
 {
     if (_this)
     {
@@ -33,7 +33,7 @@ ADFS_RESULT InitNodeDBList(NodeDBList * _this)
 }
 
 
-
+// just create, no check.
 static ADFS_RESULT node_create(NodeDBList *_this, int id, char *path, int path_len, ADFS_NODE_STATE state)
 {
     NodeDB * tmp = _this->head;
@@ -61,7 +61,7 @@ static ADFS_RESULT node_create(NodeDBList *_this, int id, char *path, int path_l
 
     if (state == S_READ_ONLY)
     {
-        if (!kcdbopen(new_node->db, path, KCOCREATE|KCOREADER))
+        if (!kcdbopen(new_node->db, path, KCOREADER))
         {
             free(new_node);
             return ADFS_ERROR;
@@ -165,11 +165,15 @@ static NodeDB * node_get(NodeDBList *_this, int id)
 }
 
 
-static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE state)
+static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE des_state)
 {
     NodeDB *tmp = node_get(_this, id);
+    if (tmp == NULL)
+        return ADFS_ERROR;
+
     kcdbclose(tmp->db);
     tmp->state = state;
+
     return (db_create(tmp->db, tmp->path, tmp->state));
 }
 
