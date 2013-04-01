@@ -7,11 +7,12 @@
 #include <stdio.h>
 
 
-static const char upload_handler_key; // variable's address only matters
+static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
 extern KCDB* g_kcdb;
 extern unsigned long g_MaxUploadSize;
+
 
 typedef struct _upload_file_object
 {
@@ -209,6 +210,7 @@ static void upload_request_data_finalize(
     }
 }
 
+
 static nxweb_result upload_on_post_data(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
@@ -218,7 +220,7 @@ static nxweb_result upload_on_post_data(
 
     if (req->content_length > g_MaxUploadSize) 
     {
-        nxweb_send_http_error(resp, 413, "Request Entity Too Large");
+        nxweb_send_http_error(resp, 413, "Request entity is too large");
         resp->keep_alive = 0; // close connection
         nxweb_start_sending_response(conn, resp);
         return NXWEB_OK;

@@ -12,19 +12,22 @@
 
 
 extern nxweb_handler upload_file_handler;
-extern nxweb_handler download_handler;
-extern nxweb_handler status_handler;
+//extern nxweb_handler download_handler;
+//extern nxweb_handler status_handler;
 //extern nxweb_handler isalive_handler;
 //extern nxweb_handler monitor_handler;
-extern nxweb_handler delete_handler;
+//extern nxweb_handler delete_handler;
 //extern nxweb_handler exist_handler;
 //extern nxweb_handler gethistory_handler;
 //extern nxweb_handler history_handler;
 
 
 NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
-NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); //NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); //NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
-NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
+//NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
+//NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
+//NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
+//NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
+//NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 //NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000);
 //NXWEB_SET_HANDLER(gethistory, "/gethistory", &gethistory_handler, .priority=1000);
 //NXWEB_SET_HANDLER(history, "/history", &history_handler, .priority=1000);
@@ -36,8 +39,6 @@ static const char* group_name=0;
 static int port=9527;
 static int ssl_port=8056;
 
-KCDB * g_kcdb;
-unsigned long g_MaxUploadSize;
 
 KCDB * index_db = NULL;
 
@@ -47,7 +48,7 @@ unsigned long kc_fbp  = 10;             // sets the power of the capacity of the
 unsigned long kc_bnum = 1000000;        // sets the number of buckets of the hash table
 unsigned long kc_msiz = 32;             // sets the size of the internal memory-mapped region
 
-NodeDBList *g_node_list = NULL;
+NodeDBList g_node_list;
 
 
 // Server main():
@@ -69,8 +70,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    an_exit(g_node_list);
-    printf("nodeserver Exit!\n");
+    an_exit(&g_node_list);
 }
 
 
@@ -206,9 +206,11 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
+    /////////////////////////////////////////////////////////////////////////////////
     printf("call an_init\n");
-    if (an_init(g_node_list, db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
+    if (an_init(&g_node_list, db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
         return EXIT_FAILURE;
+    /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon) 
     {

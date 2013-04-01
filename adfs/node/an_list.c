@@ -36,6 +36,7 @@ ADFS_RESULT init_nodedb_list(NodeDBList * _this)
 // just create, no check.
 static ADFS_RESULT node_create(NodeDBList *_this, int id, char *path, int path_len, ADFS_NODE_STATE state)
 {
+    printf("%lu, %lu, %lu", _this, _this->head, id);
     NodeDB * tmp = _this->head;
     while (tmp)
     {
@@ -109,7 +110,7 @@ static void node_release(NodeDBList *_this, int id)
             _this->head = p->next;
             _this->head->pre = NULL;
         }
-        if (p == _this->tail)
+        else if (p == _this->tail)
         {
             _this->tail = p->pre;
             _this->tail->next = NULL;
@@ -124,6 +125,7 @@ static void node_release(NodeDBList *_this, int id)
         kcdbdel(p->db);
         free(p);
         _this->number -= 1;
+
         break;
     }
 
@@ -133,18 +135,14 @@ static void node_release(NodeDBList *_this, int id)
 
 static void node_release_all(NodeDBList *_this)
 {
-    NodeDB *p = _this->tail;
-    while (p)
+    while (_this->tail)
     {
-        NodeDB *tmp = p;
-        p = p->pre;
-        _this->tail = p;
-        _this->tail->next = NULL;
+        NodeDB *tmp = _this->tail;
+        _this->tail = _this->tail->pre;
         
         kcdbclose(tmp->db);
         kcdbdel(tmp->db);
         free(tmp);
-        _this->number -= 1;
     }
 
     return ;
@@ -172,7 +170,7 @@ static ADFS_RESULT node_switch_state(NodeDBList *_this, int id, ADFS_NODE_STATE 
         return ADFS_ERROR;
 
     kcdbclose(tmp->db);
-    tmp->state = state;
+    tmp->state = des_state;
 
     return (db_create(tmp->db, tmp->path, tmp->state));
 }

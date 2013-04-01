@@ -56,10 +56,11 @@ ADFS_RESULT an_init(NodeDBList * pnl, char *db_path,
 
     printf("an_init-20\n");
 
+    printf("%d\n", node_num);
     for (int i=1; i <= node_num; i++)
     {
         memset(path, 0, sizeof(path));
-        if (snprintf(path, sizeof(path), "%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+        if (snprintf(path, sizeof(path), "%s/%04d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
                     nodedb_path, i, kc_apow, kc_fbp, kc_bnum*3, kc_msiz) >= sizeof(path))
         {
             return ADFS_ERROR;
@@ -67,11 +68,14 @@ ADFS_RESULT an_init(NodeDBList * pnl, char *db_path,
 
         if (i < node_num)
         {
+            printf("create ro db file\n");
             if (pnl->create(pnl, i, path, strlen(path), S_READ_ONLY) == ADFS_ERROR)
                 return ADFS_ERROR;
         }
         else
         {
+            printf("create rw db file\n");
+            printf("%lu\n", pnl);
             if (pnl->create(pnl, i, path, strlen(path), S_READ_WRITE) == ADFS_ERROR)
                 return ADFS_ERROR;
         }
