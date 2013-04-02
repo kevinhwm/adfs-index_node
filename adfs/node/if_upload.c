@@ -10,8 +10,8 @@
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
-extern KCDB* g_kcdb;
-extern unsigned long g_MaxUploadSize;
+//extern KCDB* g_kcdb;
+//extern unsigned long g_MaxUploadSize;
 
 
 typedef struct _upload_file_object
@@ -131,28 +131,24 @@ static nxweb_result upload_on_request(
         ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
         nxweb_parse_request_parameters( req, 0 );
-        const char * over_write = nx_simple_map_get_nocase( req->parameters, "overwrite" );
 
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        if ( strlen( ufo->filename ) > 0 && ufo->file_complete )
+        if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
-            {
-                nxweb_response_printf( resp, "store backend db failed.\n" );
-            }
+            //if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
+            if ( !an_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) )
+                nxweb_response_printf( resp, "Failed\n" );
             else
-            {
                 nxweb_response_printf( resp, "OK\n");
-                nxweb_response_printf( resp, "file name:%s\n", ufo->filename );
-                nxweb_response_printf( resp, "file length:%d\n", ufo->file_len );
-            }
         }
+        /*
         else
             printf("file not received:filename(%s)\n", ufo->filename );
+        */
 
         if ( ufo->file_ptr )
         {

@@ -14,26 +14,30 @@ typedef int ADFS_NODE_STATE;
 #define S_READ_ONLY         0
 #define S_READ_WRITE        1
 
+#define MAX_FILE_NUMBER     100000
+
 
 typedef struct NodeDB
 {
     struct NodeDB * pre;
     struct NodeDB * next;
 
-    int     id;
-    int     state;
-    KCDB *  db;
-    char    path[1024];
+    int             id;
+    int             state;
+    KCDB        *   db;
+    char            path[1024];
+    unsigned long   number;
 }NodeDB;
 
 
-#define NODE_INITIALIZED        0x55AA
+#define NODE_INITIALIZED    0x55AA
+
 typedef struct NodeDBList
 {
     // data
     struct NodeDB * head;
     struct NodeDB * tail;
-    long number;
+    unsigned long   number;
 
     // functions
     ADFS_RESULT (*create)(struct NodeDBList *, int, char *, int, ADFS_NODE_STATE);
@@ -51,10 +55,6 @@ typedef struct NodeDBList
 ADFS_RESULT init_nodedb_list(NodeDBList *_this);
 
 // an.c
-ADFS_RESULT an_init(NodeDBList * node_list, char *dbpath, unsigned long cache_size, 
-        unsigned long kchfile_size, unsigned long max_node_count);
-
-void an_exit(NodeDBList * node_list);
-
-ADFS_RESULT split_db(NodeDBList * node_list, int max_node_num);
+ADFS_RESULT an_init(char *dbpath, unsigned long cache_size);
+void an_exit();
 

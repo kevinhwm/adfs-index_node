@@ -8,31 +8,30 @@
 #include "an.h"
 
 
-extern KCDB * index_db;
-
-extern char nodedb_path[1024];
-extern unsigned long kc_apow;
-extern unsigned long kc_fbp;
-extern unsigned long kc_bnum;
-extern unsigned long kc_msiz;
+static NodeDBList adfs_node_list;
+static KCDB * index_db = NULL;
+static char nodedb_path[1024] = {0};
+static unsigned long kc_apow;
+static unsigned long kc_fbp;
+static unsigned long kc_bnum;
+static unsigned long kc_msiz;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static ADFS_RESULT split_db(NodeDBList * pnl);
 static int count_kch(char * dir);
 static ADFS_RESULT check_kch_name(char * name);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ADFS_RESULT an_init(NodeDBList * pnl, char *db_path, 
-        unsigned long mem_size, unsigned long max_file_num, unsigned long max_node_num)
+ADFS_RESULT an_init(char *db_path, unsigned long mem_size) 
 {
     printf("an_init-0\n");
 
-    int node_num = count_kch(db_path);
-    char cache_mode = 'n';
-    int init_mode = 1;
+    NodeDBList * pnl = &adfs_node_list;
 
+    int node_num = count_kch(db_path);
     strncpy(nodedb_path, db_path, sizeof(nodedb_path));
     kc_msiz = mem_size * 1024*1024;
 
@@ -60,7 +59,7 @@ ADFS_RESULT an_init(NodeDBList * pnl, char *db_path,
     for (int i=1; i <= node_num; i++)
     {
         memset(path, 0, sizeof(path));
-        if (snprintf(path, sizeof(path), "%s/%04d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+        if (snprintf(path, sizeof(path), "%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
                     nodedb_path, i, kc_apow, kc_fbp, kc_bnum*3, kc_msiz) >= sizeof(path))
         {
             return ADFS_ERROR;
@@ -83,29 +82,49 @@ ADFS_RESULT an_init(NodeDBList * pnl, char *db_path,
 
     printf("an_init-30\n");
 
-    //get size. if too big, split it
-    int64_t file_num = kcdbcount( pnl->tail->db );
-    if (file_num < 0)
-        return ADFS_ERROR;
-    if (file_num >= max_file_num)
-        split_db(pnl, max_node_num);
+    return ADFS_OK;
+}
 
-    printf("an_init-40\n");
+
+void an_exit() 
+{
+    NodeDBList * pnl = &adfs_node_list;
+
+    kcdbclose(index_db);
+    kcdbdel(index_db);
+    pnl->release_all(pnl);
+    return;
+}
+
+
+ADFS_RESULT an_save(const char *fname, size_t fname_len, const char * fp, size_t fp_len)
+{
+    // check index
+
+    // save in db
+    NodeDBList *pnl = &adfs_node_list;
+
+    NodeDB * node = pnl->tail;
+    if (node->number >= MAX_FILE_NUM)
+    {
+        if (split_db(pnl) == ADFS_ERROR)
+            return ADFS_ERROR;
+
+        node = pnl->tail;
+    }
+
+    if (kcdbset(node->db, fname, fname_len, fp, fp_len))
+    {
+        //
+    }
 
     return ADFS_OK;
 }
 
 
-void an_exit(NodeDBList * node_list)
-{
-    kcdbclose(index_db);
-    kcdbdel(index_db);
-    node_list->release_all(node_list);
-    return;
-}
-
-
-ADFS_RESULT split_db(NodeDBList * pnl, int max_node_num)
+////////////////////////////////////////////////////////////////////////////////
+// private
+static ADFS_RESULT split_db(NodeDBList * pnl)
 {
     NodeDB * last_node = pnl->tail;
 
@@ -123,11 +142,10 @@ ADFS_RESULT split_db(NodeDBList * pnl, int max_node_num)
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-
+// private
 static int count_kch(char * dir)
 {
-    int total_count=0;
+    int count=0;
 
     DIR* dirp;
     struct dirent* direntp;
@@ -138,19 +156,19 @@ static int count_kch(char * dir)
         while ((direntp = readdir(dirp)) != NULL)
         {
             if (check_kch_name(direntp->d_name) == ADFS_OK)
-                total_count++;
+                count++;
         }
-
         closedir( dirp );
-        if (total_count>0)
-            return total_count;
+
+        if (count>0)
+            return count;
         else
             return 1;
     }
     return 0;
 }
 
-
+// private
 static ADFS_RESULT check_kch_name(char * name)
 {
     if (name == NULL)
@@ -174,5 +192,4 @@ static ADFS_RESULT check_kch_name(char * name)
 
     return ADFS_OK;
 }
-
 

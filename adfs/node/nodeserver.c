@@ -40,17 +40,6 @@ static int port=9527;
 static int ssl_port=8056;
 
 
-KCDB * index_db = NULL;
-
-char nodedb_path[1024] = {0};
-unsigned long kc_apow = 0;              // sets the power of the alignment of record size
-unsigned long kc_fbp  = 10;             // sets the power of the capacity of the free block pool
-unsigned long kc_bnum = 1000000;        // sets the number of buckets of the hash table
-unsigned long kc_msiz = 32;             // sets the size of the internal memory-mapped region
-
-NodeDBList g_node_list;
-
-
 // Server main():
 static void server_main() 
 {
@@ -70,7 +59,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    an_exit(&g_node_list);
+    an_exit();
 }
 
 
@@ -89,10 +78,7 @@ static void show_help(void)
             " -v       show version\n"
 
             " -m mem   set memory map size in MB (default: 512)\n"
-            " -M fMax  set file max size in MB   (default: 80)\n"
             " -x path  database file   (default: /opt/adfs/sdb1)\n"
-            " -b size  a disk maximum kchfile count.\n"
-            " -n size  size per kchfile (default: 100000)\n"
 
             "\n"
             "example:  nodeserver -d -l nodeserver_error_log\n\n"
@@ -108,14 +94,11 @@ int main(int argc, char** argv)
     const char* log_file=0;
     const char* pid_file="nodeserver.pid";
 
-    unsigned long mem_size = 512;                   // memory size
-    unsigned long max_file_size = 200 * 1024*1024;  // max file size per sample 
+    unsigned long mem_size = 512;
     char * db_path = "./";
-    unsigned long max_node_num = 55;                // max number of kchfile
-    unsigned long max_file_num = 100000;            // max number of file in each kchfile
 
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:m:M:x:b:n:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:m:x:")) != -1) 
     {
         switch (c) 
         {
@@ -123,8 +106,8 @@ int main(int argc, char** argv)
                 show_help();
                 return 0;
             case 'v':
-                printf( "version:      nodeserver - 3.0.0"  "\n"
-                        "build-date:   " __DATE__ " " __TIME__ "\n"
+                printf( "version:   nodeserver - 3.0.0"  "\n"
+                        "build:     " __DATE__ " " __TIME__ "\n"
                       );
                 return 0;
             case 'd':
@@ -161,12 +144,6 @@ int main(int argc, char** argv)
                     fprintf(stderr, "invalid mem size: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
-            case 'M':
-                max_file_size = atoi(optarg);
-                if (max_file_size) {
-                    fprintf(stderr, "invalid max file size: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
             case 'x':
                 db_path = optarg;
                 if (strlen(db_path) > 256)
@@ -175,18 +152,6 @@ int main(int argc, char** argv)
                     return 0;
                 }
                 break;
-            case 'b':
-                max_node_num = atoi(optarg);
-                if (max_node_num) {
-                    fprintf(stderr, "invalid max node number: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
-            case 'n':
-                max_file_num = atoi(optarg);
-                if (max_file_num) {
-                    fprintf(stderr, "invalid max file number: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
             case '?':
                 fprintf(stderr, "unkown option: -%c\n\n", optopt);
                 show_help();
@@ -208,7 +173,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     printf("call an_init\n");
-    if (an_init(&g_node_list, db_path, mem_size, max_file_num, max_node_num) == ADFS_ERROR)
+    if (an_init(db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////
 
