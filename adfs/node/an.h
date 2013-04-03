@@ -41,18 +41,17 @@ typedef struct NodeDB
 }NodeDB;
 
 
-#define NODE_INITIALIZED    0x55AA
-
 typedef struct ANNameSpace
 {
     // data
-    char name[MAX_PATH_LENGTH];
-    KCDB * index_db;
+    struct ANNameSpace * pre;
+    struct ANNameSpace * next;
     struct NodeDB * head;
     struct NodeDB * tail;
 
-    unsigned long   number;
-    long initialized;
+    char name[MAX_PATH_LENGTH];
+    KCDB * index_db;
+    unsigned long number;
 
     // functions
     ADFS_RESULT (*create)(struct ANNameSpace *, int, char *, int, ADFS_NODE_STATE);
@@ -67,24 +66,22 @@ typedef struct ANManager
 {
     char path[MAX_PATH_LENGTH];
     struct ANNameSpace * head;
+    struct ANNameSpace * tail;
 
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
     unsigned long kc_msiz;
 
-    // functions
-    ADFS_RESULT (*scan)(char *path);
 }ANManager;
 
 
 // an_namespace.c
-ADFS_RESULT ns_init(ANNameSpace *_this);
+ADFS_RESULT ns_init(ANNameSpace *_this, const char * name_space);
 
 // an_manager.c
-ADFS_RESULT mgr_init(char * dbpath, unsigned long cache_size);
+ADFS_RESULT mgr_init(const char * dbpath, unsigned long cache_size);
+ANNameSpace * mgr_create(const char *name_space);
 void mgr_exit();
-ADFS_RESULT mgr_save(const char * fname, size_t fname_len, void * fp, size_t fp_len);
-void mgr_get_file(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size);
-void mgr_get_namespace();
+ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 

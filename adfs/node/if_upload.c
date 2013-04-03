@@ -112,9 +112,11 @@ static nxweb_result upload_on_request(
 { 
     printf("--- upload_on_request\n");
 
+    nxweb_parse_request_parameters(req, 0);
+    const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
+
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
-
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
@@ -138,7 +140,7 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            if ( mgr_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            if ( mgr_save(name_space, ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_response_printf( resp, "Failed\n" );
         }
         else

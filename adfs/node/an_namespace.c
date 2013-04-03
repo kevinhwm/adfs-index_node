@@ -17,7 +17,7 @@ static ADFS_RESULT ns_switch_state(ANNameSpace *_this, int id, ADFS_NODE_STATE d
 static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state);
 
 
-ADFS_RESULT ns_init(ANNameSpace * _this)
+ADFS_RESULT ns_init(ANNameSpace * _this, const char *name_space)
 {
     if (_this)
     {
@@ -26,8 +26,8 @@ ADFS_RESULT ns_init(ANNameSpace * _this)
         _this->release = ns_release;
         _this->release_all = ns_release_all;
         _this->switch_state = ns_switch_state;
+        strncpy(_this->name, name_space, sizeof(_this->name));
 
-        _this->initialized = NODE_INITIALIZED;
         return ADFS_OK;
     }
     return ADFS_ERROR;
@@ -78,7 +78,6 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, int id, char *path, int path_l
         _this->tail->next = new_node;
     else                        // list is empty, both head and tail are null.
         _this->head = new_node;
-
     _this->tail = new_node;     // whenever tail point to new node.
     _this->number += 1;
     return ADFS_OK;
