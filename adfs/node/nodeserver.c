@@ -12,7 +12,7 @@
 
 
 extern nxweb_handler upload_file_handler;
-//extern nxweb_handler download_handler;
+extern nxweb_handler download_handler;
 //extern nxweb_handler status_handler;
 //extern nxweb_handler isalive_handler;
 //extern nxweb_handler monitor_handler;
@@ -23,7 +23,7 @@ extern nxweb_handler upload_file_handler;
 
 
 NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
-//NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
+NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
@@ -59,7 +59,8 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    an_exit();
+    mgr_exit();
+    printf("ADFS-Node exit!\n");
 }
 
 
@@ -172,8 +173,8 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    printf("call an_init\n");
-    if (an_init(db_path, mem_size) == ADFS_ERROR)
+    printf("call mgr_init\n");
+    if (mgr_init(db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////
 

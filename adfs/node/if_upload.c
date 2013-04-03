@@ -138,7 +138,7 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            if ( an_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            if ( mgr_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_response_printf( resp, "Failed\n" );
         }
         else
@@ -155,23 +155,8 @@ static nxweb_result upload_on_request(
             "<form method='post' enctype='multipart/form-data'>"
             "File(s) to upload: "
             "<input type='file' multiple name='uploadedfile' />"
-            "</br>"
-            "<input type='submit' value='UploadFile!' />"
+            "<input type='submit' value='Upload' />"
             "</form>\n");
-
-    nxweb_response_printf(resp, ""
-            "<form method=\"POST\" enctype=\"multipart/form-data\" action=\"\">"
-            "upname:<br />"
-            "<input type=\"text\" name=\"upname\" />"
-            "</br>"
-            "data:<br/>"
-            "<textarea name=\"data\" cols=100 rows=20 >"
-            "input your data here..."
-            "</textarea>"
-            "<br />"
-            "<input type=\"submit\" value=\'UploadForm\' />"
-            "</form>"
-            );
 
     return NXWEB_OK;
 }
@@ -212,12 +197,11 @@ static nxweb_result upload_on_post_data(
     memset( ufo, 0, sizeof( upload_file_object ) );
 
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, 
-            upload_request_data_finalize);
+    nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, upload_request_data_finalize);
 
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
-    ufo->post_boundary[0]='-';
-    ufo->post_boundary[1]='-';
+    ufo->post_boundary[0] = '-';
+    ufo->post_boundary[1] = '-';
 
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
     nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
