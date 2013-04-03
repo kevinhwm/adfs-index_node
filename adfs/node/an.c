@@ -97,13 +97,16 @@ void an_exit()
 }
 
 
-ADFS_RESULT an_save(const char *fname, size_t fname_len, const char * fp, size_t fp_len)
+ADFS_RESULT an_save(const char *fname, size_t fname_len, void * fp, size_t fp_len)
 {
-    // check index
+    if (fp_len > MAX_FILE_SIZE)
+        return ADFS_ERROR;
 
-    // save in db
+    if (index_db == NULL)
+        return ADFS_ERROR;
+
+    // check number and split db
     NodeDBList *pnl = &adfs_node_list;
-
     NodeDB * node = pnl->tail;
     if (node->number >= MAX_FILE_NUM)
     {
@@ -113,9 +116,29 @@ ADFS_RESULT an_save(const char *fname, size_t fname_len, const char * fp, size_t
         node = pnl->tail;
     }
 
-    if (kcdbset(node->db, fname, fname_len, fp, fp_len))
+    size_t info_len;
+    char * info = kcdbget(index_db, fname, fname_len, &info_len);
+    if (info != NULL)
     {
-        //
+        NodeDB * tmp = pnl->get(pnl, atoi(info));
+        kcfree(info);
+        if (tmp == NULL)
+            return ADFS_ERROR;
+        // save into db
+        if (!kcdbset(tmp->db, fname, fname_len, fp, fp_len))
+            return ADFS_ERROR;
+    }
+    else
+    {
+        // save into db
+        if (!kcdbset(pnl->tail->db, fname, fname_len, fp, fp_len))
+            return ADFS_ERROR;
+
+        // save into index
+        char buf[16] = {0};
+        sprintf(buf, "%d", pnl->tail->id);
+        if (!kcdbset(index_db, fname, fname_len, buf, strlen(buf)))
+            return ADFS_ERROR;
     }
 
     return ADFS_OK;

@@ -64,7 +64,7 @@ static ADFS_RESULT node_create(NodeDBList * _this, int id, char *path, int path_
     new_node->state = state;
     new_node->db = kcdbnew();
 
-    if (db_create(new->db, path, state) == ADFS_ERROR)
+    if (db_create(new_node->db, path, state) == ADFS_ERROR)
     {
         free(new_node);
         return ADFS_ERROR;

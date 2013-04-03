@@ -1,11 +1,10 @@
-#include "nxweb/nxweb.h"
-#include "multipart_parser.h"
-#include <kclangc.h>
-
+#include <nxweb/nxweb.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-
+#include <kclangc.h>
+#include "multipart_parser.h"
+#include "an.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -139,16 +138,11 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            //if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
-            if ( !an_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) )
+            if ( an_save(ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_response_printf( resp, "Failed\n" );
-            else
-                nxweb_response_printf( resp, "OK\n");
         }
-        /*
         else
-            printf("file not received:filename(%s)\n", ufo->filename );
-        */
+            nxweb_response_printf( resp, "Failed\n" );
 
         if ( ufo->file_ptr )
         {
@@ -214,14 +208,6 @@ static nxweb_result upload_on_post_data(
 {
     printf("--- upload_on_post_data\n");
 
-    if (req->content_length > g_MaxUploadSize) 
-    {
-        nxweb_send_http_error(resp, 413, "Request entity is too large");
-        resp->keep_alive = 0; // close connection
-        nxweb_start_sending_response(conn, resp);
-        return NXWEB_OK;
-    }
-
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
 
@@ -234,7 +220,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[1]='-';
 
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxUploadSize);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

@@ -3,7 +3,7 @@
 
 CC = gcc
 CFLAGS = -std=c99 -Wl,-rpath=./
-LIBS = -lnxweb -lkyotocabinet -lz -lrt -pthread 
+LIBS = -lnxweb -lkyotocabinet -lrt
 
 TARGET = nodeserver
 OBJS = nodeserver.o an.o an_list.o multipart_parser.o if_upload.o 
