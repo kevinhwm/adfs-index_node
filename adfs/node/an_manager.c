@@ -35,8 +35,23 @@ ADFS_RESULT mgr_init(const char * conf_file, const char *path, unsigned long mem
     g_manager.kc_bnum = 1000000;
     g_manager.kc_msiz = mem_size *1024*1024;
 
+    // create default namespace
     if (mgr_create("default") == NULL)
         return ADFS_ERROR;
+
+    // read config file, create other namespaces
+    char buf[1024] = {0};
+    if ( !(get_conf(conf_file, "namespace_num", buf, sizeof(buf))) )
+        return ADFS_ERROR;
+    int num = atoi(buf);
+    for (int i=0; i<num; ++i)
+    {
+        char key[64] = {0};
+        sprintf(key, "namespace_%d", i);
+        get_conf(conf_file, key, buf, sizeof(buf));
+        if (mgr_create(buf) == NULL)
+            return ADFS_ERROR;
+    }
 
     return ADFS_OK;
 }
@@ -136,23 +151,23 @@ void mgr_exit()
 }
 
 
-ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
+ADFS_RESULT mgr_upload(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
 {
-    printf("mgr-save 0\n");
     if (fp_len > MAX_FILE_SIZE)
         return ADFS_ERROR;
 
-    printf("mgr-save 10\n");
-    ANNameSpace * pns = mgr_get_ns(name_space);
-    if (pns == NULL)
-        if ((pns = mgr_create(name_space)) == NULL)
-            return ADFS_ERROR;
+    ANNameSpace * pns = NULL;
+    if (name_space == NULL)
+        pns = mgr_get_ns("default");
+    else
+        pns = mgr_get_ns(name_space);
 
-    printf("mgr-save 20\n");
+    if (pns == NULL)
+        return ADFS_ERROR;
+
     if (pns->index_db == NULL)
         return ADFS_ERROR;
 
-    printf("mgr-save 30\n");
     // check number and split db
     NodeDB * node = pns->tail;
     if (node->number >= MAX_FILE_NUM)
@@ -163,7 +178,6 @@ ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_le
         node = pns->tail;
     }
 
-    printf("mgr-save 40\n");
     size_t info_len;
     char * info = kcdbget(pns->index_db, fname, fname_len, &info_len);
     if (info != NULL)
@@ -189,14 +203,44 @@ ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_le
             return ADFS_ERROR;
     }
 
-    printf("mgr-save 50\n");
     return ADFS_OK;
 }
 
 
-void mgr_get_file(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size)
+void mgr_download(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size)
 {
+    *ppfile_data = NULL;
+    *pfile_size = 0;
 
+    ANNameSpace * pns = NULL;
+    if (name_space == NULL)
+        pns = mgr_get_ns("default");
+    else
+        pns = mgr_get_ns(name_space);
+
+    if (pns == NULL)
+        return ;
+
+    if (pns->index_db == NULL)
+        return ;
+
+    size_t len = 0;
+    char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
+    if (id == NULL)
+        return;
+
+    printf("mgr-download fname:%s\n", fname);
+    printf("mgr-download id:%s\n", id);
+
+    NodeDB * pn = pns->get(pns, atoi(id));
+    if (pn == NULL)
+        printf("--------fail--------\n");
+
+    printf("mgr-download 60\n");
+    *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
+
+    printf("mgr-download 70\n");
+    kcfree(id);
     return ;
 }
 
@@ -280,13 +324,18 @@ static ADFS_RESULT check_kch_name(char * name)
 // private
 static ANNameSpace * mgr_get_ns(const char * name_space)
 {
+    printf("mgr-getns 1\n");
     ANNameSpace * tmp = g_manager.tail;
     while (tmp)
     {
+        static int a = 100;
+        printf("mgr-getns %d\n", a++);
+        printf("%s:%s\n", tmp->name, name_space);
         if (strcmp(tmp->name, name_space) == 0)
             return tmp;
         tmp = tmp->pre;
     }
 
+    printf("mgr-getns 2\n");
     return NULL;
 }

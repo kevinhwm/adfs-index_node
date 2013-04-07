@@ -3,16 +3,14 @@
 #include "an.h"
 
 
-static int parse(char *p, char *key, char *value);
-
 
 /*
- * example
+ * example:
+ *
  * char buf[2048] = {0};
  * get_conf("a.conf", "name", buf, sizeof(buf));
  * printf("[%d]%s\n", strlen(buf), buf);
  */
-
 
 int get_conf(const char * pfile, const char * target, char *value, size_t len)
 {
@@ -27,51 +25,26 @@ int get_conf(const char * pfile, const char * target, char *value, size_t len)
     {
         memset(key, 0, sizeof(key));
         memset(val, 0, sizeof(val));
-        if (parse(buf, key, val))
-        {
-            if (!strcmp(target, key))
-            {
-                if (strlen(val) >= len)
-                {
-                    res = 0;
-                    break;
-                }
-                else
-                {
-                    strncpy(value, val, len);
-                    res = 1;
-                    break;
-                }
-            }
-        }
-    }
+		if (!parse_conf(buf, key, val))
+			continue;
+		if (strcmp(target, key))
+			continue;
+
+		if (strlen(val) >= len)
+		{
+			res = 0;
+			break;
+		}
+		else
+		{
+			strncpy(value, val, len);
+			res = 1;
+			break;
+		}
+	}
 
     fclose(f);
     return res;
-}
-
-static int parse(char *line, char *key, char *value)
-{
-    trim_left(line);
-	if (line[0] == '#')
-		return 0;
-
-    char *pos, *tmp;
-    if ( !(pos = strstr(line, "=")) )
-        return 0;
-    else if ( (tmp = strstr(pos+1, "=")) )
-        return 0;
-
-    strncpy(key, line, pos-line);
-    strncpy(value, pos+1, strlen(pos+1));
-
-    trim_right(key);
-    if (strlen(key) == 0)
-        return 0;
-    trim_left(value);
-    trim_right(value);
-
-    return 1;
 }
 
 void trim_left(char * p)
@@ -100,5 +73,56 @@ void trim_right(char * p)
         else
             break;
     }
+}
+
+// parse config file, then get the value of specified key
+int parse_conf(char *line, char *key, char *value)
+{
+    trim_left(line);
+	if (line[0] == '#')
+		return 0;
+
+    char *pos, *tmp;
+    if ( !(pos = strstr(line, "=")) )
+        return 0;
+    else if ( (tmp = strstr(pos+1, "=")) )
+        return 0;
+
+    strncpy(key, line, pos-line);
+    strncpy(value, pos+1, strlen(pos+1));
+
+    trim_right(key);
+    if (strlen(key) == 0)
+        return 0;
+    trim_left(value);
+    trim_right(value);
+
+    return 1;
+}
+
+// parse url, then get real file name
+ADFS_RESULT parse_filename(char *str)
+{
+    char *pos = strstr(str, "?");
+    if (pos != NULL)
+        pos[0] = '\0';
+
+    int len = strlen(str);
+    if (len == 0)
+        return ADFS_ERROR;
+
+    if (str[len-1] == '/')
+        str[len-1] = '\0';
+
+    len = strlen(str);
+    if (len == 0)
+        return ADFS_ERROR;
+
+    int i = 0;
+    if (str[0] == '/')
+        for (i=1; i<=len; ++i)
+            str[i-1] = str[i];
+
+    return ADFS_OK;
 }
 

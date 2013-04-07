@@ -140,7 +140,12 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            if ( mgr_save(name_space, ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            //if ( mgr_upload(name_space, ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            char fname[2048] = {0};
+            strncpy(fname, req->path_info, sizeof(fname));
+            if (parse_filename(fname) == ADFS_ERROR)
+                nxweb_response_printf( resp, "Failed\n" );
+            else if ( mgr_upload(name_space, req->path_info, strlen(req->path_info), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_response_printf( resp, "Failed\n" );
         }
         else

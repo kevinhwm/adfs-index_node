@@ -48,6 +48,8 @@ static nxweb_result download_on_request(
     nxweb_parse_request_parameters( req, 0 );
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
     printf("download - 2\n");
+
+    /////
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, 0);
 
@@ -63,6 +65,7 @@ static nxweb_result download_on_request(
         if (fname[p-fname-1] == '/')
             fname[p-fname-1] = '\0';
     }
+    /////
 
     printf("path_info: %s\n", req->path_info);
     printf("fname: %s\n", fname);
@@ -70,7 +73,15 @@ static nxweb_result download_on_request(
 
     void *pfile_data = NULL;
     size_t file_size = 0;
-    mgr_get_file(fname, name_space, &pfile_data, &file_size);    // query db
+
+    /*
+    char fname[2048] = {0};
+    strncpy(fname, req->path_info, sizeof(fname));
+    if (parse_filename(fname) == ADFS_ERROR)
+        nxweb_response_printf( resp, "Failed\n" );
+    */
+
+    mgr_download(fname, name_space, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL)
     {
         nxweb_send_http_error(resp, 404, "Node: Failed");
