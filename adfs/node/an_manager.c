@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include <kclangc.h>
 #include "an.h"
 
@@ -16,7 +17,8 @@ static ANNameSpace * mgr_get_ns(const char * name_space);
 
 ANManager g_manager;
 
-ADFS_RESULT mgr_init(const char *path, unsigned long mem_size) 
+
+ADFS_RESULT mgr_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     memset(&g_manager, 0, sizeof(g_manager));
     if (strlen(path) > MAX_PATH_LENGTH)
@@ -41,27 +43,27 @@ ADFS_RESULT mgr_init(const char *path, unsigned long mem_size)
 
 ANNameSpace * mgr_create(const char *name_space) 
 {
-    printf("an_init-0\n");
+    printf("mgr-create 0\n");
 
     if (strlen(name_space) >= MAX_PATH_LENGTH)
         return NULL;
 
     ANManager *pm = &g_manager;
 
-    char path[MAX_PATH_LENGTH] = {0};
-    snprintf(path, sizeof(path), "%s/%s", pm->path, name_space);
+    char ns_path[MAX_PATH_LENGTH] = {0};
+    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
 
-    int node_num = count_kch(path);
+    int node_num = count_kch(ns_path);
 
     // index db of ADFS-Node
     char indexdb_path[1024] = {0};
-    if (sprintf(indexdb_path, "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-                path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz) >= sizeof(indexdb_path))
+    if (snprintf(indexdb_path, sizeof(indexdb_path), "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+                ns_path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz) >= sizeof(indexdb_path))
     {
         return NULL;
     }
     
-    printf("an_init-10\n");
+    printf("mgr-create 10\n");
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
     ns_init(pns, name_space);
@@ -75,15 +77,15 @@ ANNameSpace * mgr_create(const char *name_space)
     }
 
     // node db of ADFS-Node
-    printf("an_init-20\n");
+    printf("mgr-create 20\n");
 
     printf("%d\n", node_num);
     char tmp_path[MAX_PATH_LENGTH] = {0};
     for (int i=1; i <= node_num; i++)
     {
-        memset(path, 0, sizeof(path));
+        memset(tmp_path, 0, sizeof(tmp_path));
         if (snprintf(tmp_path, sizeof(tmp_path), "%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-                    path, i, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(tmp_path))
+                    ns_path, i, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(tmp_path))
         {
             return NULL;
         }
@@ -97,13 +99,12 @@ ANNameSpace * mgr_create(const char *name_space)
         else
         {
             printf("create rw db file\n");
-            printf("%lu\n", pns);
             if (pns->create(pns, i, tmp_path, strlen(tmp_path), S_READ_WRITE) == ADFS_ERROR)
                 return NULL;
         }
     }
 
-    printf("an_init-30\n");
+    printf("mgr-create 30\n");
     
     pns->pre = pm->tail;
     pns->next = NULL;
@@ -137,17 +138,21 @@ void mgr_exit()
 
 ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
 {
+    printf("mgr-save 0\n");
     if (fp_len > MAX_FILE_SIZE)
         return ADFS_ERROR;
 
+    printf("mgr-save 10\n");
     ANNameSpace * pns = mgr_get_ns(name_space);
     if (pns == NULL)
         if ((pns = mgr_create(name_space)) == NULL)
             return ADFS_ERROR;
 
+    printf("mgr-save 20\n");
     if (pns->index_db == NULL)
         return ADFS_ERROR;
 
+    printf("mgr-save 30\n");
     // check number and split db
     NodeDB * node = pns->tail;
     if (node->number >= MAX_FILE_NUM)
@@ -158,6 +163,7 @@ ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_le
         node = pns->tail;
     }
 
+    printf("mgr-save 40\n");
     size_t info_len;
     char * info = kcdbget(pns->index_db, fname, fname_len, &info_len);
     if (info != NULL)
@@ -183,6 +189,7 @@ ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_le
             return ADFS_ERROR;
     }
 
+    printf("mgr-save 50\n");
     return ADFS_OK;
 }
 
@@ -198,14 +205,15 @@ void mgr_get_file(const char * fname, const char * name_space, void ** ppfile_da
 // private
 static ADFS_RESULT split_db(ANNameSpace * pns)
 {
+    ANManager * pm = &g_manager;
     NodeDB * last_node = pns->tail;
 
     if (pns->switch_state(pns, last_node->id, S_READ_ONLY) == ADFS_ERROR)
         return ADFS_ERROR;
 
     char path[1024] = {0};
-    if (snprintf(path, sizeof(path), "%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-                node_path, pns->number, kc_apow, kc_fbp, kc_bnum*3, kc_msiz) >= sizeof(path))
+    if (snprintf(path, sizeof(path), "%s/%lu.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+                pm->path, pns->number, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(path))
     {
         return ADFS_ERROR;
     }
@@ -272,12 +280,12 @@ static ADFS_RESULT check_kch_name(char * name)
 // private
 static ANNameSpace * mgr_get_ns(const char * name_space)
 {
-    ANNameSpace * pns = g_manager.tail;
-    while (pns)
+    ANNameSpace * tmp = g_manager.tail;
+    while (tmp)
     {
-        if (strcmp(pns->name, name_space) == NULL)
-            return pns;
-        pns = pns->pre;
+        if (strcmp(tmp->name, name_space) == 0)
+            return tmp;
+        tmp = tmp->pre;
     }
 
     return NULL;

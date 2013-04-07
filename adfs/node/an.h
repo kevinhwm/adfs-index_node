@@ -3,23 +3,11 @@
  * huangtao@antiy.com
  */
 
+#include "../adfs.h"
 #include <kclangc.h>
 
-#define ADFS_VERSION        3.0
-
 #define MAX_FILE_NUM        100000
-#define MAX_URL_LENGTH      2048
-#define MAX_PATH_LENGTH     1024
 
-#define MAX_FILE_SIZE       0x08000000      // 2^3 * 16^6 = 2^27 = 128MB
-#define SPLIT_FILE_SIZE     0x04000000      // 2^2 * 16^6 = 2^26 = 64MB
-
-
-typedef enum ADFS_RESULT
-{
-    ADFS_OK         = 0,
-    ADFS_ERROR      = -1,
-}ADFS_RESULT;
 
 typedef enum ADFS_NODE_STATE
 {
@@ -62,7 +50,7 @@ typedef struct ANNameSpace
 }ANNameSpace;
 
 
-typedef struct ANManager
+typedef struct _ANManager
 {
     char path[MAX_PATH_LENGTH];
     struct ANNameSpace * head;
@@ -80,8 +68,15 @@ typedef struct ANManager
 ADFS_RESULT ns_init(ANNameSpace *_this, const char * name_space);
 
 // an_manager.c
-ADFS_RESULT mgr_init(const char * dbpath, unsigned long cache_size);
+ADFS_RESULT mgr_init(const char * conf_file, const char * dbpath, unsigned long cache_size);
 ANNameSpace * mgr_create(const char *name_space);
 void mgr_exit();
 ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
+void mgr_get_file(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size);
+
+// an_function.c
+int get_conf(const char * pfile, const char * s, char *buf, size_t len);
+void trim_left(char * p);
+void trim_right(char * p);
+
 

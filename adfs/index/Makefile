@@ -1,29 +1,30 @@
 # huangtao@antiy.com
+#
 #############################################
 
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wl,-rpath=./
-#INCLUDE = -I../
 LIBS = -lnxweb -lkyotocabinet -lrt
 
-TARGET = nodeserver
-OBJS = nodeserver.o multipart_parser.o an_manager.o an_namespace.o an_function.o if_upload.o if_download.o 
+TARGET = indexserver
+OBJS = indexserver.o an_manager.o an_namespace.o multipart_parser.o if_upload.o if_download.o 
 #if_delete.o if_status.o 
 
 
 all:$(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
 
-nodeserver.o:nodeserver.c
-multipart_parser.o:multipart_parser.c
+
+indexserver.o:indexserver.c
 an_manager.o:an_manager.c
 an_namespace.o:an_namespace.c
-an_function.o:an_function.c
+multipart_parser.o:multipart_parser.c
 if_upload.o:if_upload.c
 if_download.o:if_download.c
 #if_delete.o:if_delete.c
 #if_status.o:if_status.c
+
 
 
 .PHONY:clean
