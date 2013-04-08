@@ -384,10 +384,13 @@ int kc_class::set(const char * upname, const int upnamelen, const char * updata,
         char * pointer_temp_randstr=temp_randstr;
         char temp_time[9]={0};
         char * pointer_temp_time=temp_time;
-        sprintf(temp_upname,"%.80s.%s.%s",upname,rand_str(pointer_temp_randstr,8),time_combine(pointer_temp_time));
+
+        sprintf(temp_upname,"%.80s.%s.%s",upname, rand_str(pointer_temp_randstr, 8), time_combine(pointer_temp_time));
+
         if (strlen(temp_upname)>130)
             return -2;
-        sprintf(tempindex,"%d=%s|%.900s\0",m_node_num,temp_upname,pIndexBuffer);
+        sprintf(tempindex,"%d=%s|%.900s\0", m_node_num, temp_upname, pIndexBuffer);
+
         m_vHashDBList[m_vHashDBList.size()-1]->pHashDB->set( temp_upname,strlen(temp_upname)+1, updata, updatelen);
         m_indexdb.set( upname, upnamelen, tempindex, strlen(tempindex));
     }
@@ -421,9 +424,11 @@ int kc_class::get(const char *pname, char * pFileBuffer, const int MaxBufferLeng
         return -4;
     if (m_node_mod=="na")
         return -3;
+
     int len=-1;   
     if (m_cache_mode=='y')
         len = m_cachedb.get( pname, strlen( pname)+1, pFileBuffer, MaxBufferLength );
+
     if ( len == MaxBufferLength )
         return -2;
     else if(len!=-1)

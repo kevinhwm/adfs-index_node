@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "an.h"
+#include "ai.h"
 
 
 extern nxweb_handler upload_file_handler;
-extern nxweb_handler download_handler;
+//extern nxweb_handler download_handler;
 //extern nxweb_handler status_handler;
 //extern nxweb_handler isalive_handler;
 //extern nxweb_handler monitor_handler;
@@ -23,7 +23,7 @@ extern nxweb_handler download_handler;
 
 
 NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
-NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
+//NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
@@ -36,7 +36,7 @@ NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000);
 // Command-line options:
 static const char* user_name=0;
 static const char* group_name=0;
-static int port=9527;
+static int port=8341;
 //static int ssl_port=8056;
 
 
@@ -60,30 +60,29 @@ static void server_main()
     nxweb_run();
 
     mgr_exit();
-    printf("ADFS-Node exit!\n");
+    printf("ADFS-Index exit!\n");
 }
 
 
 static void show_help(void) 
 {
-    printf( "usage:    nodeserver <options>\n\n"
+    printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
             " -w dir   set work dir    (default: ./)\n"
-            " -l file  set log file    (default: stderr or nodeserver_error_log for daemon)\n"
-            " -p file  set pid file    (default: nodeserver.pid)\n"
+            " -l file  set log file    (default: stderr or indexserver_error_log for daemon)\n"
+            " -p file  set pid file    (default: indexserver.pid)\n"
             " -u user  set process uid\n"
             " -g group set process gid\n"
             " -P port  set http port\n"
             " -h       show this help\n"
             " -v       show version\n"
 
-            " -c file  config file     (default: ./nodeserver.conf)\n"
             " -m mem   set memory map size in MB (default: 512)\n"
             " -x path  database file   (default: /opt/adfs/sdb1)\n"
 
             "\n"
-            "example:  nodeserver -d -l nodeserver_error_log\n\n"
+            "example:  indexserver -d -l indexserver_error_log\n\n"
           );
 }
 
@@ -94,14 +93,13 @@ int main(int argc, char** argv)
     int shutdown=0;
     const char* work_dir=0;
     const char* log_file=0;
-    const char* pid_file="nodeserver.pid";
+    const char* pid_file="indexserver.pid";
 
-    const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
-    char * db_path = ".";
+    char * db_path = "./";
 
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:m:x:")) != -1) 
     {
         switch (c) 
         {
@@ -109,10 +107,8 @@ int main(int argc, char** argv)
                 show_help();
                 return 0;
             case 'v':
-                printf( "\n"
-                        "ADFS - Node v3.0.0\n"
+                printf( "version:   indexserver - 3.0.0"  "\n"
                         "build:     " __DATE__ " " __TIME__ "\n"
-                        "\n"
                       );
                 return 0;
             case 'd':
@@ -142,9 +138,6 @@ int main(int argc, char** argv)
                     fprintf(stderr, "invalid port: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
-                break;
-            case 'c':
-                conf_file=optarg;
                 break;
             case 'm':
                 mem_size = atoi(optarg);
@@ -181,14 +174,14 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     printf("call mgr_init\n");
-    if (mgr_init(conf_file, db_path, mem_size) == ADFS_ERROR)
+    if (mgr_init(db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon) 
     {
         if (!log_file) 
-            log_file="nodeserver_error_log";
+            log_file="indexserver_error_log";
 
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }

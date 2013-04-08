@@ -1,17 +1,12 @@
-#include "nxweb/nxweb.h"
-#include "multipart_parser.h"
-#include <kclangc.h>
-
+#include <nxweb/nxweb.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <stdio.h>
-
+#include <kclangc.h>
+#include "multipart_parser.h"
+#include "an.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
-
-extern KCDB* g_kcdb;
-extern unsigned long g_MaxUploadSize;
 
 
 typedef struct _upload_file_object
@@ -39,6 +34,7 @@ typedef struct _upload_file_object
 
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
+    // nothing to do
     return 0;
 }
 
@@ -92,7 +88,6 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
     return 0;
 }
 
-
 int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
@@ -113,46 +108,57 @@ static nxweb_result upload_on_request(
 { 
     printf("--- upload_on_request\n");
 
+    nxweb_parse_request_parameters(req, 0);
+    const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
+
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
-
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
+
+    nxweb_response_printf(resp, ""
+            "<form method='post' enctype='multipart/form-data'>"
+            "File(s) to upload: "
+            "<input type='file' multiple name='uploadedfile' />"
+            "<input type='submit' value='Upload' />"
+            "</form>\n");
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
     if (fwb) 
     {
+        //nxweb_parse_request_parameters( req, 0 );
+
         ufo->parser_settings.on_header_field = on_post_header_field;
         ufo->parser_settings.on_header_value = on_post_header_value;
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
-
         ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
-
-        nxweb_parse_request_parameters( req, 0 );
-        const char * over_write = nx_simple_map_get_nocase( req->parameters, "overwrite" );
 
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        if ( strlen( ufo->filename ) > 0 && ufo->file_complete )
+        if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            if ( !kcdbset( g_kcdb, ufo->filename, strlen( ufo->filename ), ufo->file_ptr, ufo->file_len ) )
+            //if ( mgr_upload(name_space, ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            char fname[PATH_MAX] = {0};
+            strncpy(fname, req->path_info, sizeof(fname));
+            if (parse_filename(fname) == ADFS_ERROR)
             {
-                nxweb_response_printf( resp, "store backend db failed.\n" );
+                nxweb_response_printf( resp, "Failed. Check file name.\n" );
+            }
+            else if ( mgr_save(name_space, fname, strlen(fname), 
+                        ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            {
+                nxweb_response_printf( resp, "Failed. Can not save.\n" );
             }
             else
-            {
-                nxweb_response_printf( resp, "OK\n");
-                nxweb_response_printf( resp, "file name:%s\n", ufo->filename );
-                nxweb_response_printf( resp, "file length:%d\n", ufo->file_len );
-            }
+                nxweb_response_printf( resp, "OK.\n" );
         }
         else
-            printf("file not received:filename(%s)\n", ufo->filename );
+            nxweb_response_printf( resp, "Failed. Check file name and name length.\n" );
 
         if ( ufo->file_ptr )
         {
@@ -160,28 +166,6 @@ static nxweb_result upload_on_request(
             ufo->file_ptr = NULL;
         }
     }
-
-    nxweb_response_printf(resp, ""
-            "<form method='post' enctype='multipart/form-data'>"
-            "File(s) to upload: "
-            "<input type='file' multiple name='uploadedfile' />"
-            "</br>"
-            "<input type='submit' value='UploadFile!' />"
-            "</form>\n");
-
-    nxweb_response_printf(resp, ""
-            "<form method=\"POST\" enctype=\"multipart/form-data\" action=\"\">"
-            "upname:<br />"
-            "<input type=\"text\" name=\"upname\" />"
-            "</br>"
-            "data:<br/>"
-            "<textarea name=\"data\" cols=100 rows=20 >"
-            "input your data here..."
-            "</textarea>"
-            "<br />"
-            "<input type=\"submit\" value=\'UploadForm\' />"
-            "</form>"
-            );
 
     return NXWEB_OK;
 }
@@ -218,27 +202,18 @@ static nxweb_result upload_on_post_data(
 {
     printf("--- upload_on_post_data\n");
 
-    if (req->content_length > g_MaxUploadSize) 
-    {
-        nxweb_send_http_error(resp, 413, "Request entity is too large");
-        resp->keep_alive = 0; // close connection
-        nxweb_start_sending_response(conn, resp);
-        return NXWEB_OK;
-    }
-
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
 
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, 
-            upload_request_data_finalize);
+    nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, upload_request_data_finalize);
 
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
-    ufo->post_boundary[0]='-';
-    ufo->post_boundary[1]='-';
+    ufo->post_boundary[0] = '-';
+    ufo->post_boundary[1] = '-';
 
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxUploadSize);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

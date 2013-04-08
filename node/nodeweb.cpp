@@ -102,12 +102,10 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
     long buffer_data_len = EVBUFFER_LENGTH( pInBuffer );
     bool succ = false;
     string fname;
-    //CBinString fmd5;
     if( buffer_data_len > 0 )
     {
         try{
             long flength = evbuffer_copyout( pInBuffer, (void *)pFileBuffer, MaxBufferLength );
-            //cout<<"flength"<<flength<<endl;
             if(flength>=MaxBufferLength)
             {
                 evhttp_send_error( req, HTTP_INTERNAL, " upload failure,data is too big!" );
@@ -120,30 +118,13 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                 evbuffer_free(returnbuffer);
                 return; 
             }
-            //		printf("\nData length:%d\n%s\n", flength, pFileBuffer );
             MPFD::Parser parser;
             parser.SetMaxCollectedDataLength(MaxBufferLength);
             parser.SetUploadedFilesStorage(MPFD::Parser::StoreUploadedFilesInMemory );
             parser.SetContentType( content );
-            //		printf("ContentType:%s\n", content );
-            //          cout<<"1"<<endl;
             parser.AcceptSomeData( pFileBuffer, flength );
-            //      cout<<"2"<<endl;
             evkeyvalq querys;
-            //check md5 
-            /*
-               bool checksum=false;
-               if( 0 == evhttp_parse_query_str( suburi, &querys ) )
-               {
-               const char *checksumval = evhttp_find_header( &querys, "checksum" );
-               if( checksumval != NULL && checksumval[0]=='1' )
-               {
-            //printf("checksum:%s", checksumval );
-            checksum = true;
-            }
-
-            }*/
-            //		printf("\nacceptsomedata\n");
+            
             std::map<std::string, MPFD::Field *> fields = parser.GetFieldsMap();
             for( std::map<std::string, MPFD::Field*>::iterator it = fields.begin(); 
                     it != fields.end();
@@ -151,27 +132,10 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
             {
 
                 fname = it->second->GetFileName();
-                //			printf("\tkey:%s\n", it->first.c_str() );
-                //			printf("\tmimetype:%s\n", it->second->GetFileMimeType().c_str() );
-                //			printf("\tfilename:%s\n", it->second->GetFileName().c_str() );
                 unsigned long fSize = it->second->GetFileContentSize();
-                //printf("\tfilelen:%ld\n", fSize );
                 unsigned char md5[16] = {0};
                 const unsigned char *pFile = (unsigned char *)it->second->GetFileContent();
-                /*
-                   if( checksum == true )
-                   {
-                   const unsigned char *lmd5 = MD5( pFile, fSize, md5 );
-                   fmd5.PutBinary( (char *)lmd5, 16 );
-                   if (fmd5 != fname.substr(0, 32 ) )
-                   {
-                   evbuffer_add_printf( returnbuffer, "file checksum failed:%s:%s.", fname.c_str(), fmd5.c_str() );
-                   evbuffer_add_printf( returnbuffer, "checksum failed." );
-                   evhttp_send_reply(req, HTTP_BADREQUEST, "Client", returnbuffer);
-                   evbuffer_free(returnbuffer);
-                   }
-                   }
-                   */
+                
                 if (fSize==0)
                 {   
                     evhttp_send_error( req, HTTP_NOTFOUND, "upload failure,upload file is empty ,please checkout" );
@@ -179,7 +143,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                     return;      
                 }
                 int upload_ans=kc_connector.set(fname.c_str(),fname.length()+1,(const char *)pFile,fSize);
-                //cout<<upload_ans<<endl;
                 if (upload_ans==-1)
                 {
                     evhttp_send_error( req, HTTP_NOTFOUND, "nodeweb is read only database" );
@@ -198,8 +161,6 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                     evbuffer_free(returnbuffer);
                     return;           
                 }
-                //g_ktdbdb.set( fname.c_str(), fname.length()+1, (const char *)pFile, fSize );
-                //	g_cachedb.set( fname.c_str(), fname.length()+1, (const char *)pFile, fSize );
                 else if(upload_ans==0)
                 {
                     succ = true;
@@ -212,7 +173,8 @@ void cb_UploadFile( struct evhttp_request *req, void *arg, const char *suburi )/
                 }
             }
         }
-        catch(MPFD::Exception e ){
+        catch(MPFD::Exception e )
+        {
             printf("Error:%s\n", e.GetError().c_str()); 
             evhttp_send_error( req, HTTP_INTERNAL, e.GetError().c_str() );
             evbuffer_free(returnbuffer);

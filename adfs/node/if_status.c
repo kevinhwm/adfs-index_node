@@ -2,14 +2,10 @@
  *
  */
 
-
 #include "nxweb/nxweb.h"
 #include <kclangc.h>
-
 #include <string.h>
 
-
-extern KCDB* g_kcdb;
 
 static nxweb_result status_on_request(nxweb_http_server_connection* conn, nxweb_http_request* req, nxweb_http_response* resp) 
 {
