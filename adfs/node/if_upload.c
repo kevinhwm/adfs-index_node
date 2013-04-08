@@ -1,6 +1,5 @@
 #include <nxweb/nxweb.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <kclangc.h>
 #include "multipart_parser.h"
@@ -8,9 +7,6 @@
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
-
-//extern KCDB* g_kcdb;
-//extern unsigned long g_MaxUploadSize;
 
 
 typedef struct _upload_file_object
@@ -38,6 +34,7 @@ typedef struct _upload_file_object
 
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
+    // nothing to do
     return 0;
 }
 
@@ -91,7 +88,6 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
     return 0;
 }
 
-
 int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
@@ -119,19 +115,25 @@ static nxweb_result upload_on_request(
     nxweb_set_response_charset(resp, "utf-8" );
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
+    nxweb_response_printf(resp, ""
+            "<form method='post' enctype='multipart/form-data'>"
+            "File(s) to upload: "
+            "<input type='file' multiple name='uploadedfile' />"
+            "<input type='submit' value='Upload' />"
+            "</form>\n");
+
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
     if (fwb) 
     {
+        //nxweb_parse_request_parameters( req, 0 );
+
         ufo->parser_settings.on_header_field = on_post_header_field;
         ufo->parser_settings.on_header_value = on_post_header_value;
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
-
         ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
-
-        nxweb_parse_request_parameters( req, 0 );
 
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
@@ -141,15 +143,22 @@ static nxweb_result upload_on_request(
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
             //if ( mgr_upload(name_space, ufo->filename, strlen(ufo->filename), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
-            char fname[2048] = {0};
+            char fname[PATH_MAX] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
-                nxweb_response_printf( resp, "Failed\n" );
-            else if ( mgr_upload(name_space, req->path_info, strlen(req->path_info), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
-                nxweb_response_printf( resp, "Failed\n" );
+            {
+                nxweb_response_printf( resp, "Failed. Check file name.\n" );
+            }
+            else if ( mgr_save(name_space, fname, strlen(fname), 
+                        ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            {
+                nxweb_response_printf( resp, "Failed. Can not save.\n" );
+            }
+            else
+                nxweb_response_printf( resp, "OK.\n" );
         }
         else
-            nxweb_response_printf( resp, "Failed\n" );
+            nxweb_response_printf( resp, "Failed. Check file name and name length.\n" );
 
         if ( ufo->file_ptr )
         {
@@ -157,13 +166,6 @@ static nxweb_result upload_on_request(
             ufo->file_ptr = NULL;
         }
     }
-
-    nxweb_response_printf(resp, ""
-            "<form method='post' enctype='multipart/form-data'>"
-            "File(s) to upload: "
-            "<input type='file' multiple name='uploadedfile' />"
-            "<input type='submit' value='Upload' />"
-            "</form>\n");
 
     return NXWEB_OK;
 }

@@ -7,8 +7,6 @@
 #include <string.h>
 
 
-extern KCDB* g_kcdb;
-
 static nxweb_result delete_on_request(nxweb_http_server_connection* conn, nxweb_http_request* req, nxweb_http_response* resp) 
 {
     printf("delete - request\n");

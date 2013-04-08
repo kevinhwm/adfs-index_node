@@ -101,27 +101,27 @@ int parse_conf(char *line, char *key, char *value)
 }
 
 // parse url, then get real file name
-ADFS_RESULT parse_filename(char *str)
+ADFS_RESULT parse_filename(char * p)
 {
-    char *pos = strstr(str, "?");
+    char *pos = strstr(p, "?");
     if (pos != NULL)
         pos[0] = '\0';
 
-    int len = strlen(str);
+    int len = 0;
+    len = strlen(p);
     if (len == 0)
         return ADFS_ERROR;
 
-    if (str[len-1] == '/')
-        str[len-1] = '\0';
+    if (p[len-1] == '/')
+        p[len-1] = '\0';
 
-    len = strlen(str);
+    len = strlen(p);
     if (len == 0)
         return ADFS_ERROR;
 
-    int i = 0;
-    if (str[0] == '/')
-        for (i=1; i<=len; ++i)
-            str[i-1] = str[i];
+    if (p[0] == '/')
+        for (int i=1; i<=len; ++i)
+            p[i-1] = p[i];
 
     return ADFS_OK;
 }

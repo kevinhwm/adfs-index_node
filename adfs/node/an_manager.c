@@ -21,7 +21,7 @@ ANManager g_manager;
 ADFS_RESULT mgr_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     memset(&g_manager, 0, sizeof(g_manager));
-    if (strlen(path) > MAX_PATH_LENGTH)
+    if (strlen(path) > PATH_MAX)
         return ADFS_ERROR;
 
     DIR *dirp = opendir(path);
@@ -60,12 +60,12 @@ ANNameSpace * mgr_create(const char *name_space)
 {
     printf("mgr-create 0\n");
 
-    if (strlen(name_space) >= MAX_PATH_LENGTH)
+    if (strlen(name_space) >= NAME_MAX)
         return NULL;
 
     ANManager *pm = &g_manager;
 
-    char ns_path[MAX_PATH_LENGTH] = {0};
+    char ns_path[PATH_MAX] = {0};
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
 
     int node_num = count_kch(ns_path);
@@ -95,7 +95,7 @@ ANNameSpace * mgr_create(const char *name_space)
     printf("mgr-create 20\n");
 
     printf("%d\n", node_num);
-    char tmp_path[MAX_PATH_LENGTH] = {0};
+    char tmp_path[PATH_MAX] = {0};
     for (int i=1; i <= node_num; i++)
     {
         memset(tmp_path, 0, sizeof(tmp_path));
@@ -151,7 +151,7 @@ void mgr_exit()
 }
 
 
-ADFS_RESULT mgr_upload(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
+ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
 {
     if (fp_len > MAX_FILE_SIZE)
         return ADFS_ERROR;
@@ -170,7 +170,7 @@ ADFS_RESULT mgr_upload(const char * name_space, const char *fname, size_t fname_
 
     // check number and split db
     NodeDB * node = pns->tail;
-    if (node->number >= MAX_FILE_NUM)
+    if (node->number >= NODE_MAX_FILE_NUM)
     {
         if (split_db(pns) == ADFS_ERROR)
             return ADFS_ERROR;
@@ -207,7 +207,7 @@ ADFS_RESULT mgr_upload(const char * name_space, const char *fname, size_t fname_
 }
 
 
-void mgr_download(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size)
+void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
@@ -234,7 +234,7 @@ void mgr_download(const char * fname, const char * name_space, void ** ppfile_da
 
     NodeDB * pn = pns->get(pns, atoi(id));
     if (pn == NULL)
-        printf("--------fail--------\n");
+        return;
 
     printf("mgr-download 60\n");
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);

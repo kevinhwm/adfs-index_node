@@ -41,31 +41,22 @@ static nxweb_result download_on_request(
         nxweb_http_response* resp) 
 {
     printf("download - request\n");
+    if (strlen(req->path_info) >= PATH_MAX)
+    {
+        nxweb_send_http_error(resp, 400, "Failed. File name is too long");
+        return NXWEB_ERROR;
+    }
 
-    char fname[MAX_URL_LENGTH] = {0};
-
-    printf("download - 1\n");
     nxweb_parse_request_parameters( req, 0 );
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
-    printf("download - 2\n");
 
-    /////
+    char fname[PATH_MAX] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
-    nxweb_url_decode(fname, 0);
-
-    if (strlen(fname) <2 || fname[0] == '?')
+    if (parse_filename(fname) == ADFS_ERROR)
     {
-        nxweb_send_http_error(resp, 404, "Node: File Not Found");
-        return NXWEB_OK;
+        nxweb_send_http_error(resp, 400, "Failed. Check file name");
+        return NXWEB_ERROR;
     }
-    char *p = strstr(fname, "?");
-    if (p != NULL)
-    {
-        p[0] = '\0';
-        if (fname[p-fname-1] == '/')
-            fname[p-fname-1] = '\0';
-    }
-    /////
 
     printf("path_info: %s\n", req->path_info);
     printf("fname: %s\n", fname);
@@ -74,26 +65,30 @@ static nxweb_result download_on_request(
     void *pfile_data = NULL;
     size_t file_size = 0;
 
-    /*
-    char fname[2048] = {0};
-    strncpy(fname, req->path_info, sizeof(fname));
-    if (parse_filename(fname) == ADFS_ERROR)
-        nxweb_response_printf( resp, "Failed\n" );
-    */
-
-    mgr_download(fname, name_space, &pfile_data, &file_size);    // query db
-    if (pfile_data == NULL)
+    mgr_get(fname, name_space, &pfile_data, &file_size);    // query db
+    if (pfile_data == NULL || file_size == 0)
     {
-        nxweb_send_http_error(resp, 404, "Node: Failed");
+        nxweb_send_http_error(resp, 404, "Failed. No file");
         return NXWEB_ERROR;
     }
     else
     {
+        printf("download -10\n");
         SHARE_DATA *ptmp = nxb_alloc_obj(req->nxb, sizeof(SHARE_DATA));
         nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void *)ptmp, download_request_data_finalize);
         ptmp->data_ptr = pfile_data;
 
+        char *file_name = fname, *tmp = NULL;
+        while ((tmp = strstr(file_name, "/")))
+            file_name = tmp + 1;
+
+        char resp_name[NAME_MAX] = {0};
+        snprintf( resp_name, sizeof(resp_name), "attachment; filename=%s", file_name );
+        nxweb_add_response_header(resp, "Content-disposition", resp_name );
+
+        printf("download -20\n");
         nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
+        printf("download -20\n");
     }
 
     return NXWEB_OK;

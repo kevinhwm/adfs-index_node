@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
-    char * db_path = "./";
+    char * db_path = ".";
 
     int c;
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
