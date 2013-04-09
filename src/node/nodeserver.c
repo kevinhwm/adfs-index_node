@@ -78,9 +78,9 @@ static void show_help(void)
             " -h       show this help\n"
             " -v       show version\n"
 
-            " -c file  config file     (default: ./nodeserver.conf)\n"
-            " -m mem   set memory map size in MB (default: 512)\n"
-            " -x path  database file   (default: /opt/adfs/sdb1)\n"
+            " -c file  config file                  (default: ./nodeserver.conf)\n"
+            " -m mem   set memory map size in MB    (default: 512)\n"
+            " -x path  database file                (default: ./)\n"
 
             "\n"
             "example:  nodeserver -d -l nodeserver_error_log\n\n"

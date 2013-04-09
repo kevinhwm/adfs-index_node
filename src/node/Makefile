@@ -1,8 +1,9 @@
+#############################################
 # huangtao@antiy.com
 #############################################
 
 CC = gcc
-CFLAGS = -c -std=c99 -Wall 
+CFLAGS = -std=c99 -Wall 
 INCLUDE = -I../include
 LIBS = -lnxweb -lkyotocabinet -lrt
 
@@ -12,7 +13,7 @@ OBJS = multipart_parser.o an_manager.o an_namespace.o an_function.o if_upload.o 
 
 
 all:$(OBJS)
-	$(CC) -std=c99 -Wall -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS) -static-libgcc 
+	$(CC) $(CFLAGS) -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS) -static-libgcc 
 
 
 nodeserver.o:nodeserver.c
@@ -22,8 +23,6 @@ an_namespace.o:an_namespace.c
 an_function.o:an_function.c
 if_upload.o:if_upload.c
 if_download.o:if_download.c
-#if_delete.o:if_delete.c
-#if_status.o:if_status.c
 
 
 #nodeserver.o:nodeserver.c

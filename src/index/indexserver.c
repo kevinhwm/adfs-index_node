@@ -1,5 +1,5 @@
 /*
- *
+ * huangtao@antiy.com
  */
 
 #include <nxweb/nxweb.h>
@@ -22,7 +22,7 @@ extern nxweb_handler upload_file_handler;
 //extern nxweb_handler history_handler;
 
 
-NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
+NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
 //NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
@@ -60,7 +60,7 @@ static void server_main()
     nxweb_run();
 
     mgr_exit();
-    printf("ADFS-Index exit!\n");
+    printf("ADFS-Index exit.\n");
 }
 
 
@@ -78,8 +78,8 @@ static void show_help(void)
             " -h       show this help\n"
             " -v       show version\n"
 
-            " -m mem   set memory map size in MB (default: 512)\n"
-            " -x path  database file   (default: /opt/adfs/sdb1)\n"
+            " -m mem   set memory map size in MB    (default: 512)\n"
+            " -x path  database file                (default: ./)\n"
 
             "\n"
             "example:  indexserver -d -l indexserver_error_log\n\n"
@@ -176,6 +176,7 @@ int main(int argc, char** argv)
     printf("call mgr_init\n");
     if (mgr_init(db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
+    printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon) 
