@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <kclangc.h>
 #include "multipart_parser.h"
-#include "an.h"
+#include "ai.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -119,6 +119,13 @@ static nxweb_result upload_on_request(
     nxweb_set_response_charset(resp, "utf-8" );
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
+    nxweb_response_printf(resp, ""
+            "<form method='post' enctype='multipart/form-data'>"
+            "File(s) to upload: "
+            "<input type='file' multiple name='uploadedfile' />"
+            "<input type='submit' value='Upload' />"
+            "</form>\n");
+
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
@@ -141,23 +148,18 @@ static nxweb_result upload_on_request(
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
             {
-                nxweb_send_http_error(resp, 400, "Failed. Check file name.");
-                return NXWEB_ERROR;
+                nxweb_response_printf( resp, "Failed. Check file name.\n" );
             }
             else if ( mgr_save(name_space, fname, strlen(fname), 
                         ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
             {
-                nxweb_send_http_error(resp, 400, "Failed. Can not save.");
-                return NXWEB_ERROR;
+                nxweb_response_printf( resp, "Failed. Can not save.\n" );
             }
             else
                 nxweb_response_printf( resp, "OK.\n" );
         }
         else
-        {
-            nxweb_send_http_error(resp, 400, "Failed. Check file name and name length." );
-            return NXWEB_ERROR;
-        }
+            nxweb_response_printf( resp, "Failed. Check file name and name length.\n" );
 
         if ( ufo->file_ptr )
         {
@@ -165,16 +167,6 @@ static nxweb_result upload_on_request(
             ufo->file_ptr = NULL;
         }
     }
-
-    nxweb_response_printf(resp, ""
-            "<form method='post' enctype='multipart/form-data'>"
-            "File(s) to upload: "
-            "<input type='file' multiple name='uploadedfile' />"
-            "<input type='submit' value='Upload' />"
-            "</form>\n"
-            "</body>\n"
-            "</html>\n"
-            );
 
     return NXWEB_OK;
 }

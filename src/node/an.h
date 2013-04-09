@@ -52,7 +52,7 @@ typedef struct ANNameSpace
 }ANNameSpace;
 
 
-typedef struct _ANManager
+typedef struct ANManager
 {
     char path[PATH_MAX];
     struct ANNameSpace * head;
@@ -62,7 +62,6 @@ typedef struct _ANManager
     unsigned long kc_fbp;
     unsigned long kc_bnum;
     unsigned long kc_msiz;
-
 }ANManager;
 
 
@@ -82,3 +81,4 @@ void trim_left(char * p);
 void trim_right(char * p);
 int parse_conf(char *p, char *key, char *value);
 ADFS_RESULT parse_filename(char *p);
+

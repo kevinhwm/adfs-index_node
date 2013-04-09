@@ -78,6 +78,7 @@ static void show_help(void)
             " -h       show this help\n"
             " -v       show version\n"
 
+            " -c file  config file                  (default: ./indexserver.conf)\n"
             " -m mem   set memory map size in MB    (default: 512)\n"
             " -x path  database file                (default: ./)\n"
 
@@ -95,11 +96,12 @@ int main(int argc, char** argv)
     const char* log_file=0;
     const char* pid_file="indexserver.pid";
 
+    const char* conf_file="indexserver.conf";
     unsigned long mem_size = 512;
     char * db_path = "./";
 
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
     {
         switch (c) 
         {
@@ -139,6 +141,9 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
                 break;
+            case 'c':
+                conf_file=optarg;
+                break;
             case 'm':
                 mem_size = atoi(optarg);
                 if (mem_size <= 0) {
@@ -174,7 +179,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     printf("call mgr_init\n");
-    if (mgr_init(db_path, mem_size) == ADFS_ERROR)
+    if (mgr_init(conf_file, db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////
