@@ -36,6 +36,11 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     return ADFS_OK;
 }
 
+ADFS_RESULT mgr_upload()
+{
+    return ADFS_OK;
+}
+
 void mgr_exit()
 {
     curl_global_cleanup();

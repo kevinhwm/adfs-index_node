@@ -113,7 +113,10 @@ static nxweb_result upload_on_request(
     printf("--- upload_on_request\n");
 
     nxweb_parse_request_parameters(req, 0);
-    const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
+    const char *namespace   = nx_simple_map_get_nocase(req->parameters, "namespace");
+    const char *ns          = nx_simple_map_get_nocase(req->parameters, "ns");
+    const char *overwrite   = nx_simple_map_get_nocase(req->parameters, "overwrite");
+    const char *ow          = nx_simple_map_get_nocase(req->parameters, "ow");
 
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
@@ -150,7 +153,7 @@ static nxweb_result upload_on_request(
             {
                 nxweb_response_printf( resp, "Failed. Check file name.\n" );
             }
-            else if ( mgr_save(name_space, fname, strlen(fname), 
+            else if ( mgr_upload(name_space, fname, strlen(fname), 
                         ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
             {
                 nxweb_response_printf( resp, "Failed. Can not save.\n" );

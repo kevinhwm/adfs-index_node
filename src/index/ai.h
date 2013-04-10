@@ -38,6 +38,5 @@ int parse_conf(char *p, char *key, char *value);
 ADFS_RESULT parse_filename(char * p);
 
 // ai_connect.c
-ADFS_RESULT ai_save();
-ADFS_RESULT ai_get();
+ADFS_RESULT aic_save();
 
