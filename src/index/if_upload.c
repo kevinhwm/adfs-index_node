@@ -150,14 +150,9 @@ static nxweb_result upload_on_request(
             char fname[PATH_MAX] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
-            {
                 nxweb_response_printf( resp, "Failed. Check file name.\n" );
-            }
-            else if ( mgr_upload(name_space, fname, strlen(fname), 
-                        ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
-            {
+            else if ( mgr_upload(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR )
                 nxweb_response_printf( resp, "Failed. Can not save.\n" );
-            }
             else
                 nxweb_response_printf( resp, "OK.\n" );
         }
