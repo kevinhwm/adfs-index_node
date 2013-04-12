@@ -33,10 +33,7 @@ ADFS_RESULT aic_upload(const char *url, const char *fname, void *data, size_t le
             long res_code = 0;
             res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
             if (res == CURLE_OK && res_code == 200)
-            {
                 adfs_res = ADFS_OK;
-                printf("ok\n");
-            }
         }
         curl_formfree(formpost);
     }

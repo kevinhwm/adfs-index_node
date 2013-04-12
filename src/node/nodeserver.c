@@ -1,5 +1,7 @@
-/*
+/* Antiy Labs. Basic Platform R & D Center
+ * nodeserver.c
  *
+ * huangtao@antiy.com
  */
 
 #include <nxweb/nxweb.h>

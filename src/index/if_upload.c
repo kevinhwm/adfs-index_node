@@ -120,6 +120,13 @@ static nxweb_result upload_on_request(
 
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
+
+    if (req->content_length > MAX_UPLOAD_SIZE)
+    {
+        nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
+        return NXWEB_OK;
+    }
+
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
 
     nxweb_response_printf(resp, ""
@@ -211,7 +218,11 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
+    if (req->content_length > MAX_UPLOAD_SIZE)
+        ufo->fpostmem = fopen("/dev/null", "wb");
+    else
+        ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
+
     nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);

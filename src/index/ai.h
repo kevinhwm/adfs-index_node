@@ -1,4 +1,5 @@
-/* ai.h
+/* Antiy Labs. Basic Platform R & D Center
+ * ai.h
  *
  * huangtao@antiy.com
  */
@@ -6,13 +7,27 @@
 #include "../include/adfs.h"
 #include <linux/limits.h>                   // PATH_MAX
 
-#define SPLIT_FILE_SIZE     0x04000000      // 2^2 * 16^6 = 2^26 = 64MB
-
 
 typedef struct AINode
 {
-    int d;
+    char ip_port[64];
+
+    struct AINode *pre;
+    struct AINode *next;
 }AINode;
+
+typedef struct AIZone
+{
+    char name[NAME_MAX];
+    int num;
+    int weight;
+
+    struct AINode *first;
+    struct AINode *last;
+
+    struct AIZone *pre;
+    struct AIZone *next;
+}AIZone;
 
 typedef struct AIManager
 {
@@ -28,6 +43,7 @@ typedef struct AIManager
 
 // ai_manager.c
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size);
+ADFS_RESULT mgr_upload(const char *name_space, const char *fname, size_t fname_len, void *fp, size_t fp_len);
 void mgr_exit();
 
 // ai_function.c

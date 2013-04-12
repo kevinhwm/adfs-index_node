@@ -3,6 +3,7 @@
  */
 
 #define ADFS_VERSION        3.0
+#define MAX_FILE_SIZE       0x10000000
 
 
 

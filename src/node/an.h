@@ -8,7 +8,6 @@
 #include <linux/limits.h>
 
 #define NODE_MAX_FILE_NUM       100000
-#define MAX_FILE_SIZE           0x08000000      // 2^3 * 16^6 = 2^27 = 128MB
 
 
 typedef enum ADFS_NODE_STATE

@@ -36,8 +36,18 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     return ADFS_OK;
 }
 
-ADFS_RESULT mgr_upload()
+ADFS_RESULT mgr_upload(const char *name_space, const char *fname, size_t fname_len, void *fp, size_t fp_len)
 {
+    char url[PATH_MAX] = {0};
+    // ip port
+
+    strncpy(url, fname, sizeof(url));
+    if (name_space)
+    {
+        strncpy(url, "?namespace=", sizeof(url));
+        strncpy(url, name_space, sizeof(url));
+    }
+
     return ADFS_OK;
 }
 
