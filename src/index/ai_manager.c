@@ -9,6 +9,7 @@
 #include <sys/stat.h>   // mkdir
 #include <kclangc.h>
 #include <curl/curl.h>
+#include <time.h>
 #include "ai.h"
 
 
@@ -19,7 +20,9 @@ AIManager g_manager;
 
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size)
 {    
-    memset(&g_manager, 0, sizeof(g_manager));
+    AIManager *pm = &g_manager;
+
+    memset(pm, 0, sizeof(*pm));
     if (strlen(path) > PATH_MAX)
         return ADFS_ERROR;
 
@@ -28,30 +31,65 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
         return ADFS_ERROR;
     closedir(dirp);
 
-    strncpy(g_manager.path, path, sizeof(g_manager.path));
-    g_manager.kc_apow = 0;
-    g_manager.kc_fbp = 10;
-    g_manager.kc_bnum = 1000000;
-    g_manager.kc_msiz = mem_size *1024*1024;
+    strncpy(pm->path, path, sizeof(pm->path));
+    pm->kc_apow = 0;
+    pm->kc_fbp = 10;
+    pm->kc_bnum = 1000000;
+    pm->kc_msiz = mem_size *1024*1024;
+    char indexdb_path[PATH_MAX] = {0};
+    sprintf(indexdb_path, "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+            pm->path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+
+    pm->index_db = kcdbnew();
+    if (kcdbopen(pm->index_db, indexdb_path, KCOWRITER|KCOCREATE) == 0)
+        return ADFS_ERROR;
 
     if (mgr_create(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
 
+    srand(time(NULL));
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
 
     return ADFS_OK;
 }
 
-ADFS_RESULT mgr_upload(const char *name_space, const char *fname, size_t fname_len, void *fp, size_t fp_len)
+ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, size_t fname_len, void *fp, size_t fp_len)
 {
-    char url[PATH_MAX] = {0};
+    AIManager *pm = &g_manager;
     
+    char key[PATH_MAX] = {0};
+    if (name_space)
+        sprintf(key, "%s:%s", name_space, fname);
+    else
+        sprintf(key, ":%s", fname);
+
+    size_t vsize;
+    char *pval = kcdbget(pm->index_db, key, strlen(key), &vsize);
+    if (pval != NULL && !overwrite)             // exist and not overwrite
+    {
+        return ADFS_OK;
+    }
+    else if (pval != NULL && overwrite)         // exist and overwrite
+    {
+        ;
+    }
+    else                                        // not exist
+    {
+        ;
+    }
+
     // traverse all zone
     //
     //   choose a node to save
     //
+    AIZone *pz = pm->head;
+    while (pz)
+    {
+        AINode *pn = pz->rand_choose(pz);
+    }
 
+    char url[PATH_MAX] = {0};
     strncpy(url, fname, sizeof(url));
     if (name_space)
     {
@@ -73,6 +111,8 @@ void mgr_exit()
         free(pz);
         pz = tmp;
     }
+    kcdbclose(pm->index_db);
+    kcdbdel(pm->index_db);
 
     curl_global_cleanup();
 }
@@ -139,4 +179,5 @@ static ADFS_RESULT mgr_create(const char *conf_file)
     }
     return ADFS_OK;
 }
+
 

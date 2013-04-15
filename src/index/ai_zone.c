@@ -10,6 +10,7 @@
 
 static ADFS_RESULT z_create(AIZone *_this, const char *ip_port);
 static void z_release_all(AIZone *_this);
+static AINode * z_rand_choose(AIZone *_this);
 
 ADFS_RESULT z_init(AIZone *_this, const char *name, int weight)
 {
@@ -22,6 +23,7 @@ ADFS_RESULT z_init(AIZone *_this, const char *name, int weight)
 
         _this->create = z_create;
         _this->release_all = z_release_all;
+        _this->rand_choose = z_rand_choose;
         return ADFS_OK;
     }
     return ADFS_ERROR;
@@ -42,6 +44,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
         return ADFS_ERROR;
 
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
+    _this->num += 1;
 
     new_node->pre = _this->tail;
     new_node->next = NULL;
@@ -55,7 +58,6 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
     return ADFS_OK;
 }
 
-
 static void z_release_all(AIZone *_this)
 {
     while (_this->tail)
@@ -64,5 +66,20 @@ static void z_release_all(AIZone *_this)
         _this->tail = _this->tail->pre;
         free(pn);
     }
+}
+
+static AINode * z_rand_choose(AIZone *_this)
+{
+    int n = rand()%(_this->num);
+    AINode *pn = _this->head;
+    for (int i=0; i<n; ++i)
+    {
+        if (pn->next)
+            pn = pn->next;
+        else
+            return NULL;
+    }
+
+    return pn;
 }
 
