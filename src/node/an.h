@@ -76,8 +76,8 @@ void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, s
 
 // an_function.c
 int get_conf(const char * pfile, const char * s, char *buf, size_t len);
+int parse_conf(char *p, char *key, char *value);
 void trim_left(char * p);
 void trim_right(char * p);
-int parse_conf(char *p, char *key, char *value);
 ADFS_RESULT parse_filename(char *p);
 

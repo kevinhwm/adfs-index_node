@@ -6,17 +6,17 @@
 /*
  * example:
  *
- * char buf[2048] = {0};
+ * char buf[NAME_MAX] = {0};
  * get_conf("a.conf", "name", buf, sizeof(buf));
  * printf("[%d]%s\n", strlen(buf), buf);
  */
 
-int get_conf(const char * pfile, const char * target, char *value, size_t len)
+ADFS_RESULT get_conf(const char * pfile, const char * target, char *value, size_t len)
 {
-    char buf[2048] = {0};
-    char key[2048] = {0};
-    char val[2048] = {0};
-    int res = 0;
+    char buf[NAME_MAX] = {0};
+    char key[NAME_MAX] = {0};
+    char val[NAME_MAX] = {0};
+    int res = ADFS_ERROR;
     
     FILE * f = fopen(pfile, "r");
 
@@ -31,13 +31,12 @@ int get_conf(const char * pfile, const char * target, char *value, size_t len)
 
         if (strlen(val) >= len)
         {
-            res = 0;
             break;
         }
         else
         {
             strncpy(value, val, len);
-            res = 1;
+            res = ADFS_OK;
             break;
         }
     }

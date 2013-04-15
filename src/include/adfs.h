@@ -1,4 +1,5 @@
-/*
+/* Antiy Labs. Basic Platform R & D Center
+ *
  * huangtao@antiy.com
  */
 

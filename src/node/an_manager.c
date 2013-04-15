@@ -13,7 +13,7 @@
 static ADFS_RESULT split_db(ANNameSpace * pns);
 static int count_kch(const char * dir);
 static ADFS_RESULT check_kch_name(char * name);
-static ANNameSpace * mgr_get_ns(const char * name_space);
+static ANNameSpace * get_ns(const char * name_space);
 
 ANManager g_manager;
 
@@ -147,7 +147,6 @@ void mgr_exit()
         free(pns);
         pns = tmp;
     }
-    return;
 }
 
 
@@ -158,9 +157,9 @@ ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_le
 
     ANNameSpace * pns = NULL;
     if (name_space == NULL)
-        pns = mgr_get_ns("default");
+        pns = get_ns("default");
     else
-        pns = mgr_get_ns(name_space);
+        pns = get_ns(name_space);
 
     if (pns == NULL)
         return ADFS_ERROR;
@@ -214,9 +213,9 @@ void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, s
 
     ANNameSpace * pns = NULL;
     if (name_space == NULL)
-        pns = mgr_get_ns("default");
+        pns = get_ns("default");
     else
-        pns = mgr_get_ns(name_space);
+        pns = get_ns(name_space);
 
     if (pns == NULL)
         return ;
@@ -322,7 +321,7 @@ static ADFS_RESULT check_kch_name(char * name)
 }
 
 // private
-static ANNameSpace * mgr_get_ns(const char * name_space)
+static ANNameSpace * get_ns(const char * name_space)
 {
     printf("mgr-getns 1\n");
     ANNameSpace * tmp = g_manager.tail;
@@ -339,3 +338,4 @@ static ANNameSpace * mgr_get_ns(const char * name_space)
     printf("mgr-getns 2\n");
     return NULL;
 }
+
