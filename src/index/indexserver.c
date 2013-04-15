@@ -109,7 +109,7 @@ int main(int argc, char** argv)
                 show_help();
                 return 0;
             case 'v':
-                printf( "version:   indexserver - " ADFS_VERSION "\n"
+                printf( "version:   ADFSI - " ADFS_VERSION "\n"
                         "build:     " __DATE__ " " __TIME__ "\n"
                       );
                 return 0;

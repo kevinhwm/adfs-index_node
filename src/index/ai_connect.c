@@ -4,6 +4,7 @@
  */
 
 #include <curl/curl.h>
+#include "ai.h"
 
 
 ADFS_RESULT aic_upload(const char *url, const char *fname, void *data, size_t len)
@@ -16,7 +17,7 @@ ADFS_RESULT aic_upload(const char *url, const char *fname, void *data, size_t le
     CURL *curl = curl_easy_init();
     if (curl)
     {
-        curl_formadd(&formpost, &lastptr,
+        curl_formadd(&formpost, &lastpost,
                 CURLFORM_COPYNAME, "file",
                 CURLFORM_BUFFER, fname,
                 CURLFORM_BUFFERPTR, data,

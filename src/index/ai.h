@@ -43,6 +43,7 @@ typedef struct AIManager
 
 // ai_manager.c
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size);
+void mgr_exit();
 ADFS_RESULT mgr_upload(const char *name_space, const char *fname, size_t fname_len, void *fp, size_t fp_len);
 void mgr_exit();
 
@@ -54,5 +55,5 @@ int parse_conf(char *p, char *key, char *value);
 ADFS_RESULT parse_filename(char * p);
 
 // ai_connect.c
-ADFS_RESULT aic_save();
+ADFS_RESULT aic_upload();
 

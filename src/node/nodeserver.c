@@ -112,7 +112,7 @@ int main(int argc, char** argv)
                 return 0;
             case 'v':
                 printf( "\n"
-                        "ADFS - Node v3.0.0\n"
+                        "ADFSN - " ADFS_VERSION "\n"
                         "build:     " __DATE__ " " __TIME__ "\n"
                         "\n"
                       );
