@@ -26,7 +26,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     AIManager *pm = &g_manager;
 
     memset(pm, 0, sizeof(*pm));
-    if (strlen(path) > PATH_MAX)
+    if (strlen(path) > ADFS_MAX_PATH)
         return ADFS_ERROR;
 
     printf("mgr-init 10\n");
@@ -41,7 +41,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
-    char indexdb_path[PATH_MAX] = {0};
+    char indexdb_path[ADFS_MAX_PATH] = {0};
     sprintf(indexdb_path, "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
 
@@ -65,7 +65,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 {
     AIManager *pm = &g_manager;
     
-    char key[PATH_MAX] = {0};
+    char key[ADFS_MAX_PATH] = {0};
     if (name_space)
         sprintf(key, "%s#%s", name_space, fname);
     else
@@ -91,7 +91,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
             start = pos_split + 1;
         }
 
-        char url[PATH_MAX] = {0};
+        char url[ADFS_MAX_PATH] = {0};
         DS_List *tmp = node_list;
         while (tmp)
         {
@@ -119,8 +119,8 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
             // roll back
         }
 
-        char record[PATH_MAX] = {0};
-        char url[PATH_MAX] = {0};
+        char record[ADFS_MAX_PATH] = {0};
+        char url[ADFS_MAX_PATH] = {0};
         DS_List *tmp = node_list;
         while (tmp)
         {
@@ -164,7 +164,7 @@ char * mgr_download(const char *name_space, const char *fname)
 {
     AIManager *pm = &g_manager;
 
-    char key[PATH_MAX] = {0};
+    char key[ADFS_MAX_PATH] = {0};
     if (name_space)
         sprintf(key, "%s#%s", name_space, fname);
     else
@@ -183,15 +183,14 @@ char * mgr_download(const char *name_space, const char *fname)
     char *pos2 = strstr(pos1, "#");
     char *pos3 = strstr(pos1, "|");
 
-    char url[PATH_MAX] = {0};
+    char url[ADFS_MAX_PATH] = {0};
     if (name_space)
         sprintf(url, "http://%.*s/%s?namespace=%s", (int)(pos3-pos2-1), pos2+1, fname, name_space);
     else
         sprintf(url, "http://%.*s/%s", (int)(pos3-pos2), pos1+1, fname);
 
-    strncpy(*redirect_url, url, url_len);
     kcfree(record);
-    return redirect_url;
+    return url;
 }
 
 void mgr_exit()

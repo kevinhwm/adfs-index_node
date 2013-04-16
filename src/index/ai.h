@@ -4,7 +4,7 @@
  * huangtao@antiy.com
  */
 
-#include <linux/limits.h>                   // PATH_MAX
+#include <linux/limits.h>
 #include "../include/adfs.h"
 #include <kclangc.h>
 
@@ -46,7 +46,7 @@ typedef struct AIZone
 
 typedef struct AIManager
 {
-    char path[PATH_MAX];
+    char path[ADFS_MAX_PATH];
     KCDB * index_db;
 
     unsigned long kc_apow;

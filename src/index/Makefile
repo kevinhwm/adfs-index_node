@@ -13,7 +13,6 @@ OBJS = indexserver.o multipart_parser.o ai_manager.o ai_zone.o ai_function.o ai_
 all:$(OBJS)
 	$(CC) $(CFLAGS) -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
-
 indexserver.o:indexserver.c
 multipart_parser.o:multipart_parser.c
 ai_manager.o:ai_manager.c

@@ -152,7 +152,7 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            char fname[PATH_MAX] = {0};
+            char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
                 nxweb_response_printf( resp, "Failed. Check file name.\n" );
