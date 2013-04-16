@@ -11,7 +11,8 @@
 
 typedef struct DS_List
 {
-    char data[NAME_MAX];
+    char zone[NAME_MAX];
+    char node[NAME_MAX];
 
     struct DS_List *next;
 }DS_List;
@@ -27,8 +28,10 @@ typedef struct AINode
 typedef struct AIZone
 {
     char name[NAME_MAX];
-    int weight;
     int num;
+
+    double weight;
+    double count;
 
     struct AINode *head;
     struct AINode *tail;
@@ -60,6 +63,7 @@ typedef struct AIManager
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size);
 void mgr_exit();
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
+char * mgr_download(const char *name_space, const char *fname);
 
 // ai_zone.c
 ADFS_RESULT z_init(AIZone *_this, const char *name, int weight);
@@ -74,6 +78,7 @@ ADFS_RESULT parse_filename(char * p);
 // ai_connect.c
 ADFS_RESULT aic_upload();
 
-// ds_lit.c
-ADFS_RESULT list_add(DS_List **dsl, const char *s, size_t len);
+// ds_list.c
+ADFS_RESULT list_add(DS_List **dsl, const char *zone, size_t zlen, const char *node, size_t nlen);
 void list_free(DS_List *dsl);
+

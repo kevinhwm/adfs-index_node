@@ -112,24 +112,15 @@ static nxweb_result upload_on_request(
 { 
     printf("--- upload_on_request\n");
 
-    nxweb_parse_request_parameters(req, 0);
-    const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
-    const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
-    int ow = 0;
-    if (overwrite && strcmp(overwrite, "1") == 0)
-        ow = 1;
-
-    nxweb_set_response_content_type(resp, "text/html");
-    nxweb_set_response_charset(resp, "utf-8" );
-
-    if (req->content_length > MAX_FILE_SIZE)
+    if (req->content_length > ADFS_MAX_FILE_SIZE)
     {
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
 
+    nxweb_set_response_content_type(resp, "text/html");
+    nxweb_set_response_charset(resp, "utf-8" );
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
-
     nxweb_response_printf(resp, ""
             "<form method='post' enctype='multipart/form-data'>"
             "File(s) to upload: "
@@ -137,9 +128,15 @@ static nxweb_result upload_on_request(
             "<input type='submit' value='Upload' />"
             "</form>\n");
 
+    nxweb_parse_request_parameters(req, 0);
+    const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
+    const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
+    int ow = 0;
+    if (overwrite && strcmp(overwrite, "1") == 0)
+        ow = 1;
+
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-
     if (fwb) 
     {
         ufo->parser_settings.on_header_field = on_post_header_field;
@@ -219,12 +216,12 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (req->content_length > MAX_FILE_SIZE)
+    if (req->content_length > ADFS_MAX_FILE_SIZE)
         ufo->fpostmem = fopen("/dev/null", "wb");
     else
         ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
 
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, ADFS_MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

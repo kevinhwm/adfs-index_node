@@ -152,7 +152,7 @@ void mgr_exit()
 
 ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len)
 {
-    if (fp_len > MAX_FILE_SIZE)
+    if (fp_len > ADFS_MAX_FILE_SIZE)
         return ADFS_ERROR;
 
     ANNameSpace * pns = NULL;

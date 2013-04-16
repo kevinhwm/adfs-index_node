@@ -98,7 +98,7 @@ int parse_conf(char *line, char *key, char *value)
     return 1;
 }
 
-// parse url, then get real file name
+// parse url, then get real file name.
 ADFS_RESULT parse_filename(char * p)
 {
     char *pos = strstr(p, "?");

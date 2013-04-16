@@ -88,7 +88,7 @@ static nxweb_result download_on_request(
 
         printf("download -20\n");
         nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
-        printf("download -20\n");
+        printf("download -30\n");
     }
 
     return NXWEB_OK;

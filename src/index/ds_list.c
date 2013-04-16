@@ -6,14 +6,15 @@
 
 #include "ai.h"
 
-ADFS_RESULT list_add(DS_List **dsl, const char *s, size_t len)
+ADFS_RESULT list_add(DS_List **dsl, const char *zone, size_t zlen, const char *node, size_t nlen)
 {
     DS_List * new_dsl = (DS_List *)malloc(sizeof(DS_List));
     if (new_dsl == NULL)
         return ADFS_ERROR;
     memset(new_dsl, 0, sizeof(DS_List));
 
-    strncpy(new_dsl->data, s, sizeof(new_dsl->data));
+    strncpy(new_dsl->zone, zone, zlen);
+    strncpy(new_dsl->node, node, nlen);
     new_dsl->next = NULL;
 
     if (*dsl == NULL)

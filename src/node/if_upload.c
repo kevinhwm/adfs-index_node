@@ -222,7 +222,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[1] = '-';
 
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, MAX_FILE_SIZE);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, ADFS_MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;
