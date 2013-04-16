@@ -7,7 +7,7 @@ CFLAGS = -std=c99 -Wall
 LIBS = -lnxweb -lkyotocabinet -lrt -lcurl
 
 TARGET = indexserver
-OBJS = multipart_parser.o ai_manager.o ai_zone.o ai_function.o ai_connect.o indexserver.o if_upload.o
+OBJS = indexserver.o multipart_parser.o ai_manager.o ai_zone.o ai_function.o ai_connect.o ds_list.o if_upload.o
 
 
 all:$(OBJS)
@@ -20,6 +20,7 @@ ai_manager.o:ai_manager.c
 ai_zone.o:ai_zone.c
 ai_function.o:ai_function.c
 ai_connect.o:ai_connect.c
+ds_list.o:ds_list.c
 if_upload.o:if_upload.c
 
 

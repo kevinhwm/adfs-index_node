@@ -7,7 +7,7 @@
 #include "ai.h"
 
 
-ADFS_RESULT aic_upload(const char *url, const char *fname, void *data, size_t len)
+ADFS_RESULT aic_upload(const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
     ADFS_RESULT adfs_res = ADFS_ERROR;
 
@@ -20,8 +20,8 @@ ADFS_RESULT aic_upload(const char *url, const char *fname, void *data, size_t le
         curl_formadd(&formpost, &lastpost,
                 CURLFORM_COPYNAME, "file",
                 CURLFORM_BUFFER, fname,
-                CURLFORM_BUFFERPTR, data,
-                CURLFORM_BUFFERLENGTH, sizeof(data),
+                CURLFORM_BUFFERPTR, fdata,
+                CURLFORM_BUFFERLENGTH, fdata_len,
                 CURLFORM_END);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
