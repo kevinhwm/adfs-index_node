@@ -58,7 +58,7 @@ ADFS_RESULT mgr_init(const char * conf_file, const char *path, unsigned long mem
 
 ANNameSpace * mgr_create(const char *name_space) 
 {
-    printf("mgr-create 0\n");
+    DBG_PRINTSN("mgr-create 0");
 
     if (strlen(name_space) >= NAME_MAX)
         return NULL;
@@ -78,7 +78,7 @@ ANNameSpace * mgr_create(const char *name_space)
         return NULL;
     }
     
-    printf("mgr-create 10\n");
+    DBG_PRINTSN("mgr-create 10");
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
     ns_init(pns, name_space);
@@ -92,9 +92,10 @@ ANNameSpace * mgr_create(const char *name_space)
     }
 
     // node db of ADFS-Node
-    printf("mgr-create 20\n");
+    DBG_PRINTSN("mgr-create 20");
+    DBG_PRINTS("node num: ");
+    DBG_PRINTIN((long)node_num);
 
-    printf("%d\n", node_num);
     char tmp_path[PATH_MAX] = {0};
     for (int i=1; i <= node_num; i++)
     {
@@ -107,19 +108,19 @@ ANNameSpace * mgr_create(const char *name_space)
 
         if (i < node_num)
         {
-            printf("create ro db file\n");
+            DBG_PRINTS("create ro db file\n");
             if (pns->create(pns, i, tmp_path, strlen(tmp_path), S_READ_ONLY) == ADFS_ERROR)
                 return NULL;
         }
         else
         {
-            printf("create rw db file\n");
+            DBG_PRINTS("create rw db file\n");
             if (pns->create(pns, i, tmp_path, strlen(tmp_path), S_READ_WRITE) == ADFS_ERROR)
                 return NULL;
         }
     }
 
-    printf("mgr-create 30\n");
+    DBG_PRINTSN("mgr-create 30");
     
     pns->pre = pm->tail;
     pns->next = NULL;
@@ -228,17 +229,19 @@ void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, s
     if (id == NULL)
         return;
 
-    printf("mgr-download fname:%s\n", fname);
-    printf("mgr-download id:%s\n", id);
+    DBG_PRINTS("mgr-download fname: ");
+    DBG_PRINTSN(fname);
+    DBG_PRINTS("mgr-download id: ");
+    DBG_PRINTSN(id);
 
     NodeDB * pn = pns->get(pns, atoi(id));
     if (pn == NULL)
         return;
 
-    printf("mgr-download 60\n");
+    DBG_PRINTSN("mgr-download 60");
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
 
-    printf("mgr-download 70\n");
+    DBG_PRINTS("mgr-download 70");
     kcfree(id);
     return ;
 }
@@ -323,19 +326,24 @@ static ADFS_RESULT check_kch_name(char * name)
 // private
 static ANNameSpace * get_ns(const char * name_space)
 {
-    printf("mgr-getns 1\n");
+    DBG_PRINTSN("mgr-getns 1");
     ANNameSpace * tmp = g_manager.tail;
     while (tmp)
     {
+#ifdef DEBUG
         static int a = 100;
-        printf("mgr-getns %d\n", a++);
-        printf("%s:%s\n", tmp->name, name_space);
+#endif // DEBUG
+        DBG_PRINTS("mgr-getns :");
+        DBG_PRINTI((long)a++);
+        DBG_PRINTSN(tmp->name);
+        DBG_PRINTSN(name_space);
+
         if (strcmp(tmp->name, name_space) == 0)
             return tmp;
         tmp = tmp->pre;
     }
 
-    printf("mgr-getns 2\n");
+    DBG_PRINTSN("mgr-getns 2");
     return NULL;
 }
 

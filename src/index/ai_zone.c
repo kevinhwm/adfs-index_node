@@ -73,12 +73,7 @@ static AINode * z_rand_choose(AIZone *_this)
     int n = rand()%(_this->num);
     AINode *pn = _this->head;
     for (int i=0; i<n; ++i)
-    {
-        if (pn->next)
-            pn = pn->next;
-        else
-            return NULL;
-    }
+        pn = pn->next;
 
     return pn;
 }

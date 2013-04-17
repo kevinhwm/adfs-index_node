@@ -105,11 +105,15 @@ ADFS_RESULT parse_filename(char * p)
     if (pos != NULL)
         pos[0] = '\0';
 
+    DBG_PRINTS("parse file name 10\n");
+    DBG_PRINTSN(p);
     int len = 0;
     len = strlen(p);
     if (len == 0)
         return ADFS_ERROR;
 
+    DBG_PRINTS("parse file name 20\n");
+    DBG_PRINTSN(p);
     if (p[len-1] == '/')
         p[len-1] = '\0';
 
@@ -117,10 +121,14 @@ ADFS_RESULT parse_filename(char * p)
     if (len == 0)
         return ADFS_ERROR;
 
+    DBG_PRINTS("parse file name 30\n");
+    DBG_PRINTSN(p);
     if (p[0] == '/')
         for (int i=1; i<=len; ++i)
             p[i-1] = p[i];
 
+    DBG_PRINTS("parse file name 40\n");
+    DBG_PRINTSN(p);
     return ADFS_OK;
 }
 

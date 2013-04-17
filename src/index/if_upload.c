@@ -110,14 +110,16 @@ static nxweb_result upload_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
-    printf("--- upload_on_request\n");
+    DBG_PRINTS("--- upload_on_request\n");
 
     if (req->content_length > ADFS_MAX_FILE_SIZE)
     {
+        DBG_PRINTS("upload 5\n");
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
 
+    DBG_PRINTS("upload 10\n");
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
     nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
@@ -128,49 +130,72 @@ static nxweb_result upload_on_request(
             "<input type='submit' value='Upload' />"
             "</form>\n");
 
+    DBG_PRINTS("upload 20\n");
     nxweb_parse_request_parameters(req, 0);
     const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
     const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
     int ow = 0;
-    if (overwrite && strcmp(overwrite, "1") == 0)
+    if (overwrite && (strcmp(overwrite, "1") == 0) )
         ow = 1;
 
+    DBG_PRINTS("upload 30\n");
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) 
     {
+        DBG_PRINTS("upload 40\n");
         ufo->parser_settings.on_header_field = on_post_header_field;
         ufo->parser_settings.on_header_value = on_post_header_value;
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
         ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
+        DBG_PRINTS("upload 50\n");
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
+        DBG_PRINTS("upload 60\n");
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
+            DBG_PRINTS("upload 61\n");
+            DBG_PRINTSN(fname);
             if (parse_filename(fname) == ADFS_ERROR)
-                nxweb_response_printf( resp, "Failed. Check file name.\n" );
+            {
+                DBG_PRINTS("upload 62\n");
+                nxweb_response_printf( resp, "Failed. Check file name or namespace.\n" );
+            }
             else if ( mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR )
+            {
+                DBG_PRINTS("upload 63\n");
                 nxweb_response_printf( resp, "Failed. Can not save.\n" );
+            }
             else
+            {
+                DBG_PRINTS("upload 64\n");
                 nxweb_response_printf( resp, "OK.\n" );
+            }
+            DBG_PRINTS("upload 65\n");
         }
         else
+        {
+            DBG_PRINTS("upload 66\n");
             nxweb_response_printf( resp, "Failed. Check file name and name length.\n" );
+        }
 
+        DBG_PRINTS("upload 70\n");
         if ( ufo->file_ptr )
         {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }
+        DBG_PRINTS("upload 80\n");
     }
 
+    DBG_PRINTS("upload 90\n");
     return NXWEB_OK;
 }
 
@@ -181,7 +206,7 @@ static void upload_request_data_finalize(
         nxweb_http_response* resp, 
         nxe_data data) 
 {
-    printf("--- upload_request_data_finalize\n");
+    DBG_PRINTS("--- upload_request_data_finalize\n");
 
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
@@ -204,7 +229,7 @@ static nxweb_result upload_on_post_data(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data\n");
+    DBG_PRINTS("--- upload_on_post_data\n");
 
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
@@ -233,7 +258,7 @@ static nxweb_result upload_on_post_data_complete(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data_complete\n");
+    DBG_PRINTS("--- upload_on_post_data_complete\n");
     
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.

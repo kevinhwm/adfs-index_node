@@ -112,7 +112,7 @@ int main(int argc, char** argv)
                 return 0;
             case 'v':
                 printf( "\n"
-                        "ADFSN - " ADFS_VERSION "\n"
+                        "ADFS-Node v" ADFS_VERSION "\n"
                         "build:     " __DATE__ " " __TIME__ "\n"
                         "\n"
                       );
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    printf("call mgr_init\n");
+    DBG_PRINTSN("call mgr_init");
     if (mgr_init(conf_file, db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////

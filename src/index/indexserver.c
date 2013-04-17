@@ -12,7 +12,7 @@
 
 
 extern nxweb_handler upload_file_handler;
-//extern nxweb_handler download_handler;
+extern nxweb_handler download_handler;
 //extern nxweb_handler status_handler;
 //extern nxweb_handler isalive_handler;
 //extern nxweb_handler monitor_handler;
@@ -23,7 +23,7 @@ extern nxweb_handler upload_file_handler;
 
 
 NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
-//NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
+NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
 //NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    printf("call mgr_init\n");
+    DBG_PRINTS("call mgr_init\n");
     if (mgr_init(conf_file, db_path, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");

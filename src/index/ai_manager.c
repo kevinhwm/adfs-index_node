@@ -14,28 +14,32 @@
 
 
 static ADFS_RESULT mgr_create(const char *conf_file);
-static ADFS_RESULT mgr_decide(AIManager *pm, DS_List ** ppdsl);
-static AIZone * mgr_choose_node(AIManager *pm);
+static void mgr_decide(AIManager *pm, DS_List ** ppdsl);
+
+// return value:
+// NULL:    file not found
+// url :    "char *" must be freed by caller
+static AIZone * mgr_choose_node(AIManager *pm, const char * record);
 
 AIManager g_manager;
 
 
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size)
 {    
-    printf("mgr-init 0\n");
+    DBG_PRINTS("mgr-init 0\n");
     AIManager *pm = &g_manager;
 
     memset(pm, 0, sizeof(*pm));
     if (strlen(path) > ADFS_MAX_PATH)
         return ADFS_ERROR;
 
-    printf("mgr-init 10\n");
+    DBG_PRINTS("mgr-init 10\n");
     DIR *dirp = opendir(path);
     if( dirp == NULL ) 
         return ADFS_ERROR;
     closedir(dirp);
 
-    printf("mgr-init 20\n");
+    DBG_PRINTS("mgr-init 20\n");
     strncpy(pm->path, path, sizeof(pm->path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
@@ -46,14 +50,14 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
             pm->path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
 
     pm->index_db = kcdbnew();
-    if (kcdbopen(pm->index_db, indexdb_path, KCOWRITER|KCOCREATE) == 0)
+    if (kcdbopen(pm->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0)
         return ADFS_ERROR;
-    printf("mgr-init 30\n");
+    DBG_PRINTS("mgr-init 30\n");
 
     if (mgr_create(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
 
-    printf("mgr-init 40\n");
+    DBG_PRINTS("mgr-init 40\n");
     srand(time(NULL));
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
@@ -63,6 +67,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
 
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
+    DBG_PRINTS("mgr-upload 1\n");
     AIManager *pm = &g_manager;
     
     char key[ADFS_MAX_PATH] = {0};
@@ -71,9 +76,10 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     else
         sprintf(key, "#%s", fname);
 
+    DBG_PRINTS("mgr-upload 10\n");
+
     size_t vsize;
     char *record = kcdbget(pm->index_db, key, strlen(key), &vsize);
-    printf("search db: %s\nkey: %s\n", record, key);
     if (record != NULL && !overwrite)             // exist and not overwrite
     {
         return ADFS_OK;
@@ -113,11 +119,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     else                                        // not exist
     {
         DS_List *node_list = NULL;
-        if (mgr_decide(pm, &node_list) == ADFS_ERROR)
-        {
-            // failed
-            // roll back
-        }
+        mgr_decide(pm, &node_list);
 
         char record[ADFS_MAX_PATH] = {0};
         char url[ADFS_MAX_PATH] = {0};
@@ -144,7 +146,8 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
             tmp = tmp->next;
         }
         record[strlen(record)-1] = '\0';
-        printf("record: %s\n", record);
+        DBG_PRINTS("record: ");
+        DBG_PRINTSN(record);
         int32_t res = kcdbset(pm->index_db, key, strlen(key), record, strlen(record));
         if (res == 0)
         {
@@ -163,7 +166,6 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 char * mgr_download(const char *name_space, const char *fname)
 {
     AIManager *pm = &g_manager;
-
     char key[ADFS_MAX_PATH] = {0};
     if (name_space)
         sprintf(key, "%s#%s", name_space, fname);
@@ -175,20 +177,23 @@ char * mgr_download(const char *name_space, const char *fname)
     if (record == NULL)
         return NULL;
 
-    AIZone *pz = mgr_choose_node(pm);
+    AIZone *pz = mgr_choose_node(pm, record);
     if (pz == NULL)
         return NULL;
 
-    char *pos1 = strstr(record, pz->name);         // record like: zone#node|zone#node
+    char *pos1 = strstr(record, pz->name);      // record like: zone#node|zone#node
     char *pos2 = strstr(pos1, "#");
     char *pos3 = strstr(pos1, "|");
 
-    char url[ADFS_MAX_PATH] = {0};
-    if (name_space)
-        sprintf(url, "http://%.*s/%s?namespace=%s", (int)(pos3-pos2-1), pos2+1, fname, name_space);
-    else
-        sprintf(url, "http://%.*s/%s", (int)(pos3-pos2), pos1+1, fname);
+    char *url = (char *)malloc(ADFS_MAX_PATH);
+    if (url == NULL)
+        return NULL;
 
+    memset(url, 0, ADFS_MAX_PATH);
+    if (name_space)
+        sprintf(url, "http://%.*s/download/%s?namespace=%s", (int)(pos3-pos2-1), pos2+1, fname, name_space);
+    else
+        sprintf(url, "http://%.*s/download/%s", (int)(pos3-pos2-1), pos2+1, fname);
     kcfree(record);
     return url;
 }
@@ -197,7 +202,7 @@ void mgr_exit()
 {
     AIManager *pm = &g_manager;
 
-    printf("exit 10\n");
+    DBG_PRINTS("exit 10\n");
     AIZone *pz = pm->head;
     while (pz)
     {
@@ -207,19 +212,19 @@ void mgr_exit()
         tmp->release_all(tmp);
         free(tmp);
     }
-    printf("exit 20\n");
+    DBG_PRINTS("exit 20\n");
     kcdbclose(pm->index_db);
-    printf("exit 30\n");
+    DBG_PRINTS("exit 30\n");
     kcdbdel(pm->index_db);
 
-    printf("exit 40\n");
+    DBG_PRINTS("exit 40\n");
     curl_global_cleanup();
 }
 
 // private
 static ADFS_RESULT mgr_create(const char *conf_file)
 {
-    printf("mgr-create 10\n");
+    DBG_PRINTS("mgr-create 10\n");
     AIManager *pm = &g_manager;
 
     char value[NAME_MAX] = {0};
@@ -227,12 +232,12 @@ static ADFS_RESULT mgr_create(const char *conf_file)
     if (get_conf(conf_file, "zone_num", value, sizeof(value)) == ADFS_ERROR)
         return ADFS_ERROR;
 
-    printf("mgr-create 20\n");
+    DBG_PRINTS("mgr-create 20\n");
     int zone_num = atoi(value);
     if (zone_num <= 0)
         return ADFS_ERROR;
     
-    printf("mgr-create 30\n");
+    DBG_PRINTS("mgr-create 30\n");
     for (int i=0; i<zone_num; ++i)
     {
         char key[NAME_MAX] = {0};
@@ -240,27 +245,27 @@ static ADFS_RESULT mgr_create(const char *conf_file)
         char weight[NAME_MAX] = {0};
         char num[NAME_MAX] = {0};
 
-        printf("mgr-create 40\n");
+        DBG_PRINTS("mgr-create 40\n");
         snprintf(key, sizeof(key), "zone%d_name", i);
 
-        printf("%s\n", conf_file);
-        printf("%s\n", key);
-        printf("%s\n", name);
+        DBG_PRINTSN(conf_file);
+        DBG_PRINTSN(key);
+        DBG_PRINTSN(name);
 
         if (get_conf(conf_file, key, name, sizeof(name)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-        printf("mgr-create 50\n");
+        DBG_PRINTS("mgr-create 50\n");
         snprintf(key, sizeof(key), "zone%d_weight", i);
         if (get_conf(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-        printf("mgr-create 60\n");
+        DBG_PRINTS("mgr-create 60\n");
         AIZone *pz = (AIZone *)malloc(sizeof(AIZone));
         if (z_init(pz, name, atoi(weight)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-        printf("mgr-create 70\n");
+        DBG_PRINTS("mgr-create 70\n");
         pz->pre = pm->tail;
         pz->next = NULL;
         if (pm->tail)
@@ -273,57 +278,57 @@ static ADFS_RESULT mgr_create(const char *conf_file)
         if (get_conf(conf_file, key, num, sizeof(num)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-        printf("mgr-create 80\n");
+        DBG_PRINTS("mgr-create 80\n");
         int node_num = atoi(num);
         if (node_num <= 0)
             return ADFS_ERROR;
 
-        printf("mgr-create 90\n");
+        DBG_PRINTS("mgr-create 90\n");
         for (int j=0; j<node_num; ++j)
         {
-            printf("i=%d, j=%d\n", i, j);
+            DBG_PRINTS("i=");
+            DBG_PRINTI((long)i);
+            DBG_PRINTS(", j=");
+            DBG_PRINTIN((long)j);
+
             snprintf(key, sizeof(key), "zone%d_%d", i, j);
             if (get_conf(conf_file, key, value, sizeof(value)) == ADFS_ERROR)
                 return ADFS_ERROR;
-            printf("mgr-create 100\n");
+            DBG_PRINTS("mgr-create 100\n");
             if (strlen(value) <= 0)
                 return ADFS_ERROR;
-            printf("mgr-create 110\n");
+            DBG_PRINTS("mgr-create 110\n");
             if (pz->create(pz, value) == ADFS_ERROR)
                 return ADFS_ERROR;
         }
-        printf("mgr-create 120\n");
+        DBG_PRINTS("mgr-create 120\n");
     }
     return ADFS_OK;
 }
 
-static ADFS_RESULT mgr_decide(AIManager *pm, DS_List ** ppdsl)
+static void mgr_decide(AIManager *pm, DS_List ** ppdsl)
 {
-    ADFS_RESULT res = ADFS_ERROR;
+    *ppdsl = NULL;
     AIZone *pz = pm->head;
     while (pz)
     {
         AINode * pn = pz->rand_choose(pz);
-        if (pn == NULL)
-        {
-            // failed. roll back.
-            ;
-        }
-
         list_add(ppdsl, pz->name, strlen(pz->name), pn->ip_port, strlen(pn->ip_port));
         pz = pz->next;
     }
-    return res;
 }
 
-static AIZone * mgr_choose_node(AIManager *pm)
+static AIZone * mgr_choose_node(AIManager *pm, const char *record)
 {
-    AIZone *pz = pm->head;
-
-    AIZone *biggest_z = NULL;
+    AIZone *biggest_z = NULL;   // (weight/count)
     AIZone *least_z = NULL;
+
+    AIZone *pz = pm->head;
     while (pz)
     {
+        if (strstr(record, pz->name) == NULL)
+            continue;
+
         if (pz->count == 0)
         {
             pz->count += 1;
@@ -334,13 +339,20 @@ static AIZone * mgr_choose_node(AIManager *pm)
         else
         {
             biggest_z = (pz->weight / pz->count) > (biggest_z->weight / biggest_z->count) ? pz : biggest_z;
-            least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;
+
+            if (least_z == NULL)
+                least_z = pz;
+            else
+                least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;
         }
         pz = pz->next;
     }
     biggest_z->count += 1;
 
-    if (biggest_z == least_z)
+    // 对于互质的 weight1 和 weight2，
+    // 不存在 count1 和 count2, count属于正整数范围内且 weight > count > 0,
+    // 使(weight1/count1) = (weight2/count2)
+    if (biggest_z == least_z)   
     {
         pz = pm->head;
         while (pz)

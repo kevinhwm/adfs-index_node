@@ -20,10 +20,10 @@ static nxweb_result download_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("download - request\n");
+    DBG_PRINTS("download - request\n");
     if (strlen(req->path_info) >= ADFS_MAX_PATH)
     {
-        nxweb_send_http_error(resp, 400, "Failed. File name is too long");
+        nxweb_send_http_error(resp, 400, "Failed. File name is too long. must less than 1024.");
         return NXWEB_ERROR;
     }
 
@@ -38,7 +38,7 @@ static nxweb_result download_on_request(
         return NXWEB_ERROR;
     }
 
-    char *redirect_url = mgr_download(name_space, fname)
+    char *redirect_url = mgr_download(name_space, fname);
     if (redirect_url == NULL)
     {
         nxweb_send_http_error(resp, 404, "Failed. No file");
@@ -46,7 +46,7 @@ static nxweb_result download_on_request(
     }
     else
     {
-        nxweb_send_http_error(resp, 303, redirect_url);
+        nxweb_send_redirect(resp, 303, redirect_url, conn->secure);
         free(redirect_url);
         return NXWEB_OK;
     }
