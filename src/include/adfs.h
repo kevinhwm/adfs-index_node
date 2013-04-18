@@ -22,12 +22,12 @@ typedef enum _ADFS_RESULT
 #ifdef DEBUG
 #include <stdio.h>
 
-#define DBG_PRINTS(x) printf("%s", x)
-#define DBG_PRINTSN(x) printf("%s\n", x)
-#define DBG_PRINTI(x) printf("%ld", x)
-#define DBG_PRINTIN(x) printf("%ld\n", x)
-#define DBG_PRINTP(x) printf("%lu", x)
-#define DBG_PRINTPN(x) printf("%lu\n", x)
+#define DBG_PRINTS(x)   printf("%s", x)
+#define DBG_PRINTSN(x)  printf("%s\n", x)
+#define DBG_PRINTI(x)   printf("%ld", x)
+#define DBG_PRINTIN(x)  printf("%ld\n", x)
+#define DBG_PRINTP(x)   printf("%lu", x)
+#define DBG_PRINTPN(x)  printf("%lu\n", x)
 #else
 #define DBG_PRINTS(x)
 #define DBG_PRINTSN(x)

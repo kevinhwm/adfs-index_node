@@ -67,7 +67,7 @@ static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *
             CURLFORM_END);
 
     DBG_PRINTS("40\n");
-    DBG_PRINTPN(curl);
+    DBG_PRINTPN((unsigned long)curl);
     DBG_PRINTSN(url);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     DBG_PRINTS("41\n");
