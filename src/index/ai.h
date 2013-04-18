@@ -5,8 +5,10 @@
  */
 
 #include <linux/limits.h>
+#include <pthread.h>
 #include "../include/adfs.h"
 #include <kclangc.h>
+#include <curl/curl.h>
 
 
 typedef struct DS_List
@@ -17,9 +19,13 @@ typedef struct DS_List
     struct DS_List *next;
 }DS_List;
 
+#define ADFS_NODE_CURL_NUM  2
 typedef struct AINode
 {
     char ip_port[64];
+
+    CURL *curl[ADFS_NODE_CURL_NUM];
+    pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
 
     struct AINode *pre;
     struct AINode *next;
@@ -76,7 +82,7 @@ void trim_right(char * p);
 ADFS_RESULT parse_filename(char * p);
 
 // ai_connect.c
-ADFS_RESULT aic_upload();
+ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
 
 // ds_list.c
 ADFS_RESULT list_add(DS_List **dsl, const char *zone, size_t zlen, const char *node, size_t nlen);

@@ -110,7 +110,7 @@ static nxweb_result upload_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
-    printf("--- upload_on_request\n");
+    DBG_PRINTS("--- upload_on_request\n");
 
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
@@ -186,7 +186,7 @@ static void upload_request_data_finalize(
         nxweb_http_response* resp, 
         nxe_data data) 
 {
-    printf("--- upload_request_data_finalize\n");
+    DBG_PRINTS("--- upload_request_data_finalize\n");
 
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
@@ -209,7 +209,7 @@ static nxweb_result upload_on_post_data(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data\n");
+    DBG_PRINTS("--- upload_on_post_data\n");
 
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
@@ -234,7 +234,7 @@ static nxweb_result upload_on_post_data_complete(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("--- upload_on_post_data_complete\n");
+    DBG_PRINTS("--- upload_on_post_data_complete\n");
     
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.

@@ -40,7 +40,7 @@ static nxweb_result download_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    printf("download - request\n");
+    DBG_PRINTS("download - request\n");
     if (strlen(req->path_info) >= PATH_MAX)
     {
         nxweb_send_http_error(resp, 400, "Failed. File name is too long");
@@ -58,9 +58,12 @@ static nxweb_result download_on_request(
         return NXWEB_ERROR;
     }
 
-    printf("path_info: %s\n", req->path_info);
-    printf("fname: %s\n", fname);
-    printf("namespace: %s\n", name_space);
+    DBG_PRINTS("path_info: ");
+    DBG_PRINTSN(req->path_info);
+    DBG_PRINTS("fname: ");
+    DBG_PRINTSN(fname);
+    DBG_PRINTS("namespace: ");
+    DBG_PRINTSN(name_space);
 
     void *pfile_data = NULL;
     size_t file_size = 0;
@@ -73,7 +76,7 @@ static nxweb_result download_on_request(
     }
     else
     {
-        printf("download -10\n");
+        DBG_PRINTS("download -10\n");
         SHARE_DATA *ptmp = nxb_alloc_obj(req->nxb, sizeof(SHARE_DATA));
         nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void *)ptmp, download_request_data_finalize);
         ptmp->data_ptr = pfile_data;
@@ -86,9 +89,9 @@ static nxweb_result download_on_request(
         snprintf( resp_name, sizeof(resp_name), "attachment; filename=%s", file_name );
         nxweb_add_response_header(resp, "Content-disposition", resp_name );
 
-        printf("download -20\n");
+        DBG_PRINTS("download -20\n");
         nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
-        printf("download -30\n");
+        DBG_PRINTS("download -30\n");
     }
 
     return NXWEB_OK;

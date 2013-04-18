@@ -14,7 +14,7 @@
 
 
 static ADFS_RESULT mgr_create(const char *conf_file);
-static void mgr_decide(AIManager *pm, DS_List ** ppdsl);
+static AINode * mgr_getnode(const char *);
 
 // return value:
 // NULL:    file not found
@@ -86,80 +86,73 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     }
     else if (record != NULL && overwrite)         // exist and overwrite
     {
+        char url[ADFS_MAX_PATH] = {0};
+
         char *start = record;
         char *pos_split = NULL;
         char *pos_sharp = NULL;
-        DS_List * node_list = NULL;
         while ((pos_sharp = strstr(start, "#")))
         {
             pos_split = strstr(pos_sharp, "|");
-            list_add(&node_list, start, pos_sharp - start, pos_sharp + 1, pos_split - pos_sharp -1);
-            start = pos_split + 1;
-        }
 
-        char url[ADFS_MAX_PATH] = {0};
-        DS_List *tmp = node_list;
-        while (tmp)
-        {
+            char tmp_node[NAME_MAX] = {0};
+            strncpy(tmp_node, pos_sharp + 1, pos_split - pos_sharp -1);
+
             if (name_space)
-                sprintf(url, "http://%s/%s?namespace=%s", tmp->node, fname, name_space);
+                sprintf(url, "http://%s/%s?namespace=%s", tmp_node, fname, name_space);
             else
-                sprintf(url, "http://%s/%s", tmp->node, fname);
+                sprintf(url, "http://%s/%s", tmp_node, fname);
+            DBG_PRINTSN(url);
 
-            if (aic_upload(url, fname, fdata, fdata_len) == ADFS_ERROR)
+            
+            if (aic_upload(mgr_getnode(tmp_node), url, fname, fdata, fdata_len) == ADFS_ERROR)
             {
+                printf("upload error: %s\n", url);
                 // failed
                 // roll back
             }
-            tmp = tmp->next;
-        }
 
-        list_free(node_list);
+            start = pos_split + 1;
+        }
     }
     else                                        // not exist
     {
-        DS_List *node_list = NULL;
-        mgr_decide(pm, &node_list);
-
-        char record[ADFS_MAX_PATH] = {0};
-        char url[ADFS_MAX_PATH] = {0};
-        DS_List *tmp = node_list;
-        while (tmp)
+        char new_record[ADFS_MAX_PATH] = {0};
+        AIZone *pz = pm->head;
+        while (pz)
         {
+            AINode * pn = pz->rand_choose(pz);
+            char url[ADFS_MAX_PATH] = {0};
             if (name_space)
-                sprintf(url, "http://%s/upload_file/%s?namespace=%s", tmp->node, fname, name_space);
+                sprintf(url, "http://%s/upload_file/%s?namespace=%s", pn->ip_port, fname, name_space);
             else
-                sprintf(url, "http://%s/upload_file/%s", tmp->node, fname);
-
-            printf("%s\n", url);
-            if (aic_upload(url, fname, fdata, fdata_len) == ADFS_ERROR)
+                sprintf(url, "http://%s/upload_file/%s", pn->ip_port, fname);
+            DBG_PRINTSN(url);
+            if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR)
             {
+                printf("upload error: %s\n", url);
                 // failed
                 // roll back
             }
-
-            strncat(record, tmp->zone, sizeof(record));
-            strcat(record, "#");
-            strncat(record, tmp->node, sizeof(record));
-            strcat(record, "|");
-
-            tmp = tmp->next;
+            strncat(new_record, pz->name, sizeof(new_record));
+            strcat(new_record, "#");
+            strncat(new_record, pn->ip_port, sizeof(new_record));
+            strcat(new_record, "|");
+            pz = pz->next;
         }
-        record[strlen(record)-1] = '\0';
-        DBG_PRINTS("record: ");
-        DBG_PRINTSN(record);
-        int32_t res = kcdbset(pm->index_db, key, strlen(key), record, strlen(record));
+        new_record[strlen(new_record)-1] = '\0';
+        DBG_PRINTS("new_record: ");
+        DBG_PRINTSN(new_record);
+
+        int32_t res = kcdbset(pm->index_db, key, strlen(key), new_record, strlen(new_record));
         if (res == 0)
         {
             // failed
             // roll back
         }
-
-        list_free(node_list);
     }
 
     kcfree(record);
-
     return ADFS_OK;
 }
 
@@ -306,18 +299,6 @@ static ADFS_RESULT mgr_create(const char *conf_file)
     return ADFS_OK;
 }
 
-static void mgr_decide(AIManager *pm, DS_List ** ppdsl)
-{
-    *ppdsl = NULL;
-    AIZone *pz = pm->head;
-    while (pz)
-    {
-        AINode * pn = pz->rand_choose(pz);
-        list_add(ppdsl, pz->name, strlen(pz->name), pn->ip_port, strlen(pn->ip_port));
-        pz = pz->next;
-    }
-}
-
 static AIZone * mgr_choose_node(AIManager *pm, const char *record)
 {
     AIZone *biggest_z = NULL;   // (weight/count)
@@ -365,3 +346,19 @@ static AIZone * mgr_choose_node(AIManager *pm, const char *record)
     return biggest_z;
 }
 
+static AINode * mgr_getnode(const char *node)
+{
+    AIZone *pz = g_manager.head;
+    while (pz)
+    {
+        AINode * pn = pz->head;
+        while (pn)
+        {
+            if (strcmp(pn->ip_port, node) == 0)
+                return pn;
+            pn = pn->next;
+        }
+        pz = pz->next;
+    }
+    return NULL;
+}

@@ -62,7 +62,7 @@ static void server_main()
     nxweb_run();
 
     mgr_exit();
-    printf("ADFS-Node exit!\n");
+    printf("ADFS-Node exit.\n");
 }
 
 
