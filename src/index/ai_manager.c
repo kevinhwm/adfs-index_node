@@ -15,10 +15,6 @@
 
 static ADFS_RESULT mgr_create(const char *conf_file);
 static AINode * mgr_getnode(const char *);
-
-// return value:
-// NULL:    file not found
-// url :    "char *" must be freed by caller
 static AIZone * mgr_choose_node(AIManager *pm, const char * record);
 
 AIManager g_manager;
@@ -156,6 +152,9 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     return ADFS_OK;
 }
 
+// return value:
+// NULL:    file not found
+// url :    "char *" must be freed by caller
 char * mgr_download(const char *name_space, const char *fname)
 {
     AIManager *pm = &g_manager;

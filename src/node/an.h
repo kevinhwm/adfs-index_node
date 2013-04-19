@@ -53,7 +53,7 @@ typedef struct ANNameSpace
 
 typedef struct ANManager
 {
-    char path[PATH_MAX];
+    char path[ADFS_MAX_PATH];
     struct ANNameSpace * head;
     struct ANNameSpace * tail;
 
@@ -69,7 +69,6 @@ ADFS_RESULT ns_init(ANNameSpace *_this, const char * name_space);
 
 // an_manager.c
 ADFS_RESULT mgr_init(const char * conf_file, const char * dbpath, unsigned long cache_size);
-ANNameSpace * mgr_create(const char *name_space);
 void mgr_exit();
 ADFS_RESULT mgr_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size);

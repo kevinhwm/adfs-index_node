@@ -114,29 +114,25 @@ static nxweb_result upload_on_request(
 
     if (req->content_length > ADFS_MAX_FILE_SIZE)
     {
-        DBG_PRINTS("upload 5\n");
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
     if (strlen(req->uri) >= ADFS_MAX_PATH)
     {
-        DBG_PRINTS("upload 7\n");
         nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
         return NXWEB_OK;
     }
 
-    DBG_PRINTS("upload 10\n");
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
-    nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
     nxweb_response_printf(resp, ""
+            "<html><head><title>Upload Module</title></head><body>"
             "<form method='post' enctype='multipart/form-data'>"
             "File(s) to upload: "
             "<input type='file' multiple name='uploadedfile' />"
             "<input type='submit' value='Upload' />"
             "</form>\n");
 
-    DBG_PRINTS("upload 20\n");
     nxweb_parse_request_parameters(req, 0);
     const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
     const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
@@ -144,64 +140,42 @@ static nxweb_result upload_on_request(
     if (overwrite && (strcmp(overwrite, "1") == 0) )
         ow = 1;
 
-    DBG_PRINTS("upload 30\n");
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) 
     {
-        DBG_PRINTS("upload 40\n");
         ufo->parser_settings.on_header_field = on_post_header_field;
         ufo->parser_settings.on_header_value = on_post_header_value;
         ufo->parser_settings.on_part_data = on_post_body;
         ufo->parser_settings.on_body_end = on_post_finished;
         ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
-        DBG_PRINTS("upload 50\n");
         multipart_parser_set_data( ufo->parser, ufo );
         ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        DBG_PRINTS("upload 60\n");
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
-            DBG_PRINTS("upload 61\n");
-            DBG_PRINTSN(fname);
             if (parse_filename(fname) == ADFS_ERROR)
-            {
-                DBG_PRINTS("upload 62\n");
-                nxweb_response_printf( resp, "Failed. Check file name or namespace.\n" );
-            }
-            else if ( mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR )
-            {
-                DBG_PRINTS("upload 63\n");
-                nxweb_response_printf( resp, "Failed. Can not save.\n" );
-            }
+                nxweb_send_http_error(resp, 400, "Failed. Check file name or namespace.\n");
+            else if (mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+                nxweb_send_http_error(resp, 400, "Failed. Can not save.\n");
             else
-            {
-                DBG_PRINTS("upload 64\n");
-                nxweb_response_printf( resp, "OK.\n" );
-            }
-            DBG_PRINTS("upload 65\n");
+                nxweb_response_printf(resp, "OK.\n");
         }
         else
-        {
-            DBG_PRINTS("upload 66\n");
-            nxweb_response_printf( resp, "Failed. Check file name and name length.\n" );
-        }
+            nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.\n");
 
-        DBG_PRINTS("upload 70\n");
-        if ( ufo->file_ptr )
+        if (ufo->file_ptr)
         {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }
-        DBG_PRINTS("upload 80\n");
     }
 
-    DBG_PRINTS("upload 90\n");
     return NXWEB_OK;
 }
 

@@ -92,7 +92,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
     return 0;
 }
 
-int on_post_finished (multipart_parser * mp_obj)
+int on_post_finished(multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     if ( pufo->ffilemem )
@@ -112,16 +112,24 @@ static nxweb_result upload_on_request(
 { 
     DBG_PRINTS("--- upload_on_request\n");
 
+    nxweb_set_response_content_type(resp, "text/html");
+    nxweb_set_response_charset(resp, "utf-8" );
+    nxweb_response_printf(resp, ""
+            "<html><head><title>Upload Module</title></head><body>"
+            "<form method='post' enctype='multipart/form-data'>"
+            "File(s) to upload: "
+            "<input type='file' multiple name='uploadedfile' />"
+            "<input type='submit' value='Upload' />"
+            "</form>\n"
+            "</body>\n"
+            "</html>\n"
+            );
+
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
 
-    nxweb_set_response_content_type(resp, "text/html");
-    nxweb_set_response_charset(resp, "utf-8" );
-    nxweb_response_append_str(resp, "<html><head><title>Upload Module</title></head><body>\n");
-
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-
     if (fwb) 
     {
         ufo->parser_settings.on_header_field = on_post_header_field;
@@ -137,44 +145,24 @@ static nxweb_result upload_on_request(
 
         if ( strlen(ufo->filename) > 0 && ufo->file_complete )
         {
-            char fname[PATH_MAX] = {0};
+            char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
-            {
                 nxweb_send_http_error(resp, 400, "Failed. Check file name.");
-                return NXWEB_ERROR;
-            }
-            else if ( mgr_save(name_space, fname, strlen(fname), 
-                        ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
-            {
+            else if (mgr_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Can not save.");
-                return NXWEB_ERROR;
-            }
             else
-                nxweb_response_printf( resp, "OK.\n" );
+                nxweb_response_printf(resp, "OK.\n");
         }
         else
-        {
-            nxweb_send_http_error(resp, 400, "Failed. Check file name and name length." );
-            return NXWEB_ERROR;
-        }
+            nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.");
 
-        if ( ufo->file_ptr )
+        if (ufo->file_ptr)
         {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }
     }
-
-    nxweb_response_printf(resp, ""
-            "<form method='post' enctype='multipart/form-data'>"
-            "File(s) to upload: "
-            "<input type='file' multiple name='uploadedfile' />"
-            "<input type='submit' value='Upload' />"
-            "</form>\n"
-            "</body>\n"
-            "</html>\n"
-            );
 
     return NXWEB_OK;
 }
@@ -235,7 +223,7 @@ static nxweb_result upload_on_post_data_complete(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data_complete\n");
-    
+
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this

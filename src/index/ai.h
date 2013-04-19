@@ -11,15 +11,7 @@
 #include <curl/curl.h>
 
 
-typedef struct DS_List
-{
-    char zone[NAME_MAX];
-    char node[NAME_MAX];
-
-    struct DS_List *next;
-}DS_List;
-
-#define ADFS_NODE_CURL_NUM  2
+#define ADFS_NODE_CURL_NUM  4
 typedef struct AINode
 {
     char ip_port[64];
@@ -83,8 +75,4 @@ ADFS_RESULT parse_filename(char * p);
 
 // ai_connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
-
-// ds_list.c
-ADFS_RESULT list_add(DS_List **dsl, const char *zone, size_t zlen, const char *node, size_t nlen);
-void list_free(DS_List *dsl);
 

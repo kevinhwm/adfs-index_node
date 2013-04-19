@@ -41,7 +41,7 @@ static nxweb_result download_on_request(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("download - request\n");
-    if (strlen(req->path_info) >= PATH_MAX)
+    if (strlen(req->path_info) >= ADFS_MAX_PATH)
     {
         nxweb_send_http_error(resp, 400, "Failed. File name is too long");
         return NXWEB_ERROR;
@@ -50,7 +50,7 @@ static nxweb_result download_on_request(
     nxweb_parse_request_parameters( req, 0 );
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
 
-    char fname[PATH_MAX] = {0};
+    char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     if (parse_filename(fname) == ADFS_ERROR)
     {
@@ -58,16 +58,8 @@ static nxweb_result download_on_request(
         return NXWEB_ERROR;
     }
 
-    DBG_PRINTS("path_info: ");
-    DBG_PRINTSN(req->path_info);
-    DBG_PRINTS("fname: ");
-    DBG_PRINTSN(fname);
-    DBG_PRINTS("namespace: ");
-    DBG_PRINTSN(name_space);
-
     void *pfile_data = NULL;
     size_t file_size = 0;
-
     mgr_get(fname, name_space, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL || file_size == 0)
     {
@@ -76,22 +68,19 @@ static nxweb_result download_on_request(
     }
     else
     {
-        DBG_PRINTS("download -10\n");
         SHARE_DATA *ptmp = nxb_alloc_obj(req->nxb, sizeof(SHARE_DATA));
         nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void *)ptmp, download_request_data_finalize);
         ptmp->data_ptr = pfile_data;
 
-        char *file_name = fname, *tmp = NULL;
-        while ((tmp = strstr(file_name, "/")))
+        char *file_name = fname;
+        char *tmp = NULL;
+        while ( (tmp = strstr(file_name, "/")) )
             file_name = tmp + 1;
 
         char resp_name[NAME_MAX] = {0};
         snprintf( resp_name, sizeof(resp_name), "attachment; filename=%s", file_name );
         nxweb_add_response_header(resp, "Content-disposition", resp_name );
-
-        DBG_PRINTS("download -20\n");
         nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
-        DBG_PRINTS("download -30\n");
     }
 
     return NXWEB_OK;
