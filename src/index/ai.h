@@ -62,6 +62,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
 void mgr_exit();
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
 char * mgr_download(const char *name_space, const char *fname);
+ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
 
 // ai_zone.c
 ADFS_RESULT z_init(AIZone *_this, const char *name, int weight);
@@ -75,4 +76,4 @@ ADFS_RESULT parse_filename(char * p);
 
 // ai_connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
-
+ADFS_RESULT aic_delete(AINode *pn, const char *url);

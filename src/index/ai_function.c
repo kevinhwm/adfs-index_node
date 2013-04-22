@@ -1,3 +1,9 @@
+/* Antiy Labs. Basic Platform R & D Center
+ * ai_function.c
+ *
+ * huangtao@antiy.com
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include "ai.h"
@@ -55,10 +61,9 @@ void trim_left(char * p)
         else
             break;
     }
+
     for (; i<=strlen(p); ++j, ++i)
-    {
         p[j] = p[i];
-    }
 }
 
 void trim_right(char * p)

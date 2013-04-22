@@ -65,7 +65,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 {
     DBG_PRINTS("mgr-upload 1\n");
     AIManager *pm = &g_manager;
-    
+
     char key[ADFS_MAX_PATH] = {0};
     if (name_space)
         sprintf(key, "%s#%s", name_space, fname);
@@ -83,16 +83,20 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     else if (record != NULL && overwrite)         // exist and overwrite
     {
         char url[ADFS_MAX_PATH] = {0};
+        char tmp_node[NAME_MAX] = {0};
 
         char *start = record;
-        char *pos_split = NULL;
         char *pos_sharp = NULL;
-        while ((pos_sharp = strstr(start, "#")))
+        char *pos_split = NULL;
+        while (start)
         {
-            pos_split = strstr(pos_sharp, "|");
+            pos_sharp = strstr(start, "#");
+            pos_split = strstr(start, "|");
 
-            char tmp_node[NAME_MAX] = {0};
-            strncpy(tmp_node, pos_sharp + 1, pos_split - pos_sharp -1);
+            if (pos_split == NULL)
+                strcpy(tmp_node, pos_sharp + 1);
+            else
+                strncpy(tmp_node, pos_sharp + 1, pos_split - pos_sharp -1);
 
             if (name_space)
                 sprintf(url, "http://%s/%s?namespace=%s", tmp_node, fname, name_space);
@@ -100,12 +104,10 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
                 sprintf(url, "http://%s/%s", tmp_node, fname);
             DBG_PRINTSN(url);
 
-            
             if (aic_upload(mgr_getnode(tmp_node), url, fname, fdata, fdata_len) == ADFS_ERROR)
             {
                 printf("upload error: %s\n", url);
-                // failed
-                // roll back
+                // failed. roll back.
             }
 
             start = pos_split + 1;
@@ -127,8 +129,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
             if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR)
             {
                 printf("upload error: %s\n", url);
-                // failed
-                // roll back
+                // failed. roll back.
             }
             strncat(new_record, pz->name, sizeof(new_record));
             strcat(new_record, "#");
@@ -143,8 +144,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
         int32_t res = kcdbset(pm->index_db, key, strlen(key), new_record, strlen(new_record));
         if (res == 0)
         {
-            // failed
-            // roll back
+            // failed. roll back.
         }
     }
 
@@ -171,23 +171,96 @@ char * mgr_download(const char *name_space, const char *fname)
 
     AIZone *pz = mgr_choose_node(pm, record);
     if (pz == NULL)
+    {
+        kcfree(record);
         return NULL;
-
-    char *pos1 = strstr(record, pz->name);      // record like: zone#node|zone#node
-    char *pos2 = strstr(pos1, "#");
-    char *pos3 = strstr(pos1, "|");
+    }
 
     char *url = (char *)malloc(ADFS_MAX_PATH);
     if (url == NULL)
+    {
+        kcfree(record);
         return NULL;
+    }
+
+    char *start = strstr(record, pz->name);      // record like: zone#node|zone#node
+    char *pos_sharp = strstr(start, "#");
+    char *pos_split = strstr(start, "|");
 
     memset(url, 0, ADFS_MAX_PATH);
-    if (name_space)
-        sprintf(url, "http://%.*s/download/%s?namespace=%s", (int)(pos3-pos2-1), pos2+1, fname, name_space);
+    if (pos_split == NULL)
+        sprintf(url, "http://%s/download/%s", pos_sharp+1, fname);
     else
-        sprintf(url, "http://%.*s/download/%s", (int)(pos3-pos2-1), pos2+1, fname);
+        sprintf(url, "http://%.*s/download/%s", (int)(pos_split-pos_sharp-1), pos_sharp+1, fname);
+
+    if (name_space)
+    {
+        strncpy(url, "?namespace=", ADFS_MAX_PATH);
+        strncpy(url, name_space, ADFS_MAX_PATH);
+    }
+
     kcfree(record);
     return url;
+}
+
+ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
+{
+    char key[ADFS_MAX_PATH] = {0};
+    char url[ADFS_MAX_PATH] = {0}; 
+    char tmp_node[NAME_MAX] = {0};
+
+    size_t vsize = 0;
+    char *record = NULL;
+    char *start = NULL;
+    char *pos_sharp = NULL;
+    char *pos_split = NULL;
+
+    AIManager *pm = &g_manager;
+    if (name_space)
+        sprintf(key, "%s#%s", name_space, fname);
+    else
+        sprintf(key, "#%s", fname);
+
+    record = kcdbget(pm->index_db, key, strlen(key), &vsize);
+    if (record == NULL)
+        return ADFS_ERROR;
+
+    start = record;
+    while (start)
+    {
+        pos_sharp = strstr(start, "#");
+        pos_split = strstr(start, "|");
+
+        memset(url, 0, ADFS_MAX_PATH);
+        if (pos_split == NULL)
+            strcpy(tmp_node, pos_sharp+1);
+        else
+            strncpy(tmp_node, pos_sharp + 1, (int)(pos_split - pos_sharp - 1));
+        sprintf(url, "http://%s/delete/%s", tmp_node, fname);
+
+        if (name_space)
+        {
+            strncpy(url, "?namespace=", ADFS_MAX_PATH);
+            strncpy(url, name_space, ADFS_MAX_PATH);
+        }
+
+        if (aic_delete(mgr_getnode(tmp_node), url) == ADFS_ERROR)
+        {
+            // failed. roll back.
+            ;
+        }
+
+        if (pos_split == NULL)
+            break;
+        else
+            start = pos_split + 1;
+    }
+    kcdbremove(pm->index_db, key, strlen(key));
+    strncat(key, ".delete", ADFS_MAX_PATH);
+    kcdbset(pm->index_db, key, strlen(key), record, vsize);
+
+    kcfree(record);
+    return ADFS_OK;
 }
 
 void mgr_exit()
@@ -228,7 +301,7 @@ static ADFS_RESULT mgr_create(const char *conf_file)
     int zone_num = atoi(value);
     if (zone_num <= 0)
         return ADFS_ERROR;
-    
+
     DBG_PRINTS("mgr-create 30\n");
     for (int i=0; i<zone_num; ++i)
     {

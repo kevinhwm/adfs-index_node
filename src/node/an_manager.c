@@ -1,4 +1,5 @@
-/* an_manager.c
+/* Antiy Labs. Basic Platform R & D Center.
+ * an_manager.c
  *
  * huangtao@antiy.com
  */
@@ -169,6 +170,92 @@ void mgr_get(const char * fname, const char * name_space, void ** ppfile_data, s
     return ;
 }
 
+
+ADFS_RESULT mgr_delete(const char *fname, const char *name_space)
+{
+    ANNameSpace * pns = NULL;
+    if (name_space == NULL)
+        pns = get_ns("default");
+    else
+        pns = get_ns(name_space);
+
+    if (pns == NULL)
+        return ADFS_ERROR;
+
+    if (pns->index_db == NULL)
+        return ADFS_ERROR;
+
+    size_t len = 0;
+    char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
+    if (id == NULL)
+        return;
+
+    NodeDB * pn = pns->get(pns, atoi(id));
+    if (pn == NULL)
+        return ADFS_ERROR;
+
+    *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
+
+    kcfree(id);
+
+
+    char key[ADFS_MAX_PATH] = {0};
+    char url[ADFS_MAX_PATH] = {0}; 
+    char tmp_node[NAME_MAX] = {0};
+
+    size_t vsize = 0;
+    char *record = NULL;
+    char *start = NULL;
+    char *pos_sharp = NULL;
+    char *pos_split = NULL;
+
+    AIManager *pm = &g_manager;
+    if (name_space)
+        sprintf(key, "%s#%s", name_space, fname);
+    else
+        sprintf(key, "#%s", fname);
+
+    record = kcdbget(pm->index_db, key, strlen(key), &vsize);
+    if (record == NULL)
+        return ADFS_ERROR;
+
+    start = record;
+    while (start)
+    {
+        pos_sharp = strstr(start, "#");
+        pos_split = strstr(start, "|");
+
+        memset(url, 0, ADFS_MAX_PATH);
+        if (pos_split == NULL)
+            strcpy(tmp_node, pos_sharp+1);
+        else
+            strncpy(tmp_node, pos_sharp + 1, (int)(pos_split - pos_sharp - 1));
+        sprintf(url, "http://%s/delete/%s", tmp_node, fname);
+
+        if (name_space)
+        {
+            strncpy(url, "?namespace=", ADFS_MAX_PATH);
+            strncpy(url, name_space, ADFS_MAX_PATH);
+        }
+
+        if (aic_delete(mgr_getnode(tmp_node), url) == ADFS_ERROR)
+        {
+            // failed. roll back.
+            ;
+        }
+
+        if (pos_split == NULL)
+            break;
+        else
+            start = pos_split + 1;
+    }
+    kcdbremove(pm->index_db, key, strlen(key));
+    strncat(key, ".delete", ADFS_MAX_PATH);
+    kcdbset(pm->index_db, key, strlen(key), record, vsize);
+
+    kcfree(record);
+    return ADFS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //private

@@ -18,6 +18,10 @@ typedef enum _ADFS_RESULT
 }ADFS_RESULT;
 
 
+#define MSG_ERR_LONG_URL        "Failed. File name is too long, must less than 1024."
+#define MSG_ERR_ILLEGAL_NAME    "Failed. File name is illegal."
+#define MSG_ERR_NO_FILE         "Failed. No file."
+
 
 #ifdef DEBUG
 #include <stdio.h>

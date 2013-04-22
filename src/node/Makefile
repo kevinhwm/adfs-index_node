@@ -7,8 +7,7 @@ CFLAGS = -std=c99 -Wall
 INCLUDE = -I../include
 LIBS = -lnxweb -lkyotocabinet -lrt
 TARGET = nodeserver
-OBJS = multipart_parser.o an_manager.o an_namespace.o an_function.o if_upload.o if_download.o nodeserver.o
-#if_delete.o if_status.o
+OBJS = multipart_parser.o an_manager.o an_namespace.o an_function.o if_upload.o if_download.o nodeserver.o if_delete.o
 
 
 release:$(OBJS)
@@ -22,6 +21,7 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_function.o an_function.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_upload.o if_upload.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_download.o if_download.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_delete.o if_delete.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
