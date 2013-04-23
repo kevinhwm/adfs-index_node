@@ -26,7 +26,7 @@ typedef struct _upload_file_object
     int                       file_complete;
     void *                    file_ptr;
     size_t                    file_len;
-    FILE *					  ffilemem;
+    FILE *                    ffilemem;
     multipart_parser_settings parser_settings;
     multipart_parser *        parser;
     char                      key[1024];
@@ -239,7 +239,7 @@ static nxweb_result upload_on_post_data_complete(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data_complete\n");
-    
+
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this

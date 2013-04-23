@@ -1,0 +1,17 @@
+B debug:
+提供更详细的信息
+
+A 正常
+upload事件
+download事件
+数据同步等
+配置相关……
+
+C warning
+磁盘空间，内存紧张
+
+D error
+节点故障……
+
+E critical
+系统漰溃

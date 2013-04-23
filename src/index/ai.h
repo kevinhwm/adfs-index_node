@@ -77,3 +77,4 @@ ADFS_RESULT parse_filename(char * p);
 // ai_connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
 ADFS_RESULT aic_delete(AINode *pn, const char *url);
+

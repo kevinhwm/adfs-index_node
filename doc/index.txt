@@ -1,64 +1,64 @@
-index node 详细设计文档
+Index
 
-一 概述：
-1. index-node存储系统,逻辑上分为三个组成部分：index，node，sql-db。
-2. index只有一份实例，node有一份或多份实例。index与node之间为一对多关系，即任一index对应一个或多个node，任一node只隶属与一个index。
-3. index存储样本列表，node存储实际样本文件。
-4. node中以一个常数来分割实体存储文件
+一 概述
+Index作为ADFS的一个组成部分，起到接受用户请求、负载均衡、监控系统状态等作用。
 
-二 组成：
-1. index。
-	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
-2. node。
-	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
-3. sql-db。
-	（1）PostgreSQL 数据库。
+1 环境
 
+1.1 操作系统
+开发系统为Fedora 18 x86_64环境，测试系统为CentOS 6.3 x86_64环境。
 
-三 处理流程
+1.2 依赖项
+1.2.1 开发依赖项
+(a) gcc
+(b) make
+(c) libcurl-devel
+(d) kyotocabinet-1.2.76
+(e) nxweb-3.1.0 修改版
+(f) zlib-devel (kyotocabinet需要)
 
-（一）主启动进程
-1. 启动程序，设置参数
-	"-l <ip_addr>  interface to listen on, default is 0.0.0.0\n"
-	"-p <num>      TCP port number to listen on (default: 1218)\n"
-	"-m            max upload file buffer, default is 10m, input is mb base\n"
-	"-u [pidfile]  pidfile if needed.\n"
-	"-c            conf file\n"
-	"-d            run as a daemon.\n"
-	"-v            print version\n\n\n"
-	"-h            print this help and exit\n";
-2. 设置若干信号的响应函数
-	SIGINT, SIGKILL（无效）, SIGQUIT, SIGHUP, SIGTERM
-3. 根据 -d 参数，确定是否创建后台进程。fork实现。
-4. 根据 -u 参数，确定是否创建 pid 文件。
-5. 启动 http 服务器。
+1.2.2 运行依赖项
+(a) kyotocabinet-1.2.76
+(b) nxweb-3.1.0 修改版
+(c) libcurl
+(d) zlib
 
-（二）http接口函数
-1. "upload"		cb_UploadFile
-（1）查找是否设置 overwirte 参数。
-（2）判断文件大小是否超过上限，如果超过则【return】。
-略：判断 http_header : checksum。
-（3）计算收到文件的MD5，并与文件名比较。
-	不同：【return】
-（4）查询是否有可用node
-	没有：【return】
-（5）没有设置 overwrite 参数，且当前样本已存在，【return】
-（6）设置 overwrite 参数，且当前样本已存在。随机选择node，存入样本
-（7）样本不存在，则保存到node。
+2 组成及结构
 
-2. "uploadkey"	cb_UploadData
-3. "download"	cb_Download
-11. "delete"	cb_DeleteKey
+2.1 安装后的文件
+(a) indexserver。主文件，二进制可执行文件。
+(b) indexserver.conf。本地配置文件，文本文件。
+(c) libkyotocabinet.so.16。kyotocabinet的动态链接库文件。
+(d) libnxweb.so.0。nxweb的动态链接库文件。
+说明：以上文件在同一目录下。
 
-4. "status"		cb_Status
-5. "config"		cb_Config
-6. "manage"		cb_Manage
-7. "retnNode"	cb_Retnnode
-8. "retn"		cb_RetnIndex
-9. "monitor"	cb_Monitor
-10. "view"		cb_ViewConfig
-12. "history"	cb_History
-13. "gethistory"	cb_GetHistory
-14. "exists"	cb_Exists
-15. ""		cb_Index
+2.2 运行时文件
+map.kch
+index.kch
 
+2.2.1 map.kch
+2.2.1.1 记录格式
+key: namespace#filename
+value: uuid1|uuid2|uuid3|...
+
+2.2.1.2 说明
+(a) “namespace”：命名空间。用户上传样本时指定的已预设命名空间之一。
+(b) “filename”：文件名。合法的文件名可以包含大小写字母，数字，“.”，除首尾字符外可以包含“/”。
+(c) “#”：不同元素之间的分隔符，属于内部关键字。
+(d) “uuid”：唯一标识符。各不相同，标识一个样本的历史唯一性，同时在内部作为索引的一部分。
+(e) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个为当前可下载的“默认”样本。
+(f) “|”：相同元素之间的分隔符。属于内部关键字。
+
+2.2.2 index.kch
+2.2.2.1 记录格式
+key: namespace#filename#uuid
+value: Zone1#Node1|Zone2#Node1|Zone3#Node2|...
+
+2.2.2.2 说明
+(a) “namespace”：命名空间。同2.2.1.2(a)。
+(b) “filename”：文件名。同2.2.1.2(b)。
+(c) “#”：同2.2.1.2(c)。
+(d) “Zone”：组织Node的基本单位，任意个Node组成一个Zone。不同的Zone之间所存储的文件完全相同，但是Node数量和结构可以不同。相见Node相关文档。
+(e) “Node”：Node的标识符。格式为“ip:port”形式，其为有效的ip和端口数据。
+(f) “...”：省略号。同2.2.1.2(e)。
+(g) “|”：同2.2.1.2(f)。
