@@ -14,11 +14,11 @@ static nxweb_result delete_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    char fname[ADFS_MAX_PATH] = {0};
+    char fname[ADFS_URL_PATH] = {0};
     const char *name_space = NULL;
 
     DBG_PRINTS("delete - request\n");
-    if (strlen(req->path_info) >= ADFS_MAX_PATH)
+    if (strlen(req->path_info) >= ADFS_URL_PATH)
     {
         nxweb_send_http_error(resp, 400, MSG_ERR_LONG_URL);
         return NXWEB_ERROR;

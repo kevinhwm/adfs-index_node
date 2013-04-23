@@ -13,9 +13,10 @@ Index作为ADFS的一个组成部分，起到接受用户请求、负载均衡�
 (a) gcc
 (b) make
 (c) libcurl-devel
-(d) kyotocabinet-1.2.76
-(e) nxweb-3.1.0 修改版
-(f) zlib-devel (kyotocabinet需要)
+(d) libuuid-devel
+(e) kyotocabinet-1.2.76
+(f) nxweb-3.1.0 修改版
+(g) zlib-devel (kyotocabinet需要)
 
 1.2.2 运行依赖项
 (a) kyotocabinet-1.2.76
@@ -46,7 +47,7 @@ value: uuid1|uuid2|uuid3|...
 (b) “filename”：文件名。合法的文件名可以包含大小写字母，数字，“.”，除首尾字符外可以包含“/”。
 (c) “#”：不同元素之间的分隔符，属于内部关键字。
 (d) “uuid”：唯一标识符。各不相同，标识一个样本的历史唯一性，同时在内部作为索引的一部分。
-(e) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个为当前可下载的“默认”样本。
+(e) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个“|”后的样本为当前“存在”样本，且是默认可下载样本。
 (f) “|”：相同元素之间的分隔符。属于内部关键字。
 
 2.2.2 index.kch
@@ -62,3 +63,20 @@ value: Zone1#Node1|Zone2#Node1|Zone3#Node2|...
 (e) “Node”：Node的标识符。格式为“ip:port”形式，其为有效的ip和端口数据。
 (f) “...”：省略号。同2.2.1.2(e)。
 (g) “|”：同2.2.1.2(f)。
+
+
+二 接口
+1 上传 - upload
+1.1 流程
+检验url并从中解析出filename、namespace和overwrite。如有不合法的地方返回失败。
+如果没有指定namespace，则namespace为默认值“default”。
+查询map库，是否已存在相同样本。
+    “存在，不覆盖”：返回成功；
+    “存在，覆盖”：map库中的uuid列表追加新值，index库中添加新项，并向Node上传文件；
+    “不存在”：map库中添加新记录，index库中添加新项，并向Node上传文件。
+* 数据一致性暂未解决。
+
+
+2 下载 - download
+
+3 删除 - delete

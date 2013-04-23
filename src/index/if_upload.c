@@ -117,7 +117,7 @@ static nxweb_result upload_on_request(
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
-    if (strlen(req->uri) >= ADFS_MAX_PATH)
+    if (strlen(req->uri) >= ADFS_URL_PATH)
     {
         nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
         return NXWEB_OK;

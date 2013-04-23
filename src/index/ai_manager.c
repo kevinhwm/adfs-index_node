@@ -9,6 +9,7 @@
 #include <sys/stat.h>   // mkdir
 #include <kclangc.h>
 #include <curl/curl.h>
+#include <uuid/uuid.h>
 #include <time.h>
 #include "ai.h"
 
@@ -38,10 +39,19 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
+
+    // create map db
+    char mapdb_path[ADFS_MAX_PATH] = {0};
+    sprintf(mapdb_path, "%s/mapdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+            pm->path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+    pm->map_db = kcdbnew();
+    if (kcdbopen(pm->map_db, mapdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0)
+        return ADFS_ERROR;
+
+    // create index db
     char indexdb_path[ADFS_MAX_PATH] = {0};
     sprintf(indexdb_path, "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-
     pm->index_db = kcdbnew();
     if (kcdbopen(pm->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0)
         return ADFS_ERROR;
@@ -56,25 +66,69 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     return ADFS_OK;
 }
 
-ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
+void mgr_exit()
 {
-    char key[ADFS_MAX_PATH] = {0};
-    size_t vsize;
-    char *record = NULL;
     AIManager *pm = &g_manager;
 
-    if (name_space)
-        sprintf(key, "%s#%s", name_space, fname);
-    else
-        sprintf(key, "#%s", fname);
+    AIZone *pz = pm->head;
+    while (pz)
+    {
+        AIZone *tmp = pz;
+        pz = pz->next;
 
-    record = kcdbget(pm->index_db, key, strlen(key), &vsize);
-    if (record != NULL && !overwrite)             // exist and not overwrite
+        tmp->release_all(tmp);
+        free(tmp);
+    }
+    kcdbclose(pm->map_db);
+    kcdbdel(pm->map_db);
+    kcdbclose(pm->index_db);
+    kcdbdel(pm->index_db);
+
+    curl_global_cleanup();
+}
+
+ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
+{
+    int exist = 1;
+    char map_key[ADFS_MAX_PATH] = {0};
+    char index_key[ADFS_MAX_PATH] = {0};
+    uuid_t uu;
+    char new_uuid[64] = {0};
+    size_t vsize;
+    char *map_record = NULL;
+    char *index_record = NULL;
+    char *new_record = NULL;
+    AIManager *pm = &g_manager;
+
+    // create a new uuid string
+    uuid_generate(&uu);
+    sprintf(new_uuid, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
+            uu[0], uu[1], uu[2], uu[3], uu[4], uu[5], uu[6], uu[7], 
+            uu[8], uu[9], uu[10], uu[11], uu[12], uu[13], uu[14], uu[15]);
+
+    if (name_space)
+        sprintf(map_key, "%s#%s", name_space, fname);
+    else
+        sprintf(map_key, "#%s", fname);
+
+    map_record = kcdbget(pm->map_db, map_key, strlen(map_key), &vsize);
+    // uuid 存在
+    // uuid| 不存在
+    // uuid|uuid 存在
+    if (map_record == NULL || map_record[vsize-1] == '|'])
+        exist = 0;
+
+    if (exist && !overwrite)             // exist and not overwrite
     {
         return ADFS_OK;
     }
-    else if (record != NULL && overwrite)         // exist and overwrite
+    else if (exist && overwrite)         // exist and overwrite
     {
+        // 取得当前的UUID
+        // 删除当前uuid指定的文件
+        // 修改map db中的记录，添加新的uuid
+        // 上传新样本
+
         char url[ADFS_MAX_PATH] = {0};
         char tmp_node[NAME_MAX] = {0};
 
@@ -252,25 +306,6 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
     return ADFS_OK;
 }
 
-void mgr_exit()
-{
-    AIManager *pm = &g_manager;
-
-    AIZone *pz = pm->head;
-    while (pz)
-    {
-        AIZone *tmp = pz;
-        pz = pz->next;
-
-        tmp->release_all(tmp);
-        free(tmp);
-    }
-    kcdbclose(pm->index_db);
-    kcdbdel(pm->index_db);
-
-    curl_global_cleanup();
-}
-
 // private
 static ADFS_RESULT mgr_create(const char *conf_file)
 {
@@ -367,7 +402,7 @@ static AIZone * mgr_choose_node(AIManager *pm, const char *record)
     biggest_z->count += 1;
 
     // 对于互质的 weight1 和 weight2，
-    // 不存在 count1 和 count2, count属于正整数范围内且 weight > count > 0,
+    // 不存在 count1 和 count2, (count属于正整数范围内且 weight > count > 0),
     // 使(weight1/count1) = (weight2/count2)
     if (biggest_z == least_z)   
     {

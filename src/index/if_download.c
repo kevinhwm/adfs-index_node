@@ -21,7 +21,7 @@ static nxweb_result download_on_request(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("download - request\n");
-    if (strlen(req->path_info) >= ADFS_MAX_PATH)
+    if (strlen(req->path_info) >= ADFS_URL_PATH)
     {
         nxweb_send_http_error(resp, 400, "Failed. File name is too long. must less than 1024.");
         return NXWEB_ERROR;

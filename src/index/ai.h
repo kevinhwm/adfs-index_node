@@ -45,6 +45,7 @@ typedef struct AIZone
 typedef struct AIManager
 {
     char path[ADFS_MAX_PATH];
+    KCDB * map_db;
     KCDB * index_db;
 
     unsigned long kc_apow;
