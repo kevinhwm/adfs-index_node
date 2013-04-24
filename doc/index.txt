@@ -1,82 +1,76 @@
-Index
+ADFS - Index
 
 一 概述
 Index作为ADFS的一个组成部分，起到接受用户请求、负载均衡、监控系统状态等作用。
 
-1 环境
+1.1 环境
+1.1.1 操作系统
+开发系统为Fedora 18 x86_64环境。
+测试系统为CentOS 6.3 x86_64环境。
 
-1.1 操作系统
-开发系统为Fedora 18 x86_64环境，测试系统为CentOS 6.3 x86_64环境。
-
-1.2 依赖项
-1.2.1 开发依赖项
+1.1.2 依赖项
+1.1.2.1 开发依赖项
 (a) gcc
 (b) make
 (c) libcurl-devel
-(d) libuuid-devel
-(e) kyotocabinet-1.2.76
-(f) nxweb-3.1.0 修改版
-(g) zlib-devel (kyotocabinet需要)
+(d) kyotocabinet-1.2.76
+(e) nxweb-3.1.0 修改版
+(f) zlib-devel (kyotocabinet需要)
 
-1.2.2 运行依赖项
+1.1.2.2 运行依赖项
 (a) kyotocabinet-1.2.76
 (b) nxweb-3.1.0 修改版
 (c) libcurl
 (d) zlib
 
-2 组成及结构
-
-2.1 安装后的文件
+1.2 组成及结构
+1.2.1 安装后的文件
 (a) indexserver。主文件，二进制可执行文件。
 (b) indexserver.conf。本地配置文件，文本文件。
 (c) libkyotocabinet.so.16。kyotocabinet的动态链接库文件。
 (d) libnxweb.so.0。nxweb的动态链接库文件。
 说明：以上文件在同一目录下。
 
-2.2 运行时文件
-map.kch
+1.2.2 运行时文件
 index.kch
 
-2.2.1 map.kch
-2.2.1.1 记录格式
-key: namespace#filename
-value: uuid1|uuid2|uuid3|...
+1.2.2.1 index.kch
+1.2.2.1.1 格式
+key: filename
+value: uuid1#zone1#node1|uuid2#zone2#node1|uuid3#zone3#node2|...
 
-2.2.1.2 说明
-(a) “namespace”：命名空间。用户上传样本时指定的已预设命名空间之一。
-(b) “filename”：文件名。合法的文件名可以包含大小写字母，数字，“.”，除首尾字符外可以包含“/”。
-(c) “#”：不同元素之间的分隔符，属于内部关键字。
-(d) “uuid”：唯一标识符。各不相同，标识一个样本的历史唯一性，同时在内部作为索引的一部分。
-(e) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个“|”后的样本为当前“存在”样本，且是默认可下载样本。
-(f) “|”：相同元素之间的分隔符。属于内部关键字。
+1.2.2.1.2 说明
+(a) “filename”：文件名。合法的文件名可以包含大小写字母，数字，“.”，除首尾字符外可以包含“/”。
+(b) “#”：不同元素之间的分隔符，属于内部关键字。在表达含义上优先与“|”。
+(c) “|”：相同元素之间的分隔符。属于内部关键字。在解析顺序上优先于“#”。
+(d) “uuid”：唯一标识符。标识一个样本的历史唯一性，同时在内部作为索引的一部分。由当前时间和随机数构成，格式为“YYYYmmddHHMMSSuuuuuurrrr”，共24个数字。
+(e) “zone”：组织Node的基本单位，任意个Node组成一个zone。不同的zone之间所存储的文件完全相同，但是Node数量和结构可以不同。详见Node相关文档。
+(f) “node”：Node的标识符。格式为“ip:port”形式，其为有效的ip和端口数据。
+(g) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个“|”后的样本为当前“存在”样本，且是默认可下载样本。
 
-2.2.2 index.kch
-2.2.2.1 记录格式
-key: namespace#filename#uuid
-value: Zone1#Node1|Zone2#Node1|Zone3#Node2|...
+1.3 源代码结构
+ai.h
+ai_node.h
+ai_node.c
+ai_zone.h
+ai_zone.c
+ai_manager.c
+indexserver.c
 
-2.2.2.2 说明
-(a) “namespace”：命名空间。同2.2.1.2(a)。
-(b) “filename”：文件名。同2.2.1.2(b)。
-(c) “#”：同2.2.1.2(c)。
-(d) “Zone”：组织Node的基本单位，任意个Node组成一个Zone。不同的Zone之间所存储的文件完全相同，但是Node数量和结构可以不同。相见Node相关文档。
-(e) “Node”：Node的标识符。格式为“ip:port”形式，其为有效的ip和端口数据。
-(f) “...”：省略号。同2.2.1.2(e)。
-(g) “|”：同2.2.1.2(f)。
+二 程序流程
+2.1 启动
 
-
-二 接口
-1 上传 - upload
-1.1 流程
-检验url并从中解析出filename、namespace和overwrite。如有不合法的地方返回失败。
-如果没有指定namespace，则namespace为默认值“default”。
-查询map库，是否已存在相同样本。
+2.2接口
+2.2.1 上传 - upload
+(a) 检验url并从中解析出filename、namespace和overwrite。如有不合法的地方返回失败。
+(b) 如果没有指定namespace，则namespace为默认值“default”。
+(c) 查询map库，是否已存在相同样本。
     “存在，不覆盖”：返回成功；
     “存在，覆盖”：map库中的uuid列表追加新值，index库中添加新项，并向Node上传文件；
     “不存在”：map库中添加新记录，index库中添加新项，并向Node上传文件。
+
 * 数据一致性暂未解决。
 
+2.2.2 下载 - download
 
-2 下载 - download
-
-3 删除 - delete
+2.2.3 删除 - delete

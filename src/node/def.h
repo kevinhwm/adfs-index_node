@@ -1,5 +1,5 @@
 /* Antiy Labs. Basic Platform R & D Center
- * adfs.h
+ * def.h
  *
  * huangtao@antiy.com
  */
@@ -12,10 +12,10 @@
 #define ADFS_MAX_PATH           2048
 #define ADFS_URL_PATH           1024
 
-typedef enum _ADFS_RESULT
+typedef enum ADFS_RESULT
 {
-    ADFS_OK         = 0,
     ADFS_ERROR      = -1,
+    ADFS_OK         = 0,
 }ADFS_RESULT;
 
 

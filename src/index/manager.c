@@ -9,9 +9,7 @@
 #include <sys/stat.h>   // mkdir
 #include <kclangc.h>
 #include <curl/curl.h>
-#include <uuid/uuid.h>
 #include <time.h>
-#include "ai.h"
 
 
 static ADFS_RESULT mgr_create(const char *conf_file);
@@ -23,6 +21,11 @@ AIManager g_manager;
 
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size)
 {    
+    // 验证conf_file是否存在
+    // 配置文件格式，必要的配置项是否都存在
+    // 取出所有的配置项，检查值是否在合法范围内
+    // 
+    
     AIManager *pm = &g_manager;
 
     memset(pm, 0, sizeof(*pm));
@@ -92,19 +95,11 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     int exist = 1;
     char map_key[ADFS_MAX_PATH] = {0};
     char index_key[ADFS_MAX_PATH] = {0};
-    uuid_t uu;
-    char new_uuid[64] = {0};
     size_t vsize;
     char *map_record = NULL;
     char *index_record = NULL;
     char *new_record = NULL;
     AIManager *pm = &g_manager;
-
-    // create a new uuid string
-    uuid_generate(&uu);
-    sprintf(new_uuid, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-            uu[0], uu[1], uu[2], uu[3], uu[4], uu[5], uu[6], uu[7], 
-            uu[8], uu[9], uu[10], uu[11], uu[12], uu[13], uu[14], uu[15]);
 
     if (name_space)
         sprintf(map_key, "%s#%s", name_space, fname);

@@ -3,8 +3,10 @@
  * huangtao@antiy.com
  */
 
+#include <pthread.h>
 #include <curl/curl.h>
-#include "ai.h"
+#include "def.h"
+#include "connect.h"
 
 static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
 static ADFS_RESULT delete(CURL *curl, const char *url);

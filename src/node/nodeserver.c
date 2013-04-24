@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     if (daemon) 
     {
         if (!log_file) 
-            log_file="nodeserver_error_log";
+            log_file="/dev/null";
 
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }

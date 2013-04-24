@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     const char* pid_file="indexserver.pid";
 
     const char* conf_file="indexserver.conf";
-    unsigned long mem_size = 512;
+    unsigned long mem_size = 256;
     char * db_path = "./";
 
     int c;
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     if (daemon) 
     {
         if (!log_file) 
-            log_file="indexserver_error_log";
+            log_file="/dev/null";
 
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
