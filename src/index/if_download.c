@@ -3,13 +3,11 @@
  */
 
 #include "nxweb/nxweb.h"
-#include <kclangc.h>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
+//#include <kclangc.h>
+//#include <unistd.h>
 #include <string.h>
 #include "ai.h"
+
 
 static const char download_handler_key;
 #define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)

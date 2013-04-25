@@ -37,8 +37,23 @@ typedef enum ADFS_RESULT
 #define DBG_PRINTPN(x)
 #endif // DEBUG
 
-// message list
+
+/////////////////////////////////////////////////////////////////////////////////
+//				message list
+/////////////////////////////////////////////////////////////////////////////////
+
+// OK
 #define MSG_OK			"OK."
+
+/////////////////////////////////////////////////////////////////////////////////
+// manager 
+#define MSG_FAIL_LONG_PATH	"Failed. Database path is too long. It must be less than 1024."
+#define MSG_FAIL_NO_PATH	"Failed. Database path dose not exist. Please create it yourself."
+#define MSG_FAIL_OPEN_DB	"Failed. Can not create or open database."
+#define MSG_FAIL_CONFIG		"Failed. Something in config file are illegal. Please check."
+#define MSG_FAIL_NAMESPACE	"Failed. Namespace is invalid."
+
+// interface
 #define MSG_FAIL_LONG_URL	"Failed. File name is too long, must less than 1024."
 #define MSG_FAIL_ILLEGAL_NAME	"Failed. File name is illegal."
 #define MSG_FAIL_NO_FILE	"Failed. No file."

@@ -1,7 +1,8 @@
-/* Antiy Labs. Basic Platform R & D Center
+/*
  * ai_zone.c
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <stdlib.h>
@@ -84,8 +85,6 @@ static void z_release_all(AIZone *_this)
         }
         free(pn);
     }
-
-    
 }
 
 static AINode * z_rand_choose(AIZone *_this)

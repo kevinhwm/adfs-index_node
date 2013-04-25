@@ -3,10 +3,9 @@
  */
 
 #include <nxweb/nxweb.h>
-#include <unistd.h>
-#include <stdio.h>
+//#include <unistd.h>
+//#include <stdio.h>
 #include <kclangc.h>
-#include "multipart_parser.h"
 #include "ai.h"
 
 static const char upload_handler_key; 
@@ -52,14 +51,12 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
     char *pfname = strstr( buff, "filename=\"" );
     if( pfname == NULL )
     {
-        if( strstr( buff, "name=\"upname\"" ) )
-        {
+        if( strstr(buff, "name=\"upname\"") ) {
             pufo->filename_ready_to_receive = 1;
             pufo->file_ready_to_receive = 0;
             return 0;
         }
-        else
-        {
+        else {
             return 0;
         }
     }
@@ -112,13 +109,11 @@ static nxweb_result upload_on_request(
 { 
     DBG_PRINTS("--- upload_on_request\n");
 
-    if (req->content_length > ADFS_MAX_FILE_SIZE)
-    {
+    if (req->content_length > ADFS_MAX_FILE_SIZE) {
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
-    if (strlen(req->uri) >= ADFS_URL_PATH)
-    {
+    if (strlen(req->uri) >= ADFS_URL_PATH) {
         nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
         return NXWEB_OK;
     }
@@ -155,8 +150,8 @@ static nxweb_result upload_on_request(
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        if ( strlen(ufo->filename) > 0 && ufo->file_complete )
-        {
+        if ( strlen(ufo->filename) > 0 && ufo->file_complete ) 
+	{
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (parse_filename(fname) == ADFS_ERROR)
@@ -169,8 +164,7 @@ static nxweb_result upload_on_request(
         else
             nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.\n");
 
-        if (ufo->file_ptr)
-        {
+        if (ufo->file_ptr) {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }

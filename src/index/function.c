@@ -4,56 +4,20 @@
  * huangtao@antiy.com
  */
 
+#include <linux/limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include "ai.h"
 
 
-/*
- * example:
- *
- * char buf[NAME_MAX] = {0};
- * get_conf("a.conf", "name", buf, sizeof(buf));
- * printf("[%d]%s\n", strlen(buf), buf);
- */
-
-ADFS_RESULT get_conf(const char * pfile, const char * target, char *value, size_t len)
-{
-    char buf[NAME_MAX] = {0};
-    char key[NAME_MAX] = {0};
-    char val[NAME_MAX] = {0};
-    int res = ADFS_ERROR;
-    
-    FILE * f = fopen(pfile, "r");
-
-    while (fgets(buf, sizeof(buf), f))
-    {
-        memset(key, 0, sizeof(key));
-        memset(val, 0, sizeof(val));
-        if (!parse_conf(buf, key, val))
-            continue;
-        if (strcmp(target, key))
-            continue;
-
-        if (strlen(val) >= len)
-        {
-            break;
-        }
-        else
-        {
-            strncpy(value, val, len);
-            res = ADFS_OK;
-            break;
-        }
-    }
-
-    fclose(f);
-    return res;
-}
-
-void trim_left(char * p)
+void trim_left_white(char * p)
 {
     int i=0, j=0;
+    if (p == NULL)
+	return;
+
     for (; i<strlen(p); ++i)
     {
         if (p[i] == ' ' || p[i] == '\t' || p[i] == '\n' )
@@ -66,8 +30,11 @@ void trim_left(char * p)
         p[j] = p[i];
 }
 
-void trim_right(char * p)
+void trim_right_white(char * p)
 {
+    if (p == NULL)
+	return ;
+
     int i = strlen(p)-1;
     for (; i>=0; --i)
     {
@@ -78,34 +45,12 @@ void trim_right(char * p)
     }
 }
 
-// parse config file, then get the value of specified key
-int parse_conf(char *line, char *key, char *value)
-{
-    trim_left(line);
-    if (line[0] == '#')
-        return 0;
-
-    char *pos, *tmp;
-    if ( !(pos = strstr(line, "=")) )
-        return 0;
-    else if ( (tmp = strstr(pos+1, "=")) )
-        return 0;
-
-    strncpy(key, line, pos-line);
-    strncpy(value, pos+1, strlen(pos+1));
-
-    trim_right(key);
-    if (strlen(key) == 0)
-        return 0;
-    trim_left(value);
-    trim_right(value);
-
-    return 1;
-}
-
 // parse url, then get real file name.
-ADFS_RESULT parse_filename(char * p)
+ADFS_RESULT get_filename_from_url(char * p)
 {
+    if (p == NULL)
+	return ADFS_ERROR;
+
     char *pos = strstr(p, "?");
     if (pos != NULL)
         pos[0] = '\0';
@@ -126,6 +71,26 @@ ADFS_RESULT parse_filename(char * p)
         for (int i=1; i<=len; ++i)
             p[i-1] = p[i];
 
+    return ADFS_OK;
+}
+
+ADFS_RESULT create_time_string(char *buf, size_t len)
+{
+    if (len < 32)
+	return ADFS_ERROR;
+
+    time_t t;
+    struct tm *lt;
+    struct timeval tv;
+    char dt[32] = {0};
+
+    time(&t);
+    lt = localtime(&t);
+    gettimeofday(&tv, NULL);
+    strftime(dt, sizeof(dt), "%Y%m%d%H%M%S", lt);
+
+    memset(buf, 0, len);
+    sprintf(buf, "%s%06d%04d", dt, tv.usec, rand()%1000);
     return ADFS_OK;
 }
 

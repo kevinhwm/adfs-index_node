@@ -20,7 +20,7 @@ static nxweb_result delete_on_request(
     DBG_PRINTS("delete - request\n");
     if (strlen(req->path_info) >= ADFS_URL_PATH)
     {
-        nxweb_send_http_error(resp, 400, MSG_ERR_LONG_URL);
+        nxweb_send_http_error(resp, 400, MSG_FAIL_LONG_URL);
         return NXWEB_ERROR;
     }
     nxweb_set_response_content_type(resp, "text/html");
@@ -29,7 +29,7 @@ static nxweb_result delete_on_request(
     strncpy(fname, req->path_info, sizeof(fname));
     if (parse_filename(fname) == ADFS_ERROR)
     {
-        nxweb_send_http_error(resp, 400, MSG_ERR_ILLEGAL_NAME);
+        nxweb_send_http_error(resp, 400, MSG_FAIL_ILLEGAL_NAME);
         return NXWEB_ERROR;
     }
 

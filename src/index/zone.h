@@ -1,13 +1,16 @@
-/* Antiy Labs. Basic Platform R & D Center.
+/*
  * zone.h
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #ifndef __ZONE_H__
 #define __ZONE_H__
 
+#include <pthread.h>
 #include <linux/limits.h>
+#include <curl/curl.h>
 
 #define ADFS_NODE_CURL_NUM  4
 

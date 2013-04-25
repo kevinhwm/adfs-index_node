@@ -1,7 +1,8 @@
-/* Antiy Labs. Basic Platform R & D Center.
+/* 
  * manager.h
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #ifndef __MANAGER_H__
@@ -12,27 +13,36 @@
 #include "zone.h"
 
 
+
 typedef struct AIManager
 {
-    char path[ADFS_MAX_PATH];
-    KCDB * map_db;
-    KCDB * index_db;
+    const char *msg;
+    char db_path[ADFS_MAX_PATH];	// database file path
 
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
     unsigned long kc_msiz;
 
-    struct AIZone *head;
-    struct AIZone *tail;
+    struct AINameSpace *ns_head;
+    struct AINameSpace *ns_tail;
+
+    struct AIZone *z_head;
+    struct AIZone *z_tail;
+
 }AIManager;
 
 
-ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size);
+// init function
+ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size);
+// clean up function
 void mgr_exit();
 
+// recieve file function
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
+// send file function
 char * mgr_download(const char *name_space, const char *fname);
+// delete file function. it's not the real deletion
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
 
 #endif // __MANAGER_H__
