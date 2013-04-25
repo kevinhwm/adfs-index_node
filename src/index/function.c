@@ -90,7 +90,7 @@ ADFS_RESULT create_time_string(char *buf, size_t len)
     strftime(dt, sizeof(dt), "%Y%m%d%H%M%S", lt);
 
     memset(buf, 0, len);
-    sprintf(buf, "%s%06d%04d", dt, tv.usec, rand()%1000);
+    sprintf(buf, "%s%06d%04d", dt, tv.tv_usec, rand()%1000);
     return ADFS_OK;
 }
 

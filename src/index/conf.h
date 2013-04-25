@@ -8,6 +8,7 @@
 #ifndef __CONF_H__
 #define __CONF_H__
 
+#include <string.h>
 #include "def.h"
 
 ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);
