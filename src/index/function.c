@@ -4,11 +4,9 @@
  * huangtao@antiy.com
  */
 
-#include <linux/limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h>
 #include "ai.h"
 
 
@@ -74,23 +72,4 @@ ADFS_RESULT get_filename_from_url(char * p)
     return ADFS_OK;
 }
 
-ADFS_RESULT create_time_string(char *buf, size_t len)
-{
-    if (len < 32)
-	return ADFS_ERROR;
-
-    time_t t;
-    struct tm *lt;
-    struct timeval tv;
-    char dt[32] = {0};
-
-    time(&t);
-    lt = localtime(&t);
-    gettimeofday(&tv, NULL);
-    strftime(dt, sizeof(dt), "%Y%m%d%H%M%S", lt);
-
-    memset(buf, 0, len);
-    sprintf(buf, "%s%06d%04d", dt, tv.tv_usec, rand()%1000);
-    return ADFS_OK;
-}
 

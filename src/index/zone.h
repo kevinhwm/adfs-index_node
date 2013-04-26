@@ -9,14 +9,13 @@
 #define __ZONE_H__
 
 #include <pthread.h>
-#include <linux/limits.h>
 #include <curl/curl.h>
 
 #define ADFS_NODE_CURL_NUM  4
 
 typedef struct AINode
 {
-    char ip_port[64];
+    char ip_port[ADFS_NODENAME_LEN];
 
     CURL *curl[ADFS_NODE_CURL_NUM];
     pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
@@ -27,7 +26,7 @@ typedef struct AINode
 
 typedef struct AIZone
 {
-    char name[NAME_MAX];
+    char name[ADFS_ZONENAME_LEN];
     int num;
 
     double weight;

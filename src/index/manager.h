@@ -13,6 +13,23 @@
 #include "zone.h"
 
 
+typedef struct AINameSpace
+{
+    char name[ADFS_NAMESPACE_LEN];
+
+    // format: "uuidzone#node|zone#node$uuidzone#node|zone#node..."
+    // zone#node					-> a position
+    // zone#node|zone#node				-> multiple positions
+    // uuidzone#node|zone#node				-> a record. length of uuid is exactly 24 bytes
+    // uuidzone#node|zone#node$uuidzone#node|zone#node	-> that real records look like
+    KCDB * index_db;
+
+    struct AIRecord * head;
+    struct AIRecord * tail;
+
+    struct AINameSpace *pre;
+    struct AINameSpace *next;
+}AINameSpace;
 
 typedef struct AIManager
 {
@@ -35,6 +52,7 @@ typedef struct AIManager
 
 // init function
 ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size);
+// mgr_check();
 // clean up function
 void mgr_exit();
 

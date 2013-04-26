@@ -9,8 +9,13 @@
 
 #define ADFS_VERSION		"3.0"
 #define ADFS_MAX_FILE_SIZE	0x10000000      // 256MB
-#define ADFS_MAX_PATH		2048
-#define ADFS_URL_PATH		1024
+#define ADFS_MAX_PATH		1024
+#define ADFS_FILENAME_LEN	256
+#define ADFS_ZONENAME_LEN	128
+#define ADFS_NODENAME_LEN	24
+#define ADFS_NAMESPACE_LEN	128
+#define ADFS_UUID_LEN		24		// exactly 24 bytes
+
 
 typedef enum ADFS_RESULT
 {
@@ -52,6 +57,7 @@ typedef enum ADFS_RESULT
 #define MSG_FAIL_OPEN_DB	"Failed. Can not create or open database."
 #define MSG_FAIL_CONFIG		"Failed. Something in config file are illegal. Please check."
 #define MSG_FAIL_NAMESPACE	"Failed. Namespace is invalid."
+#define MSG_FAIL_MALLOC		"Failed. Can not malloc"
 
 // interface
 #define MSG_FAIL_LONG_URL	"Failed. File name is too long, must less than 1024."

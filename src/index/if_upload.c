@@ -113,7 +113,7 @@ static nxweb_result upload_on_request(
         nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
         return NXWEB_OK;
     }
-    if (strlen(req->uri) >= ADFS_URL_PATH) {
+    if (strlen(req->uri) >= ADFS_MAX_PATH) {
         nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
         return NXWEB_OK;
     }
@@ -154,8 +154,12 @@ static nxweb_result upload_on_request(
 	{
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
-            if (parse_filename(fname) == ADFS_ERROR)
+            if (get_filename_from_url(fname) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Check file name or namespace.\n");
+
+	    if (strlen(fname) >= ADFS_FILENAME_LEN)
+                nxweb_send_http_error(resp, 400, "Failed. File name is too long. It must be less than 250\n");
+
             else if (mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Can not save.\n");
             else

@@ -15,8 +15,8 @@
 #include "function.h"           // common functions
 #include "manager.h"            // main function. only one object -> g_manager
 #include "multipart_parser.h"   // parse the post data
+#include "record.h"
 #include "zone.h"               // about zone infomation
-#include "namespace.h"          // about namespace information
 
 #endif // __AI_H__
 

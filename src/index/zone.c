@@ -59,7 +59,6 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
 
     new_node->pre = _this->tail;
     new_node->next = NULL;
-
     if (_this->tail)
         _this->tail->next = new_node;
     else

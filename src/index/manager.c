@@ -14,13 +14,14 @@
 #include "ai.h"
 
 
-static ADFS_RESULT mgr_init_zone(const char *file_conf);
-static AIZone * mgr_create_zone(const char *name, int weight);
-static AINameSpace * mgr_create_ns(const char *name);
-static AINode * mgr_get_node(const char *node);
-static AINameSpace * mgr_get_ns(const char *ns);
-static AIZone * mgr_choose_zone(const char * record);
+static ADFS_RESULT aim_init(const char *file_conf);
+static AIZone * aim_create_zone(const char *name, int weight);
+static ADFS_RESULT aim_create_ns(const char *name);
+static AINode * aim_get_node(const char *node);
+static AINameSpace * aim_get_ns(const char *ns);
+static AIZone * aim_choose_zone(const char * record);
 
+// only one object. like MFC
 AIManager g_manager;
 
 
@@ -47,7 +48,8 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
 
-    if (mgr_init_zone(conf_file) == ADFS_ERROR)
+    // init config file
+    if (aim_init(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
 
     // init libcurl
@@ -90,16 +92,14 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     AIManager *pm = &g_manager;
 
     int exist = 1;
-    char index_key[NAME_MAX] = {0};
-    size_t old_list_len;
     char *old_list = NULL;
-    char *new_list = NULL;
+    size_t old_list_len;
 
     AINameSpace *pns = NULL;
     if (name_space)
-	pns = mgr_get_ns(name_space);
+	pns = aim_get_ns(name_space);
     else
-	pns = mgr_get_ns("default");
+	pns = aim_get_ns("default");
 
     if (pns == NULL) {
 	pm->msg = MSG_FAIL_NAMESPACE;
@@ -107,100 +107,60 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     }
 
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
-    if (old_list == NULL || old_list[vsize-1] == '|')
+    if (old_list == NULL || old_list[old_list_len-1] == '|')
         exist = 0;
 
-    if (exist && !overwrite)		// exist and not overwrite
+    if (exist && !overwrite)
         return ADFS_OK;
 
     // send file
+    AIRecord air;
+    air_init(&air);
+    air.create_uuid(&air);
+    AIZone *pz = pm->z_head;
+    while (pz)
+    {
+	AINode * pn = pz->rand_choose(pz);
+	char url[ADFS_MAX_PATH] = {0};
+	if (name_space)
+	    sprintf(url, "http://%s/upload_file/%s?namespace=%s", pn->ip_port, fname, name_space);
+	else
+	    sprintf(url, "http://%s/upload_file/%s", pn->ip_port, fname);
+
+	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
+	    printf("upload error: %s\n", url);
+	    // failed. roll back.
+	}
+	air.add(&air, pz->name, pn->ip_port);
+	pz = pz->next;
+    }
 
     // add record
-    if (old_list == NULL)
-    {
-	kcdbset(pns->index_db, fname, strlen(fname), );
+    char *record = air.get_string(&air);
+    if (record == NULL)
+	goto err2;
+
+    if (old_list == NULL) {
+	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
-    else
-    {
-	malloc();
-	strncat();
-	kcdbset(pns->index_db, fname, strlen(fname), );
+    else {
+	char *new_list = malloc(old_list_len + strlen(record) + 1);
+	if (new_list == NULL) 
+	    goto err1;
+	sprintf("%s|%s", old_list, record);
+	kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
+	free(new_list);
     }
-
-    /*
-    if (exist && overwrite)	// exist and overwrite
-    {
-	char record[ADFS_MAX_PATH] = {0};
-	create_time_string(record, sizeof(record));// length of this uuid is exactly 24 bytes
-	strcpy(record, "#");
-	strcpy(record, pns->name);	// length of this uuid is exactly 24 bytes
-	strcpy(record, "#");
-
-        char url[ADFS_MAX_PATH] = {0};
-        char tmp_node[NAME_MAX] = {0};
-
-        char *start = old_list;
-        char *pos_sharp = NULL;
-        char *pos_split = NULL;
-        while (start)
-        {
-            pos_sharp = strstr(start, "#");
-            pos_split = strstr(start, "|");
-
-            if (pos_split == NULL)
-                strcpy(tmp_node, pos_sharp + 1);
-            else
-                strncpy(tmp_node, pos_sharp + 1, pos_split - pos_sharp -1);
-
-            if (name_space)
-                sprintf(url, "http://%s/%s?namespace=%s", tmp_node, fname, name_space);
-            else
-                sprintf(url, "http://%s/%s", tmp_node, fname);
-
-            if (aic_upload(mgr_get_node(tmp_node), url, fname, fdata, fdata_len) == ADFS_ERROR)
-            {
-                printf("upload error: %s\n", url);
-                // failed. roll back.
-            }
-
-            start = pos_split + 1;
-        }
-    }
-    else                                        // not exist
-    {
-        char new_record[ADFS_MAX_PATH] = {0};
-        AIZone *pz = pm->z_head;
-        while (pz)
-        {
-            AINode * pn = pz->rand_choose(pz);
-            char url[ADFS_MAX_PATH] = {0};
-            if (name_space)
-                sprintf(url, "http://%s/upload_file/%s?namespace=%s", pn->ip_port, fname, name_space);
-            else
-                sprintf(url, "http://%s/upload_file/%s", pn->ip_port, fname);
-            if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR)
-            {
-                printf("upload error: %s\n", url);
-                // failed. roll back.
-            }
-            strncat(new_record, pz->name, sizeof(new_record));
-            strcat(new_record, "#");
-            strncat(new_record, pn->ip_port, sizeof(new_record));
-            strcat(new_record, "|");
-            pz = pz->next;
-        }
-        new_record[strlen(new_record)-1] = '\0';
-
-        int32_t res = kcdbset(pm->index_db, key, strlen(key), new_record, strlen(new_record));
-        if (res == 0)
-        {
-            // failed. roll back.
-        }
-    }
-    */
-
+    free(record);
+    air.release(&air);
     kcfree(old_list);
     return ADFS_OK;
+err1:
+    free(record);
+err2:
+    air.release(&air);
+    kcfree(old_list);
+    return ADFS_ERROR;
 }
 
 // return value:
@@ -208,6 +168,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 // url :    "char *" must be freed by caller
 char * mgr_download(const char *name_space, const char *fname)
 {
+    /*
     AIManager *pm = &g_manager;
     char key[ADFS_MAX_PATH] = {0};
     if (name_space)
@@ -220,7 +181,7 @@ char * mgr_download(const char *name_space, const char *fname)
     if (record == NULL)
         return NULL;
 
-    AIZone *pz = mgr_choose_node(pm, record);
+    AIZone *pz = aim_choose_zone(pm, record);
     if (pz == NULL)
     {
         kcfree(record);
@@ -252,13 +213,16 @@ char * mgr_download(const char *name_space, const char *fname)
 
     kcfree(record);
     return url;
+    */
+    return NULL;
 }
 
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
 {
+    /*
     char key[ADFS_MAX_PATH] = {0};
     char url[ADFS_MAX_PATH] = {0}; 
-    char tmp_node[NAME_MAX] = {0};
+    char tmp_node[ADFS_FILENAME_LEN] = {0};
 
     size_t vsize = 0;
     char *record = NULL;
@@ -295,7 +259,7 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
             strncpy(url, name_space, ADFS_MAX_PATH);
         }
 
-        if (aic_delete(mgr_get_node(tmp_node), url) == ADFS_ERROR)
+        if (aic_delete(aim_get_node(tmp_node), url) == ADFS_ERROR)
         {
             // failed. roll back.
             ;
@@ -311,16 +275,17 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
     kcdbset(pm->index_db, key, strlen(key), record, vsize);
 
     kcfree(record);
+    */
     return ADFS_OK;
 }
 
 // private
-static ADFS_RESULT mgr_init_zone(const char *conf_file)
+static ADFS_RESULT aim_init(const char *conf_file)
 {
     AIManager *pm = &g_manager;
     pm->msg = MSG_FAIL_CONFIG;
 
-    char value[NAME_MAX] = {0};
+    char value[ADFS_FILENAME_LEN] = {0};
 
     // create zone
     if (conf_read(conf_file, "zone_num", value, sizeof(value)) == ADFS_ERROR)
@@ -332,10 +297,10 @@ static ADFS_RESULT mgr_init_zone(const char *conf_file)
 
     for (int i=0; i<zone_num; ++i)
     {
-        char key[NAME_MAX] = {0};
-        char name[NAME_MAX] = {0};
-        char weight[NAME_MAX] = {0};
-        char num[NAME_MAX] = {0};
+        char key[ADFS_FILENAME_LEN] = {0};
+        char name[ADFS_FILENAME_LEN] = {0};
+        char weight[ADFS_FILENAME_LEN] = {0};
+        char num[ADFS_FILENAME_LEN] = {0};
 
         snprintf(key, sizeof(key), "zone%d_name", i);
         if (conf_read(conf_file, key, name, sizeof(name)) == ADFS_ERROR)
@@ -345,7 +310,7 @@ static ADFS_RESULT mgr_init_zone(const char *conf_file)
         if (conf_read(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-	AIZone *pz = mgr_create_zone(name, atoi(weight));
+	AIZone *pz = aim_create_zone(name, atoi(weight));
 	if (pz == NULL)
 	    return ADFS_ERROR;
 
@@ -364,28 +329,29 @@ static ADFS_RESULT mgr_init_zone(const char *conf_file)
                 return ADFS_ERROR;
             if (strlen(value) <= 0)
                 return ADFS_ERROR;
+	    // create node
             if (pz->create(pz, value) == ADFS_ERROR) 
                 return ADFS_ERROR;
         }
     }
 
+    // create namespace
     if (conf_read(conf_file, "namespace_num", value, sizeof(value)) == ADFS_ERROR)
         return ADFS_ERROR;
     int ns_num = atoi(value);
     if (ns_num <= 0 || ns_num >100)
         return ADFS_ERROR;
 
-    // create namespace
-    if (mgr_create_ns("default") == ADFS_ERROR)
+    if (aim_create_ns("default") == ADFS_ERROR)
 	return ADFS_ERROR;
     for (int i=0; i<ns_num; ++i)
     {
-        char key[NAME_MAX] = {0};
+        char key[ADFS_FILENAME_LEN] = {0};
 	sprintf(key, "namespace_%d", i);
 	if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR)
 	    return ADFS_ERROR;
 
-	if (mgr_create_ns(value) == ADFS_ERROR)
+	if (aim_create_ns(value) == ADFS_ERROR)
 	    return ADFS_ERROR;
     }
 	
@@ -393,7 +359,7 @@ static ADFS_RESULT mgr_init_zone(const char *conf_file)
 }
 
 // private
-static AIZone * mgr_choose_zone(const char *record)
+static AIZone * aim_choose_zone(const char *record)
 {
     AIManager *pm = &g_manager;
     AIZone *biggest_z = NULL;   // (weight/count)
@@ -442,12 +408,12 @@ static AIZone * mgr_choose_zone(const char *record)
 }
 
 // private
-static AINode * mgr_get_node(const char *node)
+static AINode * aim_get_node(const char *node)
 {
     AIZone *pz = g_manager.z_head;
     while (pz)
     {
-        AINode * pn = pz->z_head;
+        AINode * pn = pz->head;
         while (pn)
         {
             if (strcmp(pn->ip_port, node) == 0)
@@ -460,7 +426,7 @@ static AINode * mgr_get_node(const char *node)
 }
 
 // private
-static AINameSpace * mgr_get_ns(const char *ns)
+static AINameSpace * aim_get_ns(const char *ns)
 {
     AINameSpace *pns = g_manager.ns_head;
     while (pns)
@@ -473,13 +439,13 @@ static AINameSpace * mgr_get_ns(const char *ns)
 }
 
 // private
-static AIZone * mgr_create_zone(const char *name, int weight)
+static AIZone * aim_create_zone(const char *name, int weight)
 {
     AIManager * pm = &g_manager;
 
     AIZone *pz = (AIZone *)malloc(sizeof(AIZone));
     if (pz == NULL) {
-	pm->msg == MSG_ERR_MALLOC;
+	pm->msg = MSG_FAIL_MALLOC;
 	return NULL;
     }
 
@@ -497,7 +463,7 @@ static AIZone * mgr_create_zone(const char *name, int weight)
 }
 
 // private
-static ADFS_RESULT mgr_create_ns(const char *name)
+static ADFS_RESULT aim_create_ns(const char *name)
 {
     AIManager * pm = &g_manager;
 
@@ -509,9 +475,9 @@ static ADFS_RESULT mgr_create_ns(const char *name)
 	pns = pns->next;
     }
 
-    pns = (AIZone *)malloc(sizeof(AINameSpace));
+    pns = malloc(sizeof(AINameSpace));
     if (pns == NULL) {
-	pm->msg == MSG_ERR_MALLOC;
+	pm->msg = MSG_FAIL_MALLOC;
 	return ADFS_ERROR;
     }
 
@@ -520,8 +486,8 @@ static ADFS_RESULT mgr_create_ns(const char *name)
     char indexdb_path[ADFS_MAX_PATH] = {0};
     sprintf(indexdb_path, "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->db_path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-    pm->index_db = kcdbnew();
-    if (kcdbopen(pm->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) {
+    pns->index_db = kcdbnew();
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) {
 	pm->msg = MSG_FAIL_OPEN_DB;
         return ADFS_ERROR;
     }

@@ -9,16 +9,16 @@
 
 /* example:
  *
- * char buf[NAME_MAX] = {0};
+ * char buf[ADFS_FILENAME_LEN] = {0};
  * conf_read("a.conf", "name", buf, sizeof(buf));
  * printf("[%d]%s\n", strlen(buf), buf);
  */
 
 ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len)
 {
-    char buf[NAME_MAX] = {0};
-    char key[NAME_MAX] = {0};
-    char val[NAME_MAX] = {0};
+    char buf[ADFS_FILENAME_LEN] = {0};
+    char key[ADFS_FILENAME_LEN] = {0};
+    char val[ADFS_FILENAME_LEN] = {0};
     int res = ADFS_ERROR;
     
     FILE * f = fopen(pfile, "r");

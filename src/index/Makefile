@@ -7,7 +7,7 @@ CFLAGS = -std=c99 -Wall
 INCLUDE = -I../include
 LIBS = -lnxweb -lkyotocabinet -luuid -lrt -lcurl -pthread
 TARGET = indexserver
-OBJS = conf.o connect.o function.o if_delete.o if_download.o if_upload.o indexserver.o manager.o multipart_parser.o zone.o
+OBJS = conf.o connect.o function.o if_delete.o if_download.o if_upload.o indexserver.o manager.o multipart_parser.o record.o zone.o
 
 
 release:$(OBJS)
@@ -23,6 +23,7 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o ai_manager.o ai_manager.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o multipart_parser.o multipart_parser.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o record.o record.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o zone.o zone.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
