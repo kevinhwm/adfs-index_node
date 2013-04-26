@@ -27,7 +27,7 @@ static nxweb_result delete_on_request(
     nxweb_parse_request_parameters(req, 0);
     name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
     strncpy(fname, req->path_info, sizeof(fname));
-    if (get_filename_from_url(fname) == ADFS_ERROR)
+    if (get_filename_from_url(fname) != 0)
     {
         nxweb_send_http_error(resp, 400, MSG_FAIL_ILLEGAL_NAME);
         return NXWEB_ERROR;

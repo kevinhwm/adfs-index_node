@@ -13,7 +13,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port);
 static void z_release_all(AIZone *_this);
 static AINode * z_rand_choose(AIZone *_this);
 
-ADFS_RESULT z_init(AIZone *_this, const char *name, int weight)
+ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
 {
     if (_this)
     {

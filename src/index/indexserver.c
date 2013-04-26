@@ -21,16 +21,9 @@ extern nxweb_handler delete_handler;
 //extern nxweb_handler gethistory_handler;
 //extern nxweb_handler history_handler;
 
-
 NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
-//NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
-//NXWEB_SET_HANDLER(isalive, "/isalive", &isalive_handler, .priority=1000); 
-//NXWEB_SET_HANDLER(monitor, "/monitor", &monitor_handler, .priority=1000);
-//NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000);
-//NXWEB_SET_HANDLER(gethistory, "/gethistory", &gethistory_handler, .priority=1000);
-//NXWEB_SET_HANDLER(history, "/history", &history_handler, .priority=1000);
 
 
 // Command-line options:
@@ -38,7 +31,6 @@ static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
 //static int ssl_port=8056;
-
 
 // Server main():
 static void server_main() 
@@ -136,8 +128,7 @@ int main(int argc, char** argv)
                 break;
             case 'P':
                 port=atoi(optarg);
-                if (port<=0) {
-                    fprintf(stderr, "invalid port: %s\n\n", optarg);
+                if (port<=0) { fprintf(stderr, "invalid port: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
                 break;
@@ -152,8 +143,7 @@ int main(int argc, char** argv)
                 }
             case 'x':
                 db_path = optarg;
-                if (strlen(db_path) > 256)
-                {
+                if (strlen(db_path) > ADFS_FILENAME_LEN) {
                     printf("path is too long\n");
                     return 0;
                 }
@@ -165,14 +155,12 @@ int main(int argc, char** argv)
         }
     }
 
-    if ((argc-optind)>0) 
-    {
+    if ((argc-optind)>0) {
         fprintf(stderr, "too many arguments\n\n"); show_help();
         return EXIT_FAILURE;
     }
 
-    if (shutdown) 
-    {
+    if (shutdown) {
         nxweb_shutdown_daemon(work_dir, pid_file);
         return EXIT_SUCCESS;
     }
@@ -184,15 +172,13 @@ int main(int argc, char** argv)
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////
 
-    if (daemon) 
-    {
+    if (daemon) {
         if (!log_file) 
             log_file="/dev/null";
 
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
-    else 
-    {
+    else {
         nxweb_run_normal(work_dir, log_file, pid_file, server_main);
     }
     return EXIT_SUCCESS;

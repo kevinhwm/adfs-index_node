@@ -16,17 +16,7 @@
 typedef struct AINameSpace
 {
     char name[ADFS_NAMESPACE_LEN];
-
-    // format: "uuidzone#node|zone#node$uuidzone#node|zone#node..."
-    // zone#node					-> a position
-    // zone#node|zone#node				-> multiple positions
-    // uuidzone#node|zone#node				-> a record. length of uuid is exactly 24 bytes
-    // uuidzone#node|zone#node$uuidzone#node|zone#node	-> that real records look like
     KCDB * index_db;
-
-    struct AIRecord * head;
-    struct AIRecord * tail;
-
     struct AINameSpace *pre;
     struct AINameSpace *next;
 }AINameSpace;
@@ -35,7 +25,6 @@ typedef struct AIManager
 {
     const char *msg;
     char db_path[ADFS_MAX_PATH];	// database file path
-
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
@@ -43,10 +32,8 @@ typedef struct AIManager
 
     struct AINameSpace *ns_head;
     struct AINameSpace *ns_tail;
-
     struct AIZone *z_head;
     struct AIZone *z_tail;
-
 }AIManager;
 
 

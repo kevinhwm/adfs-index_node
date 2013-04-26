@@ -154,7 +154,7 @@ static nxweb_result upload_on_request(
 	{
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
-            if (get_filename_from_url(fname) == ADFS_ERROR)
+            if (get_filename_from_url(fname) != 0)
                 nxweb_send_http_error(resp, 400, "Failed. Check file name or namespace.\n");
 
 	    if (strlen(fname) >= ADFS_FILENAME_LEN)

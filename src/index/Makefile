@@ -21,7 +21,7 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o if_download.o if_download.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o if_upload.o if_upload.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
-	$(CC) $(CFLAGS) -DDEBUG -c -o ai_manager.o ai_manager.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o manager.o manager.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o record.o record.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o zone.o zone.c

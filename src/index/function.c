@@ -4,10 +4,7 @@
  * huangtao@antiy.com
  */
 
-#include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include "ai.h"
 
 
 void trim_left_white(char * p)
@@ -43,11 +40,10 @@ void trim_right_white(char * p)
     }
 }
 
-// parse url, then get real file name.
-ADFS_RESULT get_filename_from_url(char * p)
+int get_filename_from_url(char * p)
 {
     if (p == NULL)
-	return ADFS_ERROR;
+	return -1;
 
     char *pos = strstr(p, "?");
     if (pos != NULL)
@@ -56,20 +52,20 @@ ADFS_RESULT get_filename_from_url(char * p)
     int len = 0;
     len = strlen(p);
     if (len == 0)
-        return ADFS_ERROR;
+        return -1;
 
     if (p[len-1] == '/')
         p[len-1] = '\0';
 
     len = strlen(p);
     if (len == 0)
-        return ADFS_ERROR;
+        return -1;
 
     if (p[0] == '/')
         for (int i=1; i<=len; ++i)
             p[i-1] = p[i];
 
-    return ADFS_OK;
+    return 0;
 }
 
 

@@ -14,12 +14,12 @@
 #include "ai.h"
 
 
-static ADFS_RESULT aim_init(const char *file_conf);
-static AIZone * aim_create_zone(const char *name, int weight);
-static ADFS_RESULT aim_create_ns(const char *name);
-static AINode * aim_get_node(const char *node);
-static AINameSpace * aim_get_ns(const char *ns);
-static AIZone * aim_choose_zone(const char * record);
+static ADFS_RESULT m_init(const char *file_conf);
+static AIZone * m_create_zone(const char *name, int weight);
+static ADFS_RESULT m_create_ns(const char *name);
+static AINode * m_get_node(const char *node);
+static AINameSpace * m_get_ns(const char *ns);
+static AIZone * m_choose_zone(const char * record);
 
 // only one object. like MFC
 AIManager g_manager;
@@ -49,7 +49,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_msiz = mem_size *1024*1024;
 
     // init config file
-    if (aim_init(conf_file) == ADFS_ERROR)
+    if (m_init(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
 
     // init libcurl
@@ -97,26 +97,27 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 
     AINameSpace *pns = NULL;
     if (name_space)
-	pns = aim_get_ns(name_space);
+	pns = m_get_ns(name_space);
     else
-	pns = aim_get_ns("default");
+	pns = m_get_ns("default");
 
     if (pns == NULL) {
 	pm->msg = MSG_FAIL_NAMESPACE;
 	return ADFS_ERROR;
     }
 
+    // need to free +1
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
     if (old_list == NULL || old_list[old_list_len-1] == '|')
         exist = 0;
 
-    if (exist && !overwrite)
-        return ADFS_OK;
+    if (exist && !overwrite) 
+	goto err3:
 
     // send file
     AIRecord air;
     air_init(&air);
-    air.create_uuid(&air);
+
     AIZone *pz = pm->z_head;
     while (pz)
     {
@@ -144,7 +145,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
     else {
-	char *new_list = malloc(old_list_len + strlen(record) + 1);
+	char *new_list = malloc(old_list_len + strlen(record) + 2);
 	if (new_list == NULL) 
 	    goto err1;
 	sprintf("%s|%s", old_list, record);
@@ -159,6 +160,7 @@ err1:
     free(record);
 err2:
     air.release(&air);
+err3:
     kcfree(old_list);
     return ADFS_ERROR;
 }
@@ -181,7 +183,7 @@ char * mgr_download(const char *name_space, const char *fname)
     if (record == NULL)
         return NULL;
 
-    AIZone *pz = aim_choose_zone(pm, record);
+    AIZone *pz = m_choose_zone(pm, record);
     if (pz == NULL)
     {
         kcfree(record);
@@ -259,7 +261,7 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
             strncpy(url, name_space, ADFS_MAX_PATH);
         }
 
-        if (aic_delete(aim_get_node(tmp_node), url) == ADFS_ERROR)
+        if (aic_delete(m_get_node(tmp_node), url) == ADFS_ERROR)
         {
             // failed. roll back.
             ;
@@ -280,7 +282,7 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
 }
 
 // private
-static ADFS_RESULT aim_init(const char *conf_file)
+static ADFS_RESULT m_init(const char *conf_file)
 {
     AIManager *pm = &g_manager;
     pm->msg = MSG_FAIL_CONFIG;
@@ -310,7 +312,7 @@ static ADFS_RESULT aim_init(const char *conf_file)
         if (conf_read(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR)
             return ADFS_ERROR;
 
-	AIZone *pz = aim_create_zone(name, atoi(weight));
+	AIZone *pz = m_create_zone(name, atoi(weight));
 	if (pz == NULL)
 	    return ADFS_ERROR;
 
@@ -342,7 +344,7 @@ static ADFS_RESULT aim_init(const char *conf_file)
     if (ns_num <= 0 || ns_num >100)
         return ADFS_ERROR;
 
-    if (aim_create_ns("default") == ADFS_ERROR)
+    if (m_create_ns("default") == ADFS_ERROR)
 	return ADFS_ERROR;
     for (int i=0; i<ns_num; ++i)
     {
@@ -351,7 +353,7 @@ static ADFS_RESULT aim_init(const char *conf_file)
 	if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR)
 	    return ADFS_ERROR;
 
-	if (aim_create_ns(value) == ADFS_ERROR)
+	if (m_create_ns(value) == ADFS_ERROR)
 	    return ADFS_ERROR;
     }
 	
@@ -359,7 +361,7 @@ static ADFS_RESULT aim_init(const char *conf_file)
 }
 
 // private
-static AIZone * aim_choose_zone(const char *record)
+static AIZone * m_choose_zone(const char *record)
 {
     AIManager *pm = &g_manager;
     AIZone *biggest_z = NULL;   // (weight/count)
@@ -408,7 +410,7 @@ static AIZone * aim_choose_zone(const char *record)
 }
 
 // private
-static AINode * aim_get_node(const char *node)
+static AINode * m_get_node(const char *node)
 {
     AIZone *pz = g_manager.z_head;
     while (pz)
@@ -426,7 +428,7 @@ static AINode * aim_get_node(const char *node)
 }
 
 // private
-static AINameSpace * aim_get_ns(const char *ns)
+static AINameSpace * m_get_ns(const char *ns)
 {
     AINameSpace *pns = g_manager.ns_head;
     while (pns)
@@ -439,7 +441,7 @@ static AINameSpace * aim_get_ns(const char *ns)
 }
 
 // private
-static AIZone * aim_create_zone(const char *name, int weight)
+static AIZone * m_create_zone(const char *name, int weight)
 {
     AIManager * pm = &g_manager;
 
@@ -449,7 +451,7 @@ static AIZone * aim_create_zone(const char *name, int weight)
 	return NULL;
     }
 
-    z_init(pz, name, weight);
+    aiz_init(pz, name, weight);
 
     pz->pre = pm->z_tail;
     pz->next = NULL;
@@ -463,7 +465,7 @@ static AIZone * aim_create_zone(const char *name, int weight)
 }
 
 // private
-static ADFS_RESULT aim_create_ns(const char *name)
+static ADFS_RESULT m_create_ns(const char *name)
 {
     AIManager * pm = &g_manager;
 

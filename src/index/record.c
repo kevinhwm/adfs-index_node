@@ -22,10 +22,11 @@ void air_init(AIRecord *pr)
     if (pr)
     {
 	memset(pr, 0, sizeof(AIRecord));
-	pr->create_uuid = r_create_uuid;
 	pr->add = r_add;
 	pr->release = r_release;
 	pr->get_string = r_get_string;
+
+	r_create_uuid(_this);
     }
 }
 
