@@ -1,11 +1,10 @@
-/* Antiy Labs. Basic Platform R & D Center
- * ai_function.c
+/* ai_function.c
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <string.h>
-
 
 void trim_left_white(char * p)
 {
@@ -13,8 +12,7 @@ void trim_left_white(char * p)
     if (p == NULL)
 	return;
 
-    for (; i<strlen(p); ++i)
-    {
+    for (; i<strlen(p); ++i) {
         if (p[i] == ' ' || p[i] == '\t' || p[i] == '\n' )
             continue;
         else
@@ -31,8 +29,7 @@ void trim_right_white(char * p)
 	return ;
 
     int i = strlen(p)-1;
-    for (; i>=0; --i)
-    {
+    for (; i>=0; --i) {
         if (p[i] == ' ' || p[i] == '\t' || p[i] == '\n' )
             p[i] = '\0';
         else

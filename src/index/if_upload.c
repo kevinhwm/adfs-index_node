@@ -1,10 +1,10 @@
-/*
+/* if_upload.c
+ *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <nxweb/nxweb.h>
-//#include <unistd.h>
-//#include <stdio.h>
 #include <kclangc.h>
 #include "ai.h"
 
@@ -32,7 +32,6 @@ typedef struct _upload_file_object
     char                      value[1024];
     KCDB *                    kc_db;
 }upload_file_object;
-
 
 
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )

@@ -1,5 +1,4 @@
-/*
- * zone.h
+/* zone.h
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.

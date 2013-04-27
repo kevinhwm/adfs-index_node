@@ -1,7 +1,7 @@
-/* Antiy Labs. Basic Platform R & D Center
- * if_delete.c
+/* if_delete.c
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include "nxweb/nxweb.h"
@@ -18,28 +18,24 @@ static nxweb_result delete_on_request(
     const char *name_space = NULL;
 
     DBG_PRINTS("delete - request\n");
-    if (strlen(req->path_info) >= ADFS_MAX_PATH)
-    {
-        nxweb_send_http_error(resp, 400, MSG_FAIL_LONG_URL);
+    if (strlen(req->path_info) >= ADFS_MAX_PATH) {
+        nxweb_send_http_error(resp, 400, "Failed. Url is too long.");
         return NXWEB_ERROR;
     }
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_parse_request_parameters(req, 0);
     name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
     strncpy(fname, req->path_info, sizeof(fname));
-    if (get_filename_from_url(fname) != 0)
-    {
-        nxweb_send_http_error(resp, 400, MSG_FAIL_ILLEGAL_NAME);
+    if (get_filename_from_url(fname) != 0) {
+        nxweb_send_http_error(resp, 400, "Failed. File name is illegal.");
         return NXWEB_ERROR;
     }
 
-    if (mgr_delete(name_space, fname) == ADFS_ERROR)
-    {
+    if (mgr_delete(name_space, fname) == ADFS_ERROR) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
         return NXWEB_ERROR;
     }
-    else
-    {
+    else {
         nxweb_response_printf(resp, "OK.\n");
         return NXWEB_OK;
     }

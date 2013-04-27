@@ -1,12 +1,12 @@
 /* ai_connect.c
  * 
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <pthread.h>
 #include <curl/curl.h>
 #include "ai.h"
-
 
 static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
 static ADFS_RESULT delete(CURL *curl, const char *url);
@@ -90,6 +90,7 @@ static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     //curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 

@@ -1,5 +1,4 @@
-/* 
- * manager.c
+/* manager.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -30,16 +29,9 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
 
-    if (strlen(path) > ADFS_MAX_PATH) {
-	pm->msg = MSG_FAIL_LONG_PATH;
-        return ADFS_ERROR;
-    }
-
     DIR *dirp = opendir(path);
-    if( dirp == NULL ) {
-	pm->msg = MSG_FAIL_NO_PATH;
+    if( dirp == NULL )
         return ADFS_ERROR;
-    }
     closedir(dirp);
 
     strncpy(pm->db_path, path, sizeof(pm->db_path));
@@ -51,10 +43,9 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     // init config file
     if (m_init(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
-
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
-
+    // init rand
     srand(time(NULL));
     return ADFS_OK;
 }
@@ -62,28 +53,22 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
 void mgr_exit()
 {
     AIManager *pm = &g_manager;
-
     AIZone *pz = pm->z_head;
-    while (pz)
-    {
+    while (pz) {
         AIZone *tmp = pz;
         pz = pz->next;
-
         tmp->release_all(tmp);
         free(tmp);
     }
 
     AINameSpace *pns = pm->ns_head;
-    while (pns)
-    {
+    while (pns) {
         AINameSpace *tmp = pns;
         pns = pns->next;
-
 	kcdbclose(tmp->index_db);
 	kcdbdel(tmp->index_db);
         free(tmp);
     }
-
     curl_global_cleanup();
 }
 
@@ -101,17 +86,15 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     else
 	pns = m_get_ns("default");
 
-    if (pns == NULL) {
-	pm->msg = MSG_FAIL_NAMESPACE;
+    if (pns == NULL) 
 	return ADFS_ERROR;
-    }
 
     // need to free +1
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
     if (old_list == NULL || old_list[old_list_len-1] == '|')
         exist = 0;
     if (exist && !overwrite) 
-	goto err3;
+	goto err1;
     // send file
     AIRecord air;
     air_init(&air);
@@ -148,7 +131,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     else {
 	char *new_list = malloc(old_list_len + strlen(record) + 2);
 	if (new_list == NULL) 
-	    goto err1;
+	    goto err3;
 	sprintf("%s|%s", old_list, record);
 	kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	free(new_list);
@@ -158,11 +141,11 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     air.release(&air);
     kcfree(old_list);
     return ADFS_OK;
-err1:
+err3:
     free(record);
 err2:
     air.release(&air);
-err3:
+err1:
     kcfree(old_list);
     return ADFS_ERROR;
 }
@@ -225,8 +208,6 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
 // private
 static ADFS_RESULT m_init(const char *conf_file)
 {
-    AIManager *pm = &g_manager;
-    pm->msg = MSG_FAIL_CONFIG;
     char value[ADFS_FILENAME_LEN] = {0};
     // create zone
     if (conf_read(conf_file, "zone_num", value, sizeof(value)) == ADFS_ERROR)
@@ -368,10 +349,8 @@ static AIZone * m_create_zone(const char *name, int weight)
     AIManager * pm = &g_manager;
 
     AIZone *pz = (AIZone *)malloc(sizeof(AIZone));
-    if (pz == NULL) {
-	pm->msg = MSG_FAIL_MALLOC;
+    if (pz == NULL)
 	return NULL;
-    }
 
     aiz_init(pz, name, weight);
 
@@ -392,29 +371,22 @@ static ADFS_RESULT m_create_ns(const char *name)
     AIManager * pm = &g_manager;
 
     AINameSpace *pns = pm->ns_head;
-    while (pns)
-    {
+    while (pns) {
     	if (strcmp(pns->name, name) == 0)
 	    return ADFS_ERROR;
 	pns = pns->next;
     }
-
     pns = malloc(sizeof(AINameSpace));
-    if (pns == NULL) {
-	pm->msg = MSG_FAIL_MALLOC;
+    if (pns == NULL) 
 	return ADFS_ERROR;
-    }
 
     strncpy(pns->name, name, sizeof(pns->name));
-
     char indexdb_path[ADFS_MAX_PATH] = {0};
     sprintf(indexdb_path, "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->db_path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) {
-	pm->msg = MSG_FAIL_OPEN_DB;
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) 
         return ADFS_ERROR;
-    }
 
     pns->pre = pm->ns_tail;
     pns->next = NULL;

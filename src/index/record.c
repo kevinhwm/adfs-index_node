@@ -1,5 +1,4 @@
-/* 
- * record.c
+/* record.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -72,21 +71,26 @@ void r_release(AIRecord *_this)
 
 char * r_get_string(AIRecord *_this)
 {
+    DBG_PRINTSN("record 1");
     int len = ADFS_UUID_LEN + _this->num * sizeof(_this->head->zone_node);
     char *record = malloc(len);
     if (record == NULL)
 	return NULL;
+    DBG_PRINTSN("record 10");
     memset(record, 0, len);
     strcpy(record, _this->uuid);
 
+    DBG_PRINTSN("record 20");
     AIPosition *pp = _this->head;
-    while (pp)
-    {
+    while (pp) {
 	strcat(record, pp->zone_node);
 	strcat(record, "|");
+	pp = pp->next;
     }
+    DBG_PRINTSN("record 30");
     // set the last "|" to be "\0"
     record[strlen(record)-1] = '\0';
+    DBG_PRINTSN("record 40");
     return record;
 }
 

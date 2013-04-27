@@ -1,5 +1,4 @@
-/* 
- * manager.h
+/* manager.h
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -37,17 +36,13 @@ typedef struct AIManager
 }AIManager;
 
 
-// init function
 ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size);
 // mgr_check();
 // clean up function
 void mgr_exit();
 
-// recieve file function
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
-// send file function
 char * mgr_download(const char *name_space, const char *fname);
-// delete file function. it's not the real deletion
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
 
 #endif // __MANAGER_H__

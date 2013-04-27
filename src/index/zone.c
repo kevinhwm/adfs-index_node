@@ -1,5 +1,4 @@
-/*
- * ai_zone.c
+/* ai_zone.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.

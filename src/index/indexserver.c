@@ -1,5 +1,7 @@
-/*
+/* indexserver.c
+ *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <nxweb/nxweb.h>
@@ -14,7 +16,7 @@
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
 extern nxweb_handler delete_handler;
-//extern nxweb_handler status_handler;
+extern nxweb_handler status_handler;
 //extern nxweb_handler isalive_handler;
 //extern nxweb_handler monitor_handler;
 //extern nxweb_handler exist_handler;
@@ -24,6 +26,7 @@ extern nxweb_handler delete_handler;
 NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
+NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
 
 // Command-line options:
