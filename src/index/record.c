@@ -19,13 +19,11 @@ char * r_get_string(AIRecord *);
 
 void air_init(AIRecord *pr)
 {
-    if (pr)
-    {
+    if (pr) {
 	memset(pr, 0, sizeof(AIRecord));
 	pr->add = r_add;
 	pr->release = r_release;
 	pr->get_string = r_get_string;
-
 	r_create_uuid(pr);
     }
 }
@@ -65,8 +63,7 @@ ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
 void r_release(AIRecord *_this)
 {
     AIPosition *pp = _this->head;
-    while (pp)
-    {
+    while (pp) {
 	AIPosition *tmp = pp;
 	pp = pp->next;
 	free(tmp);

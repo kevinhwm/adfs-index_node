@@ -135,6 +135,7 @@ static nxweb_result upload_on_request(
     if (overwrite && (strcmp(overwrite, "1") == 0) )
         ow = 1;
 
+    DBG_PRINTSN("if upload 10");
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) 
@@ -150,6 +151,7 @@ static nxweb_result upload_on_request(
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
+	DBG_PRINTSN("if upload 20");
         if ( strlen(ufo->filename) > 0 && ufo->file_complete ) 
 	{
             char fname[ADFS_MAX_PATH] = {0};
@@ -157,9 +159,9 @@ static nxweb_result upload_on_request(
             if (get_filename_from_url(fname) != 0)
                 nxweb_send_http_error(resp, 400, "Failed. Check file name or namespace.\n");
 
+	    DBG_PRINTSN("if upload 30");
 	    if (strlen(fname) >= ADFS_FILENAME_LEN)
                 nxweb_send_http_error(resp, 400, "Failed. File name is too long. It must be less than 250\n");
-
             else if (mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Can not save.\n");
             else
@@ -168,12 +170,14 @@ static nxweb_result upload_on_request(
         else
             nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.\n");
 
+	DBG_PRINTSN("if upload 40");
         if (ufo->file_ptr) {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }
     }
 
+    DBG_PRINTSN("if upload 50");
     return NXWEB_OK;
 }
 

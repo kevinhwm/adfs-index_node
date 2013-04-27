@@ -15,9 +15,11 @@ static ADFS_RESULT delete(CURL *curl, const char *url);
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
     ADFS_RESULT res = ADFS_ERROR;
+    DBG_PRINTSN("connect upload 1");
     if (pn == NULL)
         return res;
 
+    DBG_PRINTSN("connect upload 10");
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i)
     {
         if (pthread_mutex_trylock(pn->curl_mutex + i) == 0)
@@ -28,10 +30,12 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
         }
     }
 
+    DBG_PRINTSN("connect upload 20");
     pthread_mutex_t * pmutex = pn->curl_mutex + ADFS_NODE_CURL_NUM -1;
     pthread_mutex_lock(pmutex);
     res = upload(pn->curl[ADFS_NODE_CURL_NUM -1], url, fname, fdata, fdata_len);
     pthread_mutex_unlock(pmutex);
+    DBG_PRINTSN("connect upload 30");
     return res;
 }
 
@@ -66,10 +70,12 @@ static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata)
 
 static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
+    DBG_PRINTSN("connect upload 1001");
     if (curl == NULL)
         return ADFS_ERROR;
     ADFS_RESULT adfs_res = ADFS_ERROR;
 
+    DBG_PRINTSN("connect upload 1010");
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastpost = NULL;
     curl_formadd(&formpost, &lastpost,
@@ -78,7 +84,6 @@ static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *
             CURLFORM_BUFFERPTR, fdata,
             CURLFORM_BUFFERLENGTH, fdata_len,
             CURLFORM_END);
-
     static const char exp[] = "Expect:";
     struct curl_slist *headerlist = NULL;
     headerlist = curl_slist_append(headerlist, exp);
@@ -96,7 +101,6 @@ static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *
         if (res == CURLE_OK && res_code == 200)
             adfs_res = ADFS_OK;
     }
-
     curl_formfree(formpost);
     curl_slist_free_all(headerlist);
     return adfs_res;

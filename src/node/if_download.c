@@ -39,7 +39,7 @@ static nxweb_result download_on_request(
 {
     DBG_PRINTS("download - request\n");
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
-	nxweb_send_http_error(resp, 400, "Failed. File name is too long");
+	nxweb_send_http_error(resp, 400, "Failed. File name is too long.");
 	return NXWEB_ERROR;
     }
     nxweb_parse_request_parameters( req, 0 );
@@ -47,22 +47,23 @@ static nxweb_result download_on_request(
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     if (get_filename_from_url(fname) == ADFS_ERROR) {
-	nxweb_send_http_error(resp, 400, "Failed. Check file name");
+	nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 	return NXWEB_ERROR;
     }
 
+    DBG_PRINTS("download 20\n");
     void *pfile_data = NULL;
     size_t file_size = 0;
     anm_get(fname, name_space, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL || file_size == 0) {
-	nxweb_send_http_error(resp, 404, "Failed. No file");
+	nxweb_send_http_error(resp, 404, "Failed. No file.");
+	DBG_PRINTS("download 30\n");
 	return NXWEB_ERROR;
     }
     else {
 	SHARE_DATA *ptmp = nxb_alloc_obj(req->nxb, sizeof(SHARE_DATA));
 	nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void *)ptmp, download_request_data_finalize);
 	ptmp->data_ptr = pfile_data;
-
 	char *file_name = fname;
 	char *tmp = NULL;
 	while ( (tmp = strstr(file_name, "/")) )

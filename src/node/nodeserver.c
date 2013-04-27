@@ -42,7 +42,7 @@ static void server_main()
     nxweb_run();
 
     anm_exit();
-    printf("ADFS-Node exit.\n");
+    printf("ADFS Node exit.\n");
 }
 
 static void show_help(void) 
@@ -63,7 +63,7 @@ static void show_help(void)
 	    " -x dir   set work dir			(default: ./)\n"
 
 	    "\n"
-	    "example:  nodeserver -d -x ./ -l nodeserver_http_log\n\n"
+	    "example:  nodeserver -d -x ./ -l nodeserver_http_log\n"
 	  );
 }
 
@@ -79,8 +79,8 @@ int main(int argc, char** argv)
     unsigned long mem_size = 512;
 
     printf( "*********************************************\n"
-	    "ADFS-Node: " "v" ADFS_VERSION "\n"
-	    "build:     " __DATE__ " " __TIME__ "\n"
+	    "ADFS    - " "Node "ADFS_VERSION "\n"
+	    "build   - " __DATE__ " " __TIME__ "\n"
 	    "*********************************************\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 

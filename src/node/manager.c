@@ -22,16 +22,25 @@ ANManager g_manager;
 ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     memset(&g_manager, 0, sizeof(g_manager));
-    DIR *dirp = opendir(path);
-    if( dirp == NULL ) 
-	return ADFS_ERROR;
-    closedir(dirp);
-
     strncpy(g_manager.path, path, sizeof(g_manager.path));
     g_manager.kc_apow = 0;
     g_manager.kc_fbp = 10;
     g_manager.kc_bnum = 1000000;
     g_manager.kc_msiz = mem_size *1024*1024;
+
+    DIR *dp;
+    struct dirent *ent;
+    if( (dp = opendir(path)) == NULL ) 
+	return ADFS_ERROR;
+
+    while ((ent = readdir(dp)) != NULL) {
+	if (ent->d_type == 4 && ent->d_name[0] != '.') {
+	    DBG_PRINTSN(ent->d_name);
+	    m_create_ns(ent->d_name);
+	}
+    }
+    closedir(dp);
+
     return ADFS_OK;
 }
 
@@ -49,9 +58,12 @@ void anm_exit()
     }
 }
 
-ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
+ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
 {
     ANNameSpace * pns = NULL;
+    const char *name_space = ns;
+    if (name_space == NULL)
+	name_space = "default";
     pns = m_get_ns(name_space);
     if (pns == NULL)
 	pns = m_create_ns(name_space);
@@ -78,15 +90,21 @@ ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_le
     return ADFS_OK;
 }
 
-void anm_get(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size)
+void anm_get(const char * fname, const char * ns, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
     ANNameSpace * pns = NULL;
+    const char *name_space = ns;
+    if (name_space == NULL)
+	name_space = "default";
     pns = m_get_ns(name_space);
+    DBG_PRINTSN(name_space);
+    DBG_PRINTS("anm get 20\n");
     if (pns == NULL)
 	return ;
 
+    DBG_PRINTSN(fname);
     size_t len = 0;
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL)
@@ -98,7 +116,7 @@ void anm_get(const char * fname, const char * name_space, void ** ppfile_data, s
 
 ////////////////////////////////////////////////////////////////////////////////
 //private
-static ANNameSpace * m_create_ns(const char *name_space) 
+static ANNameSpace * m_create_ns(const char *name_space)
 {
     ANManager *pm = &g_manager;
     if (strlen(name_space) >= ADFS_NAMESPACE_LEN)
@@ -106,11 +124,12 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     char ns_path[ADFS_MAX_PATH] = {0};
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
-
+    DBG_PRINTSN(ns_path);
+    DBG_PRINTSN("create ns 20");
     int node_num = m_count_kch(ns_path);
     // index db of ADFS-Node
     char indexdb_path[ADFS_MAX_PATH] = {0};
-    if (snprintf(indexdb_path, sizeof(indexdb_path), "%s/indexdb.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+    if (snprintf(indexdb_path, sizeof(indexdb_path), "%s/index.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
 		ns_path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz) >= sizeof(indexdb_path))
     {
 	return NULL;
@@ -118,10 +137,9 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
     anns_init(pns, name_space);
-
     pns->index_db = kcdbnew();
     int32_t res = kcdbopen( pns->index_db, indexdb_path, KCOWRITER|KCOCREATE );
-    if ( !res )  {
+    if ( !res ) {
 	free(pns);
 	return NULL;
     }
@@ -148,7 +166,6 @@ static ANNameSpace * m_create_ns(const char *name_space)
 		return NULL;
 	}
     }
-
     pns->pre = pm->tail;
     pns->next = NULL;
     if (pm->tail)
@@ -156,7 +173,6 @@ static ANNameSpace * m_create_ns(const char *name_space)
     else
 	pm->head = pns;
     pm->tail = pns;
-
     return pns;
 }
 
@@ -231,6 +247,7 @@ static ANNameSpace * m_get_ns(const char * name_space)
 {
     ANNameSpace * tmp = g_manager.head;
     while (tmp) {
+	DBG_PRINTSN(tmp->name);
 	if (strcmp(tmp->name, name_space) == 0)
 	    return tmp;
 	tmp = tmp->next;

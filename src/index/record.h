@@ -36,7 +36,6 @@ typedef struct AIRecord
     ADFS_RESULT (*add)(struct AIRecord *, const char *, const char *);
     void (*release)(struct AIRecord *);
     char * (*get_string)(struct AIRecord *);
-    //ADFS_RESULT (*parse_string)(const char *);
 }AIRecord;
 
 void air_init(AIRecord *);

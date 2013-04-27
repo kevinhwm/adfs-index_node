@@ -61,21 +61,20 @@ static void show_help(void)
     printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
-            " -w dir   set work dir    (default: ./)\n"
-            " -l file  set log file    (default: stderr or indexserver_error_log for daemon)\n"
-            " -p file  set pid file    (default: indexserver.pid)\n"
-            " -u user  set process uid\n"
-            " -g group set process gid\n"
+            " -l file  set log file    		(default: stderr or indexserver_error_log for daemon)\n"
+            " -p file  set pid file    		(default: indexserver.pid)\n"
+            //" -u user  set process uid\n"
+            //" -g group set process gid\n"
             " -P port  set http port\n"
             " -h       show this help\n"
             " -v       show version\n"
 
-            " -c file  config file                  (default: ./indexserver.conf)\n"
-            " -m mem   set memory map size in MB    (default: 512)\n"
-            " -x path  database file                (default: ./)\n"
+            " -c file  config file			(default: ./indexserver.conf)\n"
+            " -m mem   set memory map size in MB	(default: 512)\n"
+            " -x dir   set work dir    			(default: ./)\n"
 
             "\n"
-            "example:  indexserver -d -l indexserver_error_log\n\n"
+            "example:  indexserver -d -x ./ -l indexserver_http_log\n"
           );
 }
 
@@ -84,14 +83,16 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char* work_dir=0;
+    const char* work_dir="./";
     const char* log_file=0;
     const char* pid_file="indexserver.pid";
-
     const char* conf_file="indexserver.conf";
     unsigned long mem_size = 256;
-    char * db_path = "./";
 
+    printf( "*********************************************\n"
+	    "ADFS    - " "Index "ADFS_VERSION "\n"
+	    "build   - " __DATE__ " " __TIME__ "\n"
+	    "*********************************************\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
     {
@@ -101,18 +102,12 @@ int main(int argc, char** argv)
                 show_help();
                 return 0;
             case 'v':
-                printf( "version:   ADFSI - " ADFS_VERSION "\n"
-                        "build:     " __DATE__ " " __TIME__ "\n"
-                      );
                 return 0;
             case 'd':
                 daemon=1;
                 break;
             case 's':
                 shutdown=1;
-                break;
-            case 'w':
-                work_dir=optarg;
                 break;
             case 'l':
                 log_file=optarg;
@@ -142,8 +137,8 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
             case 'x':
-                db_path = optarg;
-                if (strlen(db_path) > ADFS_FILENAME_LEN) {
+                work_dir = optarg;
+                if (strlen(work_dir) > ADFS_FILENAME_LEN) {
                     printf("path is too long\n");
                     return 0;
                 }
@@ -167,7 +162,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     DBG_PRINTS("call mgr_init\n");
-    if (mgr_init(conf_file, db_path, mem_size) == ADFS_ERROR)
+    if (mgr_init(conf_file, work_dir, mem_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////

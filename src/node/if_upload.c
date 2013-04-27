@@ -50,18 +50,14 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     char *pfname = strstr( buff, "filename=\"" );
-    if( pfname == NULL )
-    {
-        if( strstr( buff, "name=\"upname\"" ) )
-        {
+    if( pfname == NULL ) {
+        if( strstr( buff, "name=\"upname\"" ) ) {
             pufo->filename_ready_to_receive = 1;
             pufo->file_ready_to_receive = 0;
             return 0;
         }
-        else
-        {
+        else 
             return 0;
-        }
     }
 
     pfname += 10;
@@ -71,19 +67,16 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
     return 0;
 }
 
-
 static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->filename_ready_to_receive == 1 )
-    {
+    if ( pufo->filename_ready_to_receive == 1 ) {
         strncpy( pufo->filename, at, length );
         pufo->filename_ready_to_receive = 0;
         pufo->file_ready_to_receive = 1;
         return 0;
     }
-    if ( pufo->file_ready_to_receive )
-    {
+    if ( pufo->file_ready_to_receive ) {
         if ( pufo->ffilemem == NULL ) 
             return 0;
         if ( pufo->ffilemem )
@@ -95,8 +88,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
 int on_post_finished(multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->ffilemem )
-    {
+    if ( pufo->ffilemem ) {
         fclose( pufo->ffilemem );
         pufo->file_complete = 1;
         pufo->ffilemem=NULL;
@@ -127,11 +119,9 @@ static nxweb_result upload_on_request(
 
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
-
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    if (fwb) 
-    {
+    if (fwb) {
         ufo->parser_settings.on_header_field = on_post_header_field;
         ufo->parser_settings.on_header_value = on_post_header_value;
         ufo->parser_settings.on_part_data = on_post_body;
@@ -143,8 +133,7 @@ static nxweb_result upload_on_request(
         multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
         multipart_parser_free( ufo->parser );
 
-        if ( strlen(ufo->filename) > 0 && ufo->file_complete )
-        {
+        if ( strlen(ufo->filename) > 0 && ufo->file_complete ) {
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
             if (get_filename_from_url(fname) == ADFS_ERROR)
@@ -157,8 +146,7 @@ static nxweb_result upload_on_request(
         else
             nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.");
 
-        if (ufo->file_ptr)
-        {
+        if (ufo->file_ptr) {
             free( ufo->file_ptr );
             ufo->file_ptr = NULL;
         }
