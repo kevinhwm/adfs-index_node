@@ -8,7 +8,7 @@
 
 // list member functions. names begin with "ns_"
 static ADFS_RESULT ns_create(ANNameSpace * _this, int id, char *path, int path_len, ADFS_NODE_STATE state);
-static void ns_release(ANNameSpace * _this, int id);
+//static void ns_release(ANNameSpace * _this, int id);
 static void ns_release_all(ANNameSpace * _this);
 static NodeDB * ns_get(ANNameSpace * _this, int id);
 static ADFS_RESULT ns_switch_state(ANNameSpace *_this, int id, ADFS_NODE_STATE des_state);
@@ -17,13 +17,13 @@ static ADFS_RESULT ns_switch_state(ANNameSpace *_this, int id, ADFS_NODE_STATE d
 static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state);
 
 
-ADFS_RESULT ns_init(ANNameSpace * _this, const char *name_space)
+ADFS_RESULT anns_init(ANNameSpace * _this, const char *name_space)
 {
     if (_this)
     {
         memset(_this, 0, sizeof(ANNameSpace));
         _this->create = ns_create;
-        _this->release = ns_release;
+        //_this->release = ns_release;
         _this->release_all = ns_release_all;
         _this->get = ns_get;
         _this->switch_state = ns_switch_state;
@@ -33,10 +33,6 @@ ADFS_RESULT ns_init(ANNameSpace * _this, const char *name_space)
     }
     return ADFS_ERROR;
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// public function
 
 // just create, no check.
 static ADFS_RESULT ns_create(ANNameSpace * _this, int id, char *path, int path_len, ADFS_NODE_STATE state)
@@ -94,7 +90,7 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, int id, char *path, int path_l
     return ADFS_OK;
 }
 
-
+/*
 static void ns_release(ANNameSpace * _this, int id)
 {
     NodeDB *p = _this->head;
@@ -130,34 +126,28 @@ static void ns_release(ANNameSpace * _this, int id)
 
     return ;
 }
-
+*/
 
 static void ns_release_all(ANNameSpace * _this)
 {
-    while (_this->tail)
-    {
+    while (_this->tail) {
         NodeDB *tmp = _this->tail;
         _this->tail = _this->tail->pre;
-        
         kcdbclose(tmp->db);
         kcdbdel(tmp->db);
         free(tmp);
     }
-
     return ;
 }
-
 
 static NodeDB * ns_get(ANNameSpace * _this, int id)
 {
     NodeDB * tmp = _this->tail;
-    while (tmp)
-    {
+    while (tmp) {
         if (tmp->id == id)
             return tmp;
         tmp = tmp->next;
     }
-
     return NULL;
 }
 
@@ -167,10 +157,8 @@ static ADFS_RESULT ns_switch_state(ANNameSpace * _this, int id, ADFS_NODE_STATE 
     NodeDB *tmp = _this->get(_this, id);
     if (tmp == NULL)
         return ADFS_ERROR;
-
     kcdbclose(tmp->db);
     tmp->state = des_state;
-
     return db_create(tmp->db, tmp->path, tmp->state);
 }
 
@@ -185,13 +173,11 @@ static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state)
             if (!kcdbopen(db, path, KCOREADER))
                 return ADFS_ERROR;
             break;
-
         case S_READ_WRITE:
             if (!kcdbopen(db, path, KCOCREATE|KCOWRITER|KCOTRYLOCK))
                 return ADFS_ERROR;
             break;
     }
-
     return ADFS_OK;
 }
 

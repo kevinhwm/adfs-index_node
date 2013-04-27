@@ -15,3 +15,4 @@ ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len)
 int conf_split(char *p, char *key, char *value);
 
 #endif // __CONF_H__
+

@@ -26,7 +26,7 @@ void air_init(AIRecord *pr)
 	pr->release = r_release;
 	pr->get_string = r_get_string;
 
-	r_create_uuid(_this);
+	r_create_uuid(pr);
     }
 }
 

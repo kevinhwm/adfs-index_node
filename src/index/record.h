@@ -8,7 +8,7 @@
 #ifndef __RECORD_H__
 #define __RECORD_H__
 
-#include "def.h"
+#include "adfs.h"
 
 
 // format: "uuidzone#node|zone#node$uuidzone#node|zone#node..."

@@ -112,7 +112,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
         exist = 0;
 
     if (exist && !overwrite) 
-	goto err3:
+	goto err3;
 
     // send file
     AIRecord air;

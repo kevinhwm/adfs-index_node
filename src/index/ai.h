@@ -11,7 +11,7 @@
 
 #include "conf.h"               // config file
 #include "connect.h"            // curl. connect to nodeserver
-#include "def.h"
+#include "adfs.h"
 #include "function.h"           // common functions
 #include "manager.h"            // main function. only one object -> g_manager
 #include "multipart_parser.h"   // parse the post data

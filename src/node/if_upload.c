@@ -147,9 +147,9 @@ static nxweb_result upload_on_request(
         {
             char fname[ADFS_MAX_PATH] = {0};
             strncpy(fname, req->path_info, sizeof(fname));
-            if (parse_filename(fname) == ADFS_ERROR)
+            if (get_filename_from_url(fname) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Check file name.");
-            else if (mgr_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
+            else if (anm_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
                 nxweb_send_http_error(resp, 400, "Failed. Can not save.");
             else
                 nxweb_response_printf(resp, "OK.\n");
@@ -167,7 +167,6 @@ static nxweb_result upload_on_request(
     return NXWEB_OK;
 }
 
-
 static void upload_request_data_finalize(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
@@ -175,22 +174,17 @@ static void upload_request_data_finalize(
         nxe_data data) 
 {
     DBG_PRINTS("--- upload_request_data_finalize\n");
-
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
-    if (fwb && fwb->fd) 
-    {
+    if (fwb && fwb->fd) {
         fclose(fwb->fd);
         fwb->fd=0;
     }
-
-    if( ufo->postdata_ptr )
-    {
+    if( ufo->postdata_ptr ) {
         free( ufo->postdata_ptr );
         ufo->postdata_ptr = NULL;
     }
 }
-
 
 static nxweb_result upload_on_post_data(
         nxweb_http_server_connection* conn, 
@@ -198,17 +192,13 @@ static nxweb_result upload_on_post_data(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data\n");
-
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
-
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, upload_request_data_finalize);
-
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
-
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
     nxd_fwbuffer_init(fwb, ufo->fpostmem, ADFS_MAX_FILE_SIZE);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
@@ -216,23 +206,20 @@ static nxweb_result upload_on_post_data(
     return NXWEB_OK;
 }
 
-
 static nxweb_result upload_on_post_data_complete(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data_complete\n");
-
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this
     // as any other callbacks might not be invoked under error conditions.
     upload_file_object* ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
-    fclose((FILE *)fwb->fd);
+    fclose(fwb->fd);
     fwb->fd=0;
-
     return NXWEB_OK;
 }
 

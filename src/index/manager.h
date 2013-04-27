@@ -9,7 +9,7 @@
 #define __MANAGER_H__
 
 #include <kclangc.h>
-#include "def.h"
+#include "adfs.h"
 #include "zone.h"
 
 
