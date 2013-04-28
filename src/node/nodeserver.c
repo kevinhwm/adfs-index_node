@@ -36,7 +36,7 @@ static void server_main()
 
     // Override default timers (if needed):
     // make sure the timeout less than 5 seconds. be sure to void receive SIGALRM to shutdown the db brute.
-    nxweb_set_timeout(NXWEB_TIMER_KEEP_ALIVE, 3000000);
+    nxweb_set_timeout(NXWEB_TIMER_KEEP_ALIVE, 4500000);
 
     // Go!
     nxweb_run();

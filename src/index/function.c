@@ -61,6 +61,8 @@ int get_filename_from_url(char * p)
     if (p[0] == '/')
         for (int i=1; i<=len; ++i)
             p[i-1] = p[i];
+    if (strlen(p) <= 0)
+	return -1;
 
     return 0;
 }

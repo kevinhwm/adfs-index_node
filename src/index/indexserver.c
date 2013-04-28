@@ -64,8 +64,8 @@ static void show_help(void)
     printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
-            " -l file  set log file    		(default: stderr or indexserver_error_log for daemon)\n"
-            " -p file  set pid file    		(default: indexserver.pid)\n"
+            " -l file  set log file    	(default: stderr or indexserver_error_log for daemon)\n"
+            " -p file  set pid file    	(default: indexserver.pid)\n"
             //" -u user  set process uid\n"
             //" -g group set process gid\n"
             " -P port  set http port\n"
@@ -73,7 +73,7 @@ static void show_help(void)
             " -v       show version\n"
 
             " -c file  config file			(default: ./indexserver.conf)\n"
-            " -m mem   set memory map size in MB	(default: 512)\n"
+            " -m mem   set memory map size in MB	(default: 256)\n"
             " -x dir   set work dir    			(default: ./)\n"
 
             "\n"
@@ -92,10 +92,10 @@ int main(int argc, char** argv)
     const char* conf_file="indexserver.conf";
     unsigned long mem_size = 256;
 
-    printf( "*********************************************\n"
-	    "ADFS    - " "Index "ADFS_VERSION "\n"
-	    "build   - " __DATE__ " " __TIME__ "\n"
-	    "*********************************************\n" );
+    printf( "====================================================================\n"
+	    "                    ADFS - Index " ADFS_VERSION "\n"
+	    "                  " __DATE__ "  " __TIME__ "\n"
+            "====================================================================\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
     {
@@ -173,7 +173,6 @@ int main(int argc, char** argv)
     if (daemon) {
         if (!log_file) 
             log_file="/dev/null";
-
         nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
     }
     else {
