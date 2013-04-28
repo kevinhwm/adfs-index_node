@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall
 INCLUDE = -I../include
-LIBS = -lnxweb -lkyotocabinet -luuid -lrt -lcurl -pthread
+LIBS = -lnxweb -lkyotocabinet -lrt -lcurl -pthread
 TARGET = indexserver
 OBJS = conf.o connect.o function.o if_delete.o if_download.o if_upload.o if_status.o indexserver.o manager.o multipart_parser.o record.o zone.o
 
