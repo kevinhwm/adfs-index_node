@@ -44,5 +44,6 @@ void mgr_exit();
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
 char * mgr_download(const char *name_space, const char *fname);
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
+char * mgr_status();
 
 #endif // __MANAGER_H__

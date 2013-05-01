@@ -205,6 +205,45 @@ ADFS_RESULT mgr_delete(const char *name_space, const char *fname)
     return ADFS_OK;
 }
 
+char * mgr_status()
+{
+    int size = 4096;
+    char *p = malloc(size);
+    if (p == NULL)
+	return NULL;
+    memset(p, 0, size);
+
+    AIManager *pm = &g_manager;
+    AIZone *pz = pm->z_head;
+    DBG_PRINTSN("10");
+    while (pz) {
+	DBG_PRINTSN("11");
+	strncat(p, "<li>Zone: ", size);
+	strncat(p, pz->name, size);
+	strncat(p, "</li><table border=\"1\">\n", size);
+	strncat(p, "<tr><th>node</th><th>status</th></tr>\n", size);
+	AINode *pn = pz->head;
+	while (pn) {
+	    DBG_PRINTSN("12");
+	    strncat(p, "<tr><td>", size);
+	    strncat(p, pn->ip_port, size);
+	    strncat(p, "</td><td bgcolor=", size);
+	    char url[1024] = {0};
+	    sprintf(url, "http://%s/status", pn->ip_port);
+	    if (aic_status(pn, url) == ADFS_OK) 
+		strncat(p, "\"green\">alive", size);
+	    else 
+		strncat(p, "\"red\">lost", size);
+	    strncat(p, "</td></tr>", size);
+	    pn = pn->next;
+	}
+	strncat(p, "</table>", size);
+    	pz = pz->next;
+    }
+    DBG_PRINTSN("20");
+    return p;
+}
+
 // private
 static ADFS_RESULT m_init(const char *conf_file)
 {
@@ -398,4 +437,5 @@ static ADFS_RESULT m_create_ns(const char *name)
 
     return ADFS_OK;
 }
+
 

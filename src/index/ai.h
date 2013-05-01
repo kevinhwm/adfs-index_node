@@ -22,7 +22,7 @@ int get_filename_from_url(char *);
 
 // connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
-ADFS_RESULT aic_delete(AINode *pn, const char *url);
+ADFS_RESULT aic_status(AINode *pn, const char *url);
 
 // conf.h
 ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);

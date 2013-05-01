@@ -33,13 +33,11 @@ typedef struct _upload_file_object
     KCDB *                    kc_db;
 }upload_file_object;
 
-
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
     // nothing to do
     return 0;
 }
-
 
 static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
@@ -66,7 +64,6 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
     pufo->file_ready_to_receive = 1;
     return 0;
 }
-
 
 static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
@@ -99,7 +96,6 @@ int on_post_finished (multipart_parser * mp_obj)
     }
     return 0;
 }
-
 
 static nxweb_result upload_on_request(
 	nxweb_http_server_connection* conn, 
@@ -170,7 +166,7 @@ static nxweb_result upload_on_request(
 
     nxweb_response_printf(resp, ""
 	    "<form method='post' enctype='multipart/form-data'>\n"
-	    "file to upload: "
+	    "File to upload: "
 	    "<input type='file' multiple name='uploadedfile' />"
 	    "<input type='submit' value='upload' />\n"
 	    "</form></body></html>\n" );
