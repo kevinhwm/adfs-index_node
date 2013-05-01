@@ -10,12 +10,17 @@
 #include <string.h>
 #include "ai.h"
 
-
 static nxweb_result status_on_request(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
+    nxweb_set_response_content_type(resp, "text/html");
+    nxweb_send_http_error(resp, 404, "test\n");
+    resp->keep_alive = 0;
+    return NXWEB_OK;
+
+    /*
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_response_append_str(resp, "<html><head><title>ADFS - status</title></head><body>");
     nxweb_response_append_str(resp, "<h3>ADFS status table</h3>");
@@ -27,6 +32,7 @@ static nxweb_result status_on_request(
     nxweb_response_append_str(resp, "</table></body></html>");
     nxweb_response_append_str(resp, "</body></html>");
     return NXWEB_OK;
+    */
 }
 
 nxweb_handler status_handler={
