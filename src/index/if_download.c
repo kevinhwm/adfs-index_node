@@ -29,6 +29,7 @@ static nxweb_result download_on_request(
 
     nxweb_parse_request_parameters( req, 0 );
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
+    const char *history = nx_simple_map_get_nocase( req->parameters, "history" );
 
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
@@ -42,7 +43,7 @@ static nxweb_result download_on_request(
 	return NXWEB_OK;
     }
 
-    char *redirect_url = mgr_download(name_space, fname);
+    char *redirect_url = mgr_download(name_space, fname, history);
     if (redirect_url == NULL) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
     }

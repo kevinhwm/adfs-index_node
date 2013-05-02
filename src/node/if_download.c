@@ -70,7 +70,7 @@ static nxweb_result download_on_request(
 	    file_name = tmp + 1;
 
 	char resp_name[NAME_MAX] = {0};
-	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%s", file_name );
+	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-ADFS_UUID_LEN), file_name);
 	nxweb_add_response_header(resp, "Content-disposition", resp_name );
 	nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
     }

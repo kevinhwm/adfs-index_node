@@ -8,9 +8,10 @@
 #include <kclangc.h>
 #include "ai.h"
 
+extern unsigned long g_MaxFileSize;
+
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
-
 
 typedef struct _upload_file_object
 {
@@ -149,7 +150,7 @@ static nxweb_result upload_on_request(
 	    }
 	    else {
 		nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>\n" );
-		nxweb_response_printf(resp, "<p>OK</p><br />" );
+		nxweb_response_printf(resp, "OK" );
 	    }
 	}
 	else {
@@ -201,7 +202,7 @@ static nxweb_result upload_on_post_data(
 	nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data\n");
-    if (req->content_length > ADFS_MAX_FILE_SIZE) {
+    if (req->content_length > g_MaxFileSize) {
 	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
 	resp->keep_alive=0;
 	return NXWEB_OK;
@@ -213,11 +214,11 @@ static nxweb_result upload_on_post_data(
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
-    if (req->content_length > ADFS_MAX_FILE_SIZE)
+    if (req->content_length > g_MaxFileSize)
 	ufo->fpostmem = fopen("/dev/null", "wb");
     else
 	ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, ADFS_MAX_FILE_SIZE);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxFileSize);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

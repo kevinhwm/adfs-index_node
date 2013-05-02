@@ -11,7 +11,7 @@
 static const char status_handler_key; 
 #define STATUS_HANDLER_KEY ((nxe_data)&status_handler_key)
 
-struct tmpdata 
+struct SHARE_DATA 
 {
     char *p;
 };
@@ -23,7 +23,7 @@ static void status_request_data_finalize(
 	nxe_data data) 
 {
     DBG_PRINTS("--- status_request_data_finalize\n");
-    struct tmpdata * tmp = data.ptr;
+    struct SHARE_DATA * tmp = data.ptr;
     if (tmp && tmp->p) {
 	free(tmp->p);
 	tmp->p = NULL;
@@ -39,9 +39,10 @@ static nxweb_result status_on_request(
     nxweb_response_append_str(resp, "<html><head><title>ADFS - status</title></head><body>");
     nxweb_response_append_str(resp, "<h3>ADFS status table</h3>");
 
-    struct tmpdata *tmp = nxb_alloc_obj(req->nxb, sizeof(struct tmpdata));
+    struct SHARE_DATA *tmp = nxb_alloc_obj(req->nxb, sizeof(struct SHARE_DATA));
     nxweb_set_request_data(req, STATUS_HANDLER_KEY, (nxe_data)(void*)tmp, status_request_data_finalize);
     char *p = mgr_status();
+    tmp->p = p;
     nxweb_response_append_str(resp, p);
     nxweb_response_append_str(resp, "</body></html>");
     return NXWEB_OK;

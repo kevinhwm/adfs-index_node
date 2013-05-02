@@ -8,7 +8,6 @@
 #define __ADFS_H__
 
 #define ADFS_VERSION		"3.0"
-#define ADFS_MAX_FILE_SIZE	0x08000000      // 128MB
 #define ADFS_MAX_PATH		1024
 #define ADFS_FILENAME_LEN	256
 #define ADFS_ZONENAME_LEN	128

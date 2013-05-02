@@ -36,13 +36,13 @@ typedef struct AIManager
 }AIManager;
 
 
-ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size);
+ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size, unsigned long max_file_size);
 // mgr_check();
 // clean up function
 void mgr_exit();
 
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
-char * mgr_download(const char *name_space, const char *fname);
+char * mgr_download(const char *name_space, const char *fname, const char *history);
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
 char * mgr_status();
 

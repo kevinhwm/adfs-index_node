@@ -55,9 +55,8 @@ static void server_main()
     nxweb_run();
 
     mgr_exit();
-    printf("ADFS-Index exit.\n");
+    printf("ADFS Index exit.\n");
 }
-
 
 static void show_help(void) 
 {
@@ -74,6 +73,7 @@ static void show_help(void)
 
             " -c file  config file			(default: ./indexserver.conf)\n"
             " -m mem   set memory map size in MB	(default: 256)\n"
+            " -M fmax  set file max size in MB		(default: 128)\n"
             " -x dir   set work dir    			(default: ./)\n"
 
             "\n"
@@ -91,13 +91,14 @@ int main(int argc, char** argv)
     const char* pid_file="indexserver.pid";
     const char* conf_file="indexserver.conf";
     unsigned long mem_size = 256;
+    unsigned long max_file_size = 128;
 
     printf( "====================================================================\n"
 	    "                    ADFS - Index " ADFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:M:x:")) != -1) 
     {
         switch (c) 
         {
@@ -139,6 +140,12 @@ int main(int argc, char** argv)
                     fprintf(stderr, "invalid mem size: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
+            case 'M':
+                max_file_size = atoi(optarg);
+                if (max_file_size <= 0) {
+                    fprintf(stderr, "invalid file size: %s\n\n", optarg);
+                    return EXIT_FAILURE;
+                }
             case 'x':
                 work_dir = optarg;
                 if (strlen(work_dir) > ADFS_FILENAME_LEN) {
@@ -165,7 +172,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     DBG_PRINTS("call mgr_init\n");
-    if (mgr_init(conf_file, work_dir, mem_size) == ADFS_ERROR)
+    if (mgr_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////
