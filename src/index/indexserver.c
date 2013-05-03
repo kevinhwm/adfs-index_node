@@ -63,7 +63,7 @@ static void show_help(void)
     printf( "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
-            " -l file  set log file    	(default: stderr or indexserver_error_log for daemon)\n"
+            //" -l file  set log file    	(default: stderr or indexserver_error_log for daemon)\n"
             " -p file  set pid file    	(default: indexserver.pid)\n"
             //" -u user  set process uid\n"
             //" -g group set process gid\n"
@@ -87,7 +87,6 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char* work_dir="./";
-    const char* log_file=0;
     const char* pid_file="indexserver.pid";
     const char* conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -98,7 +97,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:M:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsw:p:u:g:P:c:m:M:x:")) != -1) 
     {
         switch (c) 
         {
@@ -112,9 +111,6 @@ int main(int argc, char** argv)
                 break;
             case 's':
                 shutdown=1;
-                break;
-            case 'l':
-                log_file=optarg;
                 break;
             case 'p':
                 pid_file=optarg;
@@ -177,14 +173,10 @@ int main(int argc, char** argv)
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////
 
-    if (daemon) {
-        if (!log_file) 
-            log_file="/dev/null";
-        nxweb_run_daemon(work_dir, log_file, pid_file, server_main);
-    }
-    else {
-        nxweb_run_normal(work_dir, log_file, pid_file, server_main);
-    }
+    if (daemon)
+        nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);
+    else 
+        nxweb_run_normal(work_dir, 0, pid_file, server_main);
     return EXIT_SUCCESS;
 }
 

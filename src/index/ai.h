@@ -28,5 +28,17 @@ ADFS_RESULT aic_status(AINode *pn, const char *url);
 ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);
 int conf_split(char *p, char *key, char *value);
 
+// log.h
+typedef enum {
+    LOG_LEVEL_FATAL = 0,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG
+}LOG_LEVEL;
+
+int log_init(const char *filename);
+void log_release();
+void log_out(const char *module, const char *info, LOG_LEVEL level);
 #endif // __AI_H__
 

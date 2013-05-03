@@ -41,6 +41,5 @@ typedef enum ADFS_RESULT
 #define DBG_PRINTPN(x)
 #endif // DEBUG
 
-
 #endif // __ADFS_H__
 

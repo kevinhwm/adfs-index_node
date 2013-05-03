@@ -13,21 +13,34 @@
 #include "ai.h"
 
 
-static ADFS_RESULT m_init(const char *file_conf);
+static ADFS_RESULT m_init_zone(const char *file_conf);
+static ADFS_RESULT m_init_ns(const char *file_conf);
+static ADFS_RESULT m_init_log(const char *file_conf);
+static ADFS_RESULT m_init_stat(const char *file_conf);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 //static AINode * m_get_node(const char *node);
 static AINameSpace * m_get_ns(const char *ns);
 static AIZone * m_choose_zone(const char * record);
 static char * m_get_history(const char *, int);
+static m_upload_inc(int *stat_upload);
+static m_download_inc(int *stat_download);
+static m_delete_inc(int *stat_delete);
 
-// only one object. like MFC
+static int *stat_upload = NULL;
+static int *stat_download = NULL;
+static int *stat_delete = NULL;
+static int stat_hour = 0;
+static int time_t t_start;
+
 AIManager g_manager;
 unsigned long g_MaxFileSize;
+int g_log_level = 1;
 
 
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
-{    
+{
+    time(&t_start);
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
 
@@ -43,9 +56,18 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_msiz = mem_size *1024*1024;
     g_MaxFileSize = max_file_size *1024*1024;
 
-    // init config file
-    if (m_init(conf_file) == ADFS_ERROR)
+    // init zone
+    if (m_init_zone(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
+    // init namespace
+    if (m_init_ns(conf_file) == ADFS_ERROR)
+	return ADFS_ERROR;
+    // init log
+    if (m_init_log(conf_file) == ADFS_ERROR)
+	return ADFS_ERROR;
+    // init statistics
+    if (m_init_stat(conf_file) == ADFS_ERROR)
+	return ADFS_ERROR;
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
     // init rand
@@ -73,10 +95,12 @@ void mgr_exit()
         free(tmp);
     }
     curl_global_cleanup();
+    log_release();
 }
 
 ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
+    log_out("upload", "upload", LOG_LEVEL_INFO);
     DBG_PRINTSN("mgr upload 1");
     AIManager *pm = &g_manager;
 
@@ -138,6 +162,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 	free(new_list);
     }
     DBG_PRINTSN("mgr upload 50");
+    m_upload_inc(stat_upload);
 
     free(record);
     air.release(&air);
@@ -158,6 +183,7 @@ err1:
 // url :    "char *" must be freed by caller
 char * mgr_download(const char *ns, const char *fname, const char *history)
 {
+    log_out("download", "download", LOG_LEVEL_INFO);
     //AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL)
@@ -204,6 +230,7 @@ char * mgr_download(const char *ns, const char *fname, const char *history)
     strncat(url, pns->name, ADFS_MAX_PATH);
     DBG_PRINTSN(url);
 
+    m_download_inc(stat_download);
     free(record);
     kcfree(line);
     return url;
@@ -238,6 +265,7 @@ ADFS_RESULT mgr_delete(const char *ns, const char *fname)
     strcat(new_line, "$");
     kcdbset(pns->index_db, fname, strlen(fname), new_line, strlen(new_line));
 
+    m_delete_inc(stat_delete);
     free(new_line);
     kcfree(line);
     return ADFS_OK;
@@ -287,7 +315,7 @@ char * mgr_status()
 }
 
 // private
-static ADFS_RESULT m_init(const char *conf_file)
+static ADFS_RESULT m_init_zone(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // create zone
@@ -328,6 +356,12 @@ static ADFS_RESULT m_init(const char *conf_file)
                 return ADFS_ERROR;
         }
     }
+    return ADFS_OK;
+}
+
+static ADFS_RESULT m_init_ns(const char *file_conf)
+{
+    char value[ADFS_FILENAME_LEN] = {0};
     // create namespace
     if (conf_read(conf_file, "namespace_num", value, sizeof(value)) == ADFS_ERROR)
         return ADFS_ERROR;
@@ -345,6 +379,52 @@ static ADFS_RESULT m_init(const char *conf_file)
 	if (m_create_ns(value) == ADFS_ERROR)
 	    return ADFS_ERROR;
     }
+    return ADFS_OK;
+}
+
+static ADFS_RESULT m_init_log(const char *file_conf)
+{
+    char value[ADFS_FILENAME_LEN] = {0};
+    // log_level
+    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR)
+        return ADFS_ERROR;
+    int log_level = atoi(value);
+    if (log_level < 0 || log_level > 4)
+	return ADFS_ERROR;
+    g_log_level = log_level;
+
+    if (conf_read(conf_file, "log_path", value, sizeof(value)) == ADFS_ERROR)
+	return ADFS_ERROR;
+    if (log_init(value) != 0)
+	return ADFS_ERROR;
+    return ADFS_OK;
+}
+
+static ADFS_RESULT m_init_stat(const char *file_conf)
+{
+    char value[ADFS_FILENAME_LEN] = {0};
+    // statistics
+    if (conf_read(conf_file, "stat_hour", value, sizeof(value)) == ADFS_ERROR)
+	return ADFS_ERROR;
+    stat_hour = atoi(hour);
+    if (stat_hour < 1 || stat_hour > 24)
+	return ADFS_ERROR;
+
+    int size = sizeof(int)*stat_hour*60;
+    if ((stat_upload = malloc(size)) == NULL)
+	return ADFS_ERROR;
+    memset(stat_upload, 0, size);
+    if ((stat_download = malloc(size)) == NULL) {
+	free(stat_upload);
+	return ADFS_ERROR;
+    }
+    memset(stat_download, 0, size);
+    if ((stat_delete = malloc(size)) == NULL) {
+	free(stat_upload);
+	free(stat_download);
+	return ADFS_ERROR;
+    }
+    memset(stat_delete, 0, size);
     return ADFS_OK;
 }
 
@@ -510,4 +590,20 @@ static char * m_get_history(const char *line, int order)
 
     return record;
 }
+
+static void m_upload_inc(int *stat_upload)
+{
+    time_t t_cur;
+    time(&t_cur);
+    int pos = (t_cur-t_start) % (stat_hour*60);
+
+    // 需要判断何时重置为0;
+    atomic_inc(stat_upload[pos]);
+}
+
+static void m_download_inc(int *stat_download)
+{}
+
+static void m_delete_inc(int *stat_delete)
+{}
 
