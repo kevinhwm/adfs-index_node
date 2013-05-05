@@ -13,25 +13,25 @@
 #include "ai.h"
 
 
-static ADFS_RESULT m_init_zone(const char *file_conf);
-static ADFS_RESULT m_init_ns(const char *file_conf);
-static ADFS_RESULT m_init_log(const char *file_conf);
-static ADFS_RESULT m_init_stat(const char *file_conf);
+static ADFS_RESULT m_init_zone(const char *conf_file);
+static ADFS_RESULT m_init_ns(const char *conf_file);
+static ADFS_RESULT m_init_log(const char *conf_file);
+static ADFS_RESULT m_init_stat(const char *conf_file);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 //static AINode * m_get_node(const char *node);
 static AINameSpace * m_get_ns(const char *ns);
 static AIZone * m_choose_zone(const char * record);
 static char * m_get_history(const char *, int);
-static m_upload_inc(int *stat_upload);
-static m_download_inc(int *stat_download);
-static m_delete_inc(int *stat_delete);
+static void m_upload_inc(int *stat_upload);
+static void m_download_inc(int *stat_download);
+static void m_delete_inc(int *stat_delete);
 
 static int *stat_upload = NULL;
 static int *stat_download = NULL;
 static int *stat_delete = NULL;
 static int stat_hour = 0;
-static int time_t t_start;
+static time_t t_start;
 
 AIManager g_manager;
 unsigned long g_MaxFileSize;
@@ -359,7 +359,7 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_ns(const char *file_conf)
+static ADFS_RESULT m_init_ns(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // create namespace
@@ -382,7 +382,7 @@ static ADFS_RESULT m_init_ns(const char *file_conf)
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_log(const char *file_conf)
+static ADFS_RESULT m_init_log(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // log_level
@@ -400,13 +400,13 @@ static ADFS_RESULT m_init_log(const char *file_conf)
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_stat(const char *file_conf)
+static ADFS_RESULT m_init_stat(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // statistics
     if (conf_read(conf_file, "stat_hour", value, sizeof(value)) == ADFS_ERROR)
 	return ADFS_ERROR;
-    stat_hour = atoi(hour);
+    stat_hour = atoi(value);
     if (stat_hour < 1 || stat_hour > 24)
 	return ADFS_ERROR;
 
@@ -595,10 +595,10 @@ static void m_upload_inc(int *stat_upload)
 {
     time_t t_cur;
     time(&t_cur);
-    int pos = (t_cur-t_start) % (stat_hour*60);
+    //int pos = (t_cur-t_start) % (stat_hour*60);
 
     // 需要判断何时重置为0;
-    atomic_inc(stat_upload[pos]);
+    //atomic_inc(stat_upload[pos]);
 }
 
 static void m_download_inc(int *stat_download)
