@@ -236,6 +236,7 @@ err1:
 
 ADFS_RESULT mgr_delete(const char *ns, const char *fname)
 {
+    log_out("delete", "delete", LOG_LEVEL_INFO);
     AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL)
@@ -293,14 +294,14 @@ char * mgr_status()
 	    strncat(p, "</td><td ", size);
 	    char url[1024] = {0};
 	    sprintf(url, "http://%s/status", pn->ip_port);
-	    DBG_PRINTSN("12.5");
+	    DBG_PRINTSN("13");
 	    if (aic_status(pn, url) == ADFS_OK) 
 		strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);
 	    else 
 		strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size);
 	    strncat(p, "</td></tr>", size);
 	    pn = pn->next;
-	    DBG_PRINTSN("13");
+	    DBG_PRINTSN("14");
 	}
 	strncat(p, "</table>", size);
     	pz = pz->next;
