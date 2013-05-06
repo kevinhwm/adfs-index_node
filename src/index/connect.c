@@ -8,8 +8,17 @@
 #include <curl/curl.h>
 #include "ai.h"
 
+enum FLAG_CONNECTION
+{
+    FLAG_UPLOAD 	= 1,
+    FLAG_DOWNLOAD,
+    FLAG_DELETE,
+    FLAG_STATUS
+};
+
 static ADFS_RESULT upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
 static ADFS_RESULT status(CURL *curl, const char *url);
+static void reconnect(AINode *pn, int pos, int flag);
 
 
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len)
@@ -24,6 +33,8 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     {
         if (pthread_mutex_trylock(pn->curl_mutex + i) == 0)
         {
+	    if (pn->flag[i] != 0 && pn->flag[i] != FLAG_UPLOAD)
+		reconnect(pn, i, FLAG_UPLOAD);
             res = upload(pn->curl[i], url, fname, fdata, fdata_len);
             pthread_mutex_unlock(pn->curl_mutex + i);
             return res;
@@ -33,6 +44,8 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     DBG_PRINTSN("connect upload 20");
     pthread_mutex_t * pmutex = pn->curl_mutex + ADFS_NODE_CURL_NUM -1;
     pthread_mutex_lock(pmutex);
+    if (pn->flag[ADFS_NODE_CURL_NUM-1] != 0 && pn->flag[ADFS_NODE_CURL_NUM-1] != FLAG_UPLOAD)
+	reconnect(pn, ADFS_NODE_CURL_NUM-1, FLAG_UPLOAD);
     res = upload(pn->curl[ADFS_NODE_CURL_NUM -1], url, fname, fdata, fdata_len);
     pthread_mutex_unlock(pmutex);
     DBG_PRINTSN("connect upload 30");
@@ -49,6 +62,8 @@ ADFS_RESULT aic_status(AINode *pn, const char *url)
     {
         if (pthread_mutex_trylock(pn->curl_mutex + i) == 0)
         {
+	    if (pn->flag[i] != 0 && pn->flag[i] != FLAG_STATUS)
+		reconnect(pn, i, FLAG_STATUS);
             res = status(pn->curl[i], url);
             pthread_mutex_unlock(pn->curl_mutex + i);
             return res;
@@ -57,6 +72,8 @@ ADFS_RESULT aic_status(AINode *pn, const char *url)
 
     pthread_mutex_t * pmutex = pn->curl_mutex + ADFS_NODE_CURL_NUM -1;
     pthread_mutex_lock(pmutex);
+    if (pn->flag[ADFS_NODE_CURL_NUM-1] != 0 && pn->flag[ADFS_NODE_CURL_NUM-1] != FLAG_STATUS)
+	reconnect(pn, ADFS_NODE_CURL_NUM-1, FLAG_STATUS);
     res = status(pn->curl[ADFS_NODE_CURL_NUM -1], url);
     pthread_mutex_unlock(pmutex);
     return res;
@@ -127,4 +144,12 @@ static ADFS_RESULT status(CURL *curl, const char *url)
             adfs_res = ADFS_OK;
     }
     return adfs_res;
+}
+
+
+static void reconnect(AINode *pn, int pos, int flag)
+{
+    curl_easy_cleanup(pn->curl[pos]);
+    pn->curl[pos] = curl_easy_init();
+    pn->flag[pos] = flag;
 }

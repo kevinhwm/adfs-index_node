@@ -12,11 +12,14 @@
 
 #define ADFS_NODE_CURL_NUM  4
 
+
 typedef struct AINode
 {
     char ip_port[ADFS_NODENAME_LEN];
     CURL *curl[ADFS_NODE_CURL_NUM];
     pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
+    int flag[ADFS_NODE_CURL_NUM];
+
     struct AINode *pre;
     struct AINode *next;
 }AINode;

@@ -6,7 +6,7 @@ CC = gcc
 CFLAGS = -std=c99 -Wall
 LIBS = -lnxweb -lkyotocabinet -lrt -lcurl -pthread
 TARGET = indexserver
-OBJS = conf.o connect.o function.o if_upload.o if_download.o if_delete.o if_status.o indexserver.o manager.o multipart_parser.o record.o zone.o log.o
+OBJS = conf.o connect.o function.o if_upload.o if_download.o if_delete.o if_status.o indexserver.o manager.o multipart_parser.o record.o zone.o log.o stat.o
 
 
 release:$(OBJS)
@@ -25,6 +25,7 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o connect.o connect.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o function.o function.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o log.o log.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o stat.o stat.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
