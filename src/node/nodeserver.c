@@ -5,10 +5,9 @@
  */
 
 #include <nxweb/nxweb.h>
-#include <kclangc.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "an.h"
+#include "an_manager.h"
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;

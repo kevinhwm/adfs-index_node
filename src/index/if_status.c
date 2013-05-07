@@ -6,7 +6,7 @@
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "manager.h"
+#include "ai_manager.h"
 
 static const char status_handler_key; 
 #define STATUS_HANDLER_KEY ((nxe_data)&status_handler_key)
@@ -41,7 +41,7 @@ static nxweb_result status_on_request(
 
     struct SHARE_DATA *tmp = nxb_alloc_obj(req->nxb, sizeof(struct SHARE_DATA));
     nxweb_set_request_data(req, STATUS_HANDLER_KEY, (nxe_data)(void*)tmp, status_request_data_finalize);
-    char *p = mgr_status();
+    char *p = aim_status();
     tmp->p = p;
     nxweb_response_append_str(resp, p);
     nxweb_response_append_str(resp, "</body></html>");

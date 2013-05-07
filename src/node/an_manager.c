@@ -8,7 +8,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <kclangc.h>
-#include "an.h"
+#include "an_namespace.h"
+#include "an_manager.h"
 
 static ANNameSpace * m_create_ns(const char *name_space);
 static ADFS_RESULT split_db(ANNameSpace * pns);

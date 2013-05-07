@@ -3,11 +3,9 @@
  */
 
 #include <nxweb/nxweb.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <kclangc.h>
 #include "multipart_parser.h"
-#include "an.h"
+#include "an_manager.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -35,13 +33,11 @@ typedef struct _upload_file_object
 }upload_file_object;
 
 
-
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
 {
     // nothing to do
     return 0;
 }
-
 
 static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
@@ -188,7 +184,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
     ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, ADFS_MAX_FILE_SIZE);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, req->content_length);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

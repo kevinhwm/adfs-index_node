@@ -6,7 +6,7 @@
 
 #include <stdlib.h>	// malloc
 #include <string.h>
-#include "zone.h"
+#include "ai_zone.h"
 
 static ADFS_RESULT z_create(AIZone *_this, const char *ip_port);
 static void z_release_all(AIZone *_this);

@@ -6,7 +6,7 @@
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "manager.h"
+#include "ai_manager.h"
 
 
 static const char download_handler_key;
@@ -41,7 +41,7 @@ static nxweb_result download_on_request(
 	return NXWEB_OK;
     }
 
-    char *redirect_url = mgr_download(name_space, fname, history);
+    char *redirect_url = aim_download(name_space, fname, history);
     if (redirect_url == NULL) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
     }

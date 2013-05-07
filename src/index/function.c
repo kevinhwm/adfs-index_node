@@ -1,4 +1,4 @@
-/* ai_function.c
+/* function.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.

@@ -1,7 +1,11 @@
-/* adfs node -> an
+/* an_namespace.h
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
+
+#ifndef __NAMESPACE_H__
+#define __NAMESPACE_H__
 
 #include "adfs.h"
 #include <kclangc.h>
@@ -47,31 +51,8 @@ typedef struct ANNameSpace
     ADFS_RESULT (*switch_state)(struct ANNameSpace *, int, ADFS_NODE_STATE);
 }ANNameSpace;
 
-
-typedef struct ANManager
-{
-    char path[ADFS_MAX_PATH];
-    struct ANNameSpace * head;
-    struct ANNameSpace * tail;
-
-    unsigned long kc_apow;
-    unsigned long kc_fbp;
-    unsigned long kc_bnum;
-    unsigned long kc_msiz;
-}ANManager;
-
-
 // an_namespace.c
 ADFS_RESULT anns_init(ANNameSpace *_this, const char * name_space);
 
-// an_manager.c
-ADFS_RESULT anm_init(const char * conf_file, const char * dbpath, unsigned long cache_size);
-void anm_exit();
-ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
-void anm_get(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size);
-
-// an_function.c
-void trim_left_white(char * p);
-void trim_right_white(char * p);
-ADFS_RESULT get_filename_from_url(char *p);
+#endif // __NAMESPACE_H__
 

@@ -1,4 +1,4 @@
-/* manager.c
+/* ai_manager.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -12,8 +12,8 @@
 #include <time.h>
 
 #include "adfs.h"
-#include "manager.h"
-#include "record.h"
+#include "ai_manager.h"
+#include "ai_record.h"
 
 
 static ADFS_RESULT m_init_zone(const char *conf_file);
@@ -31,7 +31,7 @@ unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level;
 
 
-ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
+ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
 {
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
@@ -66,7 +66,7 @@ ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_
     return ADFS_OK;
 }
 
-void mgr_exit()
+void aim_exit()
 {
     AIManager *pm = &g_manager;
     AIZone *pz = pm->z_head;
@@ -94,10 +94,10 @@ void mgr_exit()
     curl_global_cleanup();
 }
 
-ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
+ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
     log_out("upload", "upload", LOG_LEVEL_INFO);
-    DBG_PRINTSN("mgr upload 1");
+    DBG_PRINTSN("aim upload 1");
     AIManager *pm = &g_manager;
 
     int exist = 1;
@@ -120,7 +120,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
     AIRecord air;
     air_init(&air);
 
-    DBG_PRINTSN("mgr upload 30");
+    DBG_PRINTSN("aim upload 30");
     AIZone *pz = pm->z_head;
     while (pz) {
 	AINode * pn = pz->rand_choose(pz);
@@ -130,7 +130,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 	else
 	    sprintf(url, "http://%s/upload_file/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
 
-	DBG_PRINTSN("mgr upload 35");
+	DBG_PRINTSN("aim upload 35");
 	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
 	    printf("upload error: %s\n", url);
 	    // failed. roll back.
@@ -138,14 +138,14 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 	air.add(&air, pz->name, pn->ip_port);
 	pz = pz->next;
     }
-    DBG_PRINTSN("mgr upload 40");
+    DBG_PRINTSN("aim upload 40");
 
     // add record
     char *record = air.get_string(&air);
     if (record == NULL)
 	goto err1;
 
-    DBG_PRINTSN("mgr upload 45");
+    DBG_PRINTSN("aim upload 45");
     if (old_list == NULL) {
 	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
@@ -157,7 +157,7 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 	kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	free(new_list);
     }
-    DBG_PRINTSN("mgr upload 50");
+    DBG_PRINTSN("aim upload 50");
     pm->s_upload.inc(&(pm->s_upload));
 
     free(record);
@@ -177,7 +177,7 @@ err1:
 // return value:
 // NULL:    file not found
 // url :    "char *" must be freed by caller
-char * mgr_download(const char *ns, const char *fname, const char *history)
+char * aim_download(const char *ns, const char *fname, const char *history)
 {
     AIManager *pm = &g_manager;
     log_out("download", "download", LOG_LEVEL_INFO);
@@ -237,7 +237,7 @@ err1:
     return NULL;
 }
 
-ADFS_RESULT mgr_delete(const char *ns, const char *fname)
+ADFS_RESULT aim_delete(const char *ns, const char *fname)
 {
     log_out("delete", "delete", LOG_LEVEL_INFO);
     AIManager *pm = &g_manager;
@@ -272,7 +272,7 @@ err1:
     return ADFS_ERROR;
 }
 
-char * mgr_status()
+char * aim_status()
 {
     int size = 8192;
     char *p = malloc(size);
@@ -318,9 +318,9 @@ char * mgr_status()
     strncat(p, str_time, size);
     strncat(p, "</p>", size);
     int *pcount = pm->s_upload.get(&(pm->s_upload), &t_cur);
-    for (int i=0; i<pm->s_upload.stat_min; ++i) {
-	if (pcount < pm->s_upload.stat_count)
-	    pcount += pm->s_upload.stat_min;
+    for (int i=0; i<pm->s_upload.scope; ++i) {
+	if (pcount < pm->s_upload.count)
+	    pcount += pm->s_upload.scope;
 	char tmp[128] = {0};
 	sprintf(tmp, "%d", *pcount);
 	strncat(p, tmp, size);

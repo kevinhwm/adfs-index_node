@@ -5,10 +5,9 @@
  */
 
 #include <nxweb/nxweb.h>
-#include <kclangc.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "manager.h"
+#include "ai_manager.h"
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
@@ -46,7 +45,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    mgr_exit();
+    aim_exit();
     printf("ADFS Index exit.\n");
 }
 
@@ -158,8 +157,8 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    DBG_PRINTS("call mgr_init\n");
-    if (mgr_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
+    DBG_PRINTS("call aim_init\n");
+    if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");
     /////////////////////////////////////////////////////////////////////////////////

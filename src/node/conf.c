@@ -1,13 +1,13 @@
-/*
- * conf.c
+/* conf.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <stdio.h>
-#include "conf.h"
-#include "function.h"
+#include <string.h>
+#include "adfs.h"
+
 
 /* example:
  *

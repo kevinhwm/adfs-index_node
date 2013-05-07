@@ -3,9 +3,6 @@
  */
 
 #include "nxweb/nxweb.h"
-#include <stdio.h>
-#include <string.h>
-#include "an.h"
 
 static nxweb_result status_on_request(
 	nxweb_http_server_connection* conn, 

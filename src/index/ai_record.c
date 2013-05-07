@@ -1,4 +1,4 @@
-/* record.c
+/* ai_record.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>	// gettimeofday
-#include "record.h"
+#include "ai_record.h"
 
 void r_create_uuid(AIRecord *);
 ADFS_RESULT r_add(AIRecord *, const char *, const char *);

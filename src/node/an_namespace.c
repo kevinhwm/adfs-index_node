@@ -3,11 +3,10 @@
  * huangtao@antiy.com
  */
 
-#include "an.h"
+#include "an_namespace.h"
 
 // list member functions. names begin with "ns_"
 static ADFS_RESULT ns_create(ANNameSpace * _this, int id, char *path, int path_len, ADFS_NODE_STATE state);
-//static void ns_release(ANNameSpace * _this, int id);
 static void ns_release_all(ANNameSpace * _this);
 static NodeDB * ns_get(ANNameSpace * _this, int id);
 static ADFS_RESULT ns_switch_state(ANNameSpace *_this, int id, ADFS_NODE_STATE des_state);
@@ -21,7 +20,6 @@ ADFS_RESULT anns_init(ANNameSpace * _this, const char *name_space)
     if (_this) {
         memset(_this, 0, sizeof(ANNameSpace));
         _this->create = ns_create;
-        //_this->release = ns_release;
         _this->release_all = ns_release_all;
         _this->get = ns_get;
         _this->switch_state = ns_switch_state;

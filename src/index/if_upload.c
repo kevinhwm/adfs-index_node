@@ -7,7 +7,7 @@
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
 #include "multipart_parser.h"
-#include "manager.h"
+#include "ai_manager.h"
 
 extern unsigned long g_MaxFileSize;
 
@@ -145,7 +145,7 @@ static nxweb_result upload_on_request(
 		nxweb_send_http_error(resp, 403, "Failed. File name is too long. It must be less than 250\n");
 		goto err;
 	    }
-	    else if (mgr_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
+	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
 		nxweb_send_http_error(resp, 403, "Failed. Can not save.\n");
 		goto err;
 	    }

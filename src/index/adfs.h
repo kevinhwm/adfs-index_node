@@ -15,6 +15,7 @@
 #define ADFS_NAMESPACE_LEN	128
 #define ADFS_UUID_LEN		24		// exactly 24 bytes
 
+#include <string.h>	// size_t
 
 typedef enum ADFS_RESULT
 {
@@ -46,22 +47,6 @@ typedef enum LOG_LEVEL{
 int log_init(const char *filename);
 void log_release();
 void log_out(const char *module, const char *info, LOG_LEVEL level);
-
-// stat.c
-#include <time.h>
-typedef struct AIStat 
-{
-    unsigned long stat_start;
-    int stat_min;
-    int pos_last; 	// last record 
-    int *stat_count;
-
-    void (*release)(struct AIStat *);
-    int *(*get)(struct AIStat *, time_t *);
-    void (*inc)(struct AIStat *);
-}AIStat;
-
-ADFS_RESULT stat_init(AIStat *ps, unsigned long start, int min);
 
 //==============================================================================
 

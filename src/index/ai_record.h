@@ -1,4 +1,4 @@
-/* record.h
+/* ai_record.h
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.

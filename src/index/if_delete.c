@@ -5,7 +5,7 @@
  */
 
 #include "nxweb/nxweb.h"
-#include "manager.h"
+#include "ai_manager.h"
 
 
 static nxweb_result delete_on_request(
@@ -30,7 +30,7 @@ static nxweb_result delete_on_request(
         return NXWEB_ERROR;
     }
 
-    if (mgr_delete(name_space, fname) == ADFS_ERROR) {
+    if (aim_delete(name_space, fname) == ADFS_ERROR) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
         return NXWEB_ERROR;
     }
