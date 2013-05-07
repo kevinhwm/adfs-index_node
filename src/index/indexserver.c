@@ -6,22 +6,14 @@
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-
 #include <stdio.h>
 #include <unistd.h>
-
-#include "ai.h"
-
+#include "manager.h"
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
 extern nxweb_handler delete_handler;
 extern nxweb_handler status_handler;
-//extern nxweb_handler isalive_handler;
-//extern nxweb_handler monitor_handler;
-//extern nxweb_handler exist_handler;
-//extern nxweb_handler gethistory_handler;
-//extern nxweb_handler history_handler;
 
 NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
@@ -80,7 +72,6 @@ static void show_help(void)
             "example:  indexserver -d -x ./ -l indexserver_http_log\n"
           );
 }
-
 
 int main(int argc, char** argv) 
 {

@@ -5,7 +5,9 @@
  */
 
 #include <stdio.h>
-#include "ai.h"
+#include <string.h>
+#include "adfs.h"
+
 
 /* example:
  *

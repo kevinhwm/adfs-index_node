@@ -10,7 +10,10 @@
 #include <kclangc.h>
 #include <curl/curl.h>
 #include <time.h>
-#include "ai.h"
+
+#include "adfs.h"
+#include "manager.h"
+#include "record.h"
 
 
 static ADFS_RESULT m_init_zone(const char *conf_file);
@@ -25,7 +28,7 @@ static char * m_get_history(const char *, int);
 
 AIManager g_manager;
 unsigned long g_MaxFileSize;
-int g_log_level;
+LOG_LEVEL g_log_level;
 
 
 ADFS_RESULT mgr_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
@@ -427,11 +430,11 @@ static ADFS_RESULT m_init_stat(const char *conf_file)
 
     unsigned long stat_start = (unsigned long)time(NULL);
     int stat_min = stat_hour * 60;
-    if (ais_init(&(pm->s_upload), stat_start, stat_min) == ADFS_ERROR)
+    if (stat_init(&(pm->s_upload), stat_start, stat_min) == ADFS_ERROR)
 	return ADFS_ERROR;
-    if (ais_init(&(pm->s_download), stat_start, stat_min) == ADFS_ERROR)
+    if (stat_init(&(pm->s_download), stat_start, stat_min) == ADFS_ERROR)
 	return ADFS_ERROR;
-    if (ais_init(&(pm->s_delete), stat_start, stat_min) == ADFS_ERROR)
+    if (stat_init(&(pm->s_delete), stat_start, stat_min) == ADFS_ERROR)
 	return ADFS_ERROR;
     return ADFS_OK;
 }

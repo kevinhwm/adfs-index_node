@@ -8,7 +8,8 @@
 #define __MANAGER_H__
 
 #include <kclangc.h>
-#include "ai.h"
+#include "zone.h"
+#include "adfs.h"
 
 
 typedef struct AINameSpace
@@ -18,18 +19,6 @@ typedef struct AINameSpace
     struct AINameSpace *pre;
     struct AINameSpace *next;
 }AINameSpace;
-
-typedef struct AIStat 
-{
-    unsigned long stat_start;
-    int stat_min;
-    int pos_last; 	// last record 
-    int *stat_count;
-
-    void (*release)(struct AIStat *);
-    int *(*get)(struct AIStat *, time_t *);
-    void (*inc)(struct AIStat *);
-}AIStat;
 
 typedef struct AIManager
 {
@@ -51,6 +40,7 @@ typedef struct AIManager
 }AIManager;
 
 
+// manager.c
 ADFS_RESULT mgr_init(const char *file_conf, const char *path_db, unsigned long mem_size, unsigned long max_file_size);
 void mgr_exit();
 
@@ -58,5 +48,12 @@ ADFS_RESULT mgr_upload(const char *name_space, int overwrite, const char *fname,
 char * mgr_download(const char *name_space, const char *fname, const char *history);
 ADFS_RESULT mgr_delete(const char *name_space, const char *fname);
 char * mgr_status();
+
+// stat.c
+ADFS_RESULT ais_init(AIStat *ps, unsigned long, int);
+
+// connect.c
+ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
+ADFS_RESULT aic_status(AINode *pn, const char *url);
 
 #endif // __MANAGER_H__

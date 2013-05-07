@@ -6,7 +6,8 @@
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "ai.h"
+#include "adfs.h"
+#include "zone.h"
 
 enum FLAG_CONNECTION
 {
@@ -153,3 +154,4 @@ static void reconnect(AINode *pn, int pos, int flag)
     pn->curl[pos] = curl_easy_init();
     pn->flag[pos] = flag;
 }
+

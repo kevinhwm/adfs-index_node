@@ -5,8 +5,7 @@
  */
 
 #include "nxweb/nxweb.h"
-#include <kclangc.h>
-#include "ai.h"
+#include "manager.h"
 
 
 static nxweb_result delete_on_request(

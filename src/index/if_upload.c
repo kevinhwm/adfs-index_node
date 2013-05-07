@@ -6,7 +6,8 @@
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-#include "ai.h"
+#include "multipart_parser.h"
+#include "manager.h"
 
 extern unsigned long g_MaxFileSize;
 

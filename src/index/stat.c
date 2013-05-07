@@ -1,18 +1,19 @@
-/* manager.c
+/* stat.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
  */
 
-#include <time.h>
+#include <stdlib.h>
 #include <string.h>
-#include "ai.h"
+#include <time.h>
+#include "adfs.h"
 
 static void s_release(AIStat *ps);
 static int * s_get(AIStat *ps, time_t *);
 static void s_inc(AIStat *ps);
 
-ADFS_RESULT ais_init(AIStat *ps, unsigned long stat_start, int min)
+ADFS_RESULT stat_init(AIStat *ps, unsigned long stat_start, int min)
 {
     if (ps) {
 	memset(ps, 0, sizeof(AIStat));

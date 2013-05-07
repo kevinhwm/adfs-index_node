@@ -4,9 +4,9 @@
  * Antiy Labs. Basic Platform R & D Center.
  */
 
-#include <stdlib.h>
+#include <stdlib.h>	// malloc
 #include <string.h>
-#include "ai.h"
+#include "zone.h"
 
 static ADFS_RESULT z_create(AIZone *_this, const char *ip_port);
 static void z_release_all(AIZone *_this);

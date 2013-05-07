@@ -4,11 +4,11 @@
  * Antiy Labs. Basic Platform R & D Center.
  */
 
+#include <stdlib.h>	// rand
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/time.h>
+#include <sys/time.h>	// gettimeofday
 #include "record.h"
 
 void r_create_uuid(AIRecord *);

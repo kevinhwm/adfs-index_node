@@ -52,7 +52,7 @@ static void show_help(void)
     printf( "usage:    nodeserver <options>\n"
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
-	    " -l file  set log file    		(default: stderr or nodeserver_error_log for daemon)\n"
+	    //" -l file  set log file    		(default: stderr or nodeserver_error_log for daemon)\n"
 	    " -p file  set pid file    		(default: nodeserver.pid)\n"
 	    //" -u user  set process uid\n"
 	    //" -g group set process gid\n"
@@ -75,15 +75,14 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char* work_dir="./";
-    const char* nxweb_log=0;
     const char* pid_file="nodeserver.pid";
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
-    printf( "*********************************************\n"
-	    "ADFS    - " "Node "ADFS_VERSION "\n"
-	    "build   - " __DATE__ " " __TIME__ "\n"
-	    "*********************************************\n" );
+    printf( "====================================================================\n"
+	    "                    ADFS - Node " ADFS_VERSION "\n"
+	    "                  " __DATE__ "  " __TIME__ "\n"
+            "====================================================================\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
     {
@@ -99,9 +98,6 @@ int main(int argc, char** argv)
 		break;
 	    case 's':
 		shutdown=1;
-		break;
-	    case 'l':
-		nxweb_log=optarg;
 		break;
 	    case 'p':
 		pid_file=optarg;
@@ -154,14 +150,10 @@ int main(int argc, char** argv)
     if (anm_init(conf_file, work_dir, mem_size) == ADFS_ERROR)
 	return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////
-    if (daemon) {
-	if (!nxweb_log) 
-	    nxweb_log="/dev/null";
-	nxweb_run_daemon(work_dir, nxweb_log, pid_file, server_main);
-    }
-    else {
-	nxweb_run_normal(work_dir, nxweb_log, pid_file, server_main);
-    }
+    if (daemon) 
+	nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);
+    else 
+	nxweb_run_normal(work_dir, 0, pid_file, server_main);
     return EXIT_SUCCESS;
 }
 

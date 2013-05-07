@@ -5,10 +5,8 @@
  */
 
 #include "nxweb/nxweb.h"
-//#include <kclangc.h>
-//#include <unistd.h>
 #include <string.h>
-#include "ai.h"
+#include "manager.h"
 
 
 static const char download_handler_key;

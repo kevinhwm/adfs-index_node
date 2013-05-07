@@ -6,7 +6,7 @@
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "ai.h"
+#include "manager.h"
 
 static const char status_handler_key; 
 #define STATUS_HANDLER_KEY ((nxe_data)&status_handler_key)
