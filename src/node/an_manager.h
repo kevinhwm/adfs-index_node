@@ -25,7 +25,8 @@ typedef struct ANManager
 ADFS_RESULT anm_init(const char * conf_file, const char * dbpath, unsigned long cache_size);
 void anm_exit();
 ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
-void anm_get(const char * fname, const char * name_space, void ** ppfile_data, size_t *pfile_size);
+void anm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
+ADFS_RESULT anm_remove(const char *name_space, const char *fname);
 
 #endif // __MANAGER_H___
 

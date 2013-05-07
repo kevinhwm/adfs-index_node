@@ -1,14 +1,11 @@
-/*
+/* if_download.c
+ *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include "nxweb/nxweb.h"
-#include <kclangc.h>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
+#include "kclangc.h"
 #include "an_manager.h"
 
 static const char download_handler_key;
@@ -54,7 +51,7 @@ static nxweb_result download_on_request(
     DBG_PRINTS("download 20\n");
     void *pfile_data = NULL;
     size_t file_size = 0;
-    anm_get(fname, name_space, &pfile_data, &file_size);    // query db
+    anm_get(name_space, fname, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL || file_size == 0) {
 	nxweb_send_http_error(resp, 404, "Failed. No file.");
 	DBG_PRINTS("download 30\n");
@@ -69,7 +66,7 @@ static nxweb_result download_on_request(
 	while ( (tmp = strstr(file_name, "/")) )
 	    file_name = tmp + 1;
 
-	char resp_name[NAME_MAX] = {0};
+	char resp_name[ADFS_FILENAME_LEN] = {0};
 	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-ADFS_UUID_LEN), file_name);
 	nxweb_add_response_header(resp, "Content-disposition", resp_name );
 	nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );

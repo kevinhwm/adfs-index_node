@@ -19,7 +19,6 @@ static ANNameSpace * m_get_ns(const char * name_space);
 
 ANManager g_manager;
 
-
 ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     memset(&g_manager, 0, sizeof(g_manager));
@@ -91,7 +90,7 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     return ADFS_OK;
 }
 
-void anm_get(const char * fname, const char * ns, void ** ppfile_data, size_t *pfile_size)
+void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
@@ -100,19 +99,35 @@ void anm_get(const char * fname, const char * ns, void ** ppfile_data, size_t *p
     if (name_space == NULL)
 	name_space = "default";
     pns = m_get_ns(name_space);
-    DBG_PRINTSN(name_space);
-    DBG_PRINTS("anm get 20\n");
     if (pns == NULL)
 	return ;
 
-    DBG_PRINTSN(fname);
     size_t len = 0;
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL)
 	return ;
-    NodeDB * pn = pns->get(pns, atoi(id));
+    NodeDB *pn = pns->get(pns, atoi(id));
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
     kcfree(id);
+}
+
+ADFS_RESULT anm_remove(const char *ns, const char *fname)
+{
+    ANNameSpace * pns = NULL;
+    const char *name_space = ns;
+    if (name_space == NULL)
+	name_space = "default";
+    pns = m_get_ns(name_space);
+    if (pns == NULL)
+	return ADFS_ERROR;
+    size_t len = 0;
+    char *id = kcdbseize(pns->index_db, fname, strlen(fname), &len);
+    if (id == NULL)
+	return ADFS_ERROR;
+    NodeDB *pn = pns->get(pns, atoi(id));
+    kcdbremove(pn->db, fname, strlen(fname));
+    kcfree(id);
+    return ADFS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +140,6 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     char ns_path[ADFS_MAX_PATH] = {0};
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
-    DBG_PRINTSN(ns_path);
-    DBG_PRINTSN("create ns 20");
     int node_num = m_count_kch(ns_path);
     // index db of ADFS-Node
     char indexdb_path[ADFS_MAX_PATH] = {0};
@@ -248,7 +261,6 @@ static ANNameSpace * m_get_ns(const char * name_space)
 {
     ANNameSpace * tmp = g_manager.head;
     while (tmp) {
-	DBG_PRINTSN(tmp->name);
 	if (strcmp(tmp->name, name_space) == 0)
 	    return tmp;
 	tmp = tmp->next;

@@ -10,6 +10,7 @@
 #include "ai_manager.h"
 
 extern unsigned long g_MaxFileSize;
+extern int g_clean_mode;
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -105,10 +106,15 @@ static nxweb_result upload_on_request(
 	nxweb_http_response* resp)
 { 
     DBG_PRINTS("--- upload_on_request\n");
+    if (g_clean_mode) {
+	nxweb_send_http_error(resp, 403, "work mode: clean");
+	resp->keep_alive=0;
+	return NXWEB_ERROR;
+    }
     if (strlen(req->uri) >= ADFS_MAX_PATH) {
 	nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
 	resp->keep_alive=0;
-	return NXWEB_OK;
+	return NXWEB_ERROR;
     }
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
@@ -203,10 +209,15 @@ static nxweb_result upload_on_post_data(
 	nxweb_http_response* resp) 
 {
     DBG_PRINTS("--- upload_on_post_data\n");
+    if (g_clean_mode) {
+	nxweb_send_http_error(resp, 403, "work mode: clean");
+	resp->keep_alive=0;
+	return NXWEB_ERROR;
+    }
     if (req->content_length > g_MaxFileSize) {
 	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
 	resp->keep_alive=0;
-	return NXWEB_OK;
+	return NXWEB_ERROR;
     }
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );

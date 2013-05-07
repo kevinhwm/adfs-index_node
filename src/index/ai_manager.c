@@ -29,7 +29,7 @@ static char * m_get_history(const char *, int);
 AIManager g_manager;
 unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level;
-
+int g_clean_mode = 0;
 
 ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
 {
@@ -63,6 +63,28 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     curl_global_init(CURL_GLOBAL_ALL);
     // init rand
     srand(time(NULL));
+
+    // work mode 
+    char value[ADFS_FILENAME_LEN] = {0};
+    if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR)
+	return ADFS_ERROR;
+    if (strcmp(value, "clean") == 0) {
+	printf("\nIndex will work in 'clean mode'! \n"
+		"When it is done, you should restart it manually. \n");
+	while (1) {
+	    printf("\nAre you sure ? (y/n) ");
+	    int i = getchar();
+	    if (i == 'y') {
+		g_clean_mode = 1;
+		printf("\nwork in 'clean' node.\n");
+		return ADFS_OK;
+	    }
+	    else if (i == 'n') {
+		break;
+	    }
+	}
+    }
+    printf("\nwork in 'normal' node.\n");
     return ADFS_OK;
 }
 
@@ -410,7 +432,7 @@ static ADFS_RESULT m_init_log(const char *conf_file)
     if (g_log_level < 0 || g_log_level > 4)
 	return ADFS_ERROR;
 
-    if (conf_read(conf_file, "log_path", value, sizeof(value)) == ADFS_ERROR)
+    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR)
 	return ADFS_ERROR;
     if (log_init(value) != 0)
 	return ADFS_ERROR;
