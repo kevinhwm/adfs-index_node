@@ -23,8 +23,14 @@ static ADFS_RESULT m_init_stat(const char *conf_file);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
+static AINode * m_get_node(const char *node, size_t len);
 static AIZone * m_choose_zone(const char * record);
 static char * m_get_history(const char *, int);
+static ADFS_RESULT m_clean();
+
+static ADFS_RESULT m_traverse(AINameSpace *pns);
+static const char * m_deal(const char *ns, const char *fname, const char *record);
+static ADFS_RESULT m_send_command(const char *ns, const char *fname, const char *record, int len);
 
 AIManager g_manager;
 unsigned long g_MaxFileSize;
@@ -77,6 +83,10 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 	    if (i == 'y') {
 		g_clean_mode = 1;
 		printf("\nwork in 'clean' node.\n");
+		if (m_clean() == ADFS_OK)
+		    log_out("manager", "Clean ok.", LOG_LEVEL_INFO);
+		else
+		    log_out("manager", "Clean failed.", LOG_LEVEL_INFO);
 		return ADFS_OK;
 	    }
 	    else if (i == 'n') {
@@ -119,7 +129,6 @@ void aim_exit()
 ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
     log_out("upload", "upload", LOG_LEVEL_INFO);
-    DBG_PRINTSN("aim upload 1");
     AIManager *pm = &g_manager;
 
     int exist = 1;
@@ -138,11 +147,12 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
         exist = 0;
     if (exist && !overwrite)		// exist and not overwrite
 	goto ok1;
+
     // send file
+    AIPosition *pp;	// may be used in "rollback" tag
     AIRecord air;
     air_init(&air);
 
-    DBG_PRINTSN("aim upload 30");
     AIZone *pz = pm->z_head;
     while (pz) {
 	AINode * pn = pz->rand_choose(pz);
@@ -152,22 +162,19 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
 	else
 	    sprintf(url, "http://%s/upload_file/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
 
-	DBG_PRINTSN("aim upload 35");
 	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
 	    printf("upload error: %s\n", url);
-	    // failed. roll back.
+	    goto rollback;
 	}
 	air.add(&air, pz->name, pn->ip_port);
 	pz = pz->next;
     }
-    DBG_PRINTSN("aim upload 40");
 
     // add record
     char *record = air.get_string(&air);
     if (record == NULL)
 	goto err1;
 
-    DBG_PRINTSN("aim upload 45");
     if (old_list == NULL) {
 	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
@@ -179,7 +186,6 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
 	kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	free(new_list);
     }
-    DBG_PRINTSN("aim upload 50");
     pm->s_upload.inc(&(pm->s_upload));
 
     free(record);
@@ -188,6 +194,22 @@ ok1:
     kcfree(old_list);
     return ADFS_OK;
 
+rollback:
+    pp = air.head;
+    while (pp) {
+	char *pos_sharp = strstr(pp->zone_node, "#");
+	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
+	if (pn != NULL) {
+	    char url[ADFS_MAX_PATH] = {0};
+	    if (name_space)
+		sprintf(url, "http://%s/remove/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
+	    else
+		sprintf(url, "http://%s/remove/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
+	    aic_remove(pn, url);		// do not care about success or failure.
+	}
+	pp = pp->next;
+    }
+    goto err1;
 err2:
     free(record);
 err1:
@@ -517,6 +539,26 @@ static AINameSpace * m_get_ns(const char *ns)
     return NULL;
 }
 
+static AINode * m_get_node(const char *node, size_t len)
+{
+    char *p = malloc(len+1);
+    if (p == NULL)
+	return NULL;
+    strncpy(p, node, len);
+
+    AIZone *pz = g_manager.z_head;
+    while (pz) {
+	AINode *pn = pz->head;
+	while (pn) {
+	    if (strcmp(pn->ip_port, p) == 0)
+		return pn;
+	    pn = pn->next;
+	}
+	pz = pz->next;
+    }
+    return NULL;
+}
+
 // private
 static AIZone * m_create_zone(const char *name, int weight)
 {
@@ -604,4 +646,78 @@ static char * m_get_history(const char *line, int order)
     return record;
 }
 
+
+static ADFS_RESULT m_clean()
+{
+    AINameSpace *pns = g_manager.ns_head;
+    while (pns) {
+	m_traverse(pns);
+	pns = pns->next;
+    }
+    return ADFS_OK;
+}
+
+static ADFS_RESULT m_traverse(AINameSpace *pns)
+{
+    KCCUR *cur;
+    char *kbuf;
+    const char *cvbuf;
+    size_t ksiz, vsiz;
+
+    cur = kcdbcursor(pns->index_db);
+    kccurjump(cur);
+    while ((kbuf = kccurget(cur, &ksiz, &cvbuf, &vsiz, 0)) != NULL) {
+	const char *hold = m_deal(pns->name, kbuf, cvbuf);
+	kccursetvalue(cur, hold, strlen(hold), 1);
+	kcfree(kbuf);
+    }
+    kccurdel(cur);
+    return ADFS_OK;
+}
+
+static const char * m_deal(const char *ns, const char *fname, const char *record)
+{
+    const char *rest = record;
+    const char *pos_dollar = NULL;
+
+    while ((pos_dollar = strstr(rest, "$"))) {
+	if (m_send_command(ns, fname, rest, pos_dollar - rest) == ADFS_ERROR)
+	    break;
+	rest = pos_dollar +1;
+    }
+    return rest;
+}
+
+static ADFS_RESULT m_send_command(const char *ns, const char *fname, const char *record, int len)
+{
+    char *r = malloc(len+1);
+    if (r == NULL)
+	return ADFS_ERROR;
+    strncpy(r, record, len);
+
+    char *rest = r;
+    while (rest) {
+	AINode *pn = NULL;
+	char *pos_sharp = strstr(rest, "#");
+	char *pos_split = strstr(pos_sharp, "|");
+	rest = pos_split;
+
+	if (pos_split)
+	    pn = m_get_node(pos_sharp + 1, pos_split - pos_sharp -1);
+	else 
+	    pn = m_get_node(pos_sharp +1, strlen(pos_sharp + 1));
+
+	if (pn != NULL) {
+	    char url[ADFS_MAX_PATH] = {0};
+	    if (ns)
+		sprintf(url, "http://%s/remove/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, r, ns);
+	    else
+		sprintf(url, "http://%s/remove/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r);
+	    aic_remove(pn, url);		// do not care about success or failure.
+	}
+    }
+
+    free(r);
+    return ADFS_OK;
+}
 

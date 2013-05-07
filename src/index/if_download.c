@@ -8,7 +8,6 @@
 #include <string.h>
 #include "ai_manager.h"
 
-extern int g_clean_mode;
 
 static const char download_handler_key;
 #define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)
@@ -20,11 +19,6 @@ static nxweb_result download_on_request(
         nxweb_http_response* resp) 
 {
     DBG_PRINTS("download - request\n");
-    if (g_clean_mode) {
-	nxweb_send_http_error(resp, 403, "work mode: clean");
-	resp->keep_alive=0;
-	return NXWEB_ERROR;
-    }
     if (strlen(req->path_info) >= ADFS_MAX_PATH)
     {
         nxweb_send_http_error(resp, 400, "Failed. File name is too long. must less than 1024.");

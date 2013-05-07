@@ -25,6 +25,7 @@ static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
 //static int ssl_port=8056;
+extern int g_clean_mode;
 
 // Server main():
 static void server_main() 
@@ -161,6 +162,9 @@ int main(int argc, char** argv)
     if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
         return EXIT_FAILURE;
     printf("ADFS-Index start ...\n");
+
+    if (g_clean_mode == 1)
+	return EXIT_SUCCESS;
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon)

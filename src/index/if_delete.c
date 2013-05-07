@@ -7,18 +7,12 @@
 #include "nxweb/nxweb.h"
 #include "ai_manager.h"
 
-extern int g_clean_mode;
 
 static nxweb_result delete_on_request(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    if (g_clean_mode) {
-	nxweb_send_http_error(resp, 403, "work mode: clean");
-	resp->keep_alive=0;
-	return NXWEB_ERROR;
-    }
     char fname[ADFS_MAX_PATH] = {0};
     const char *name_space = NULL;
 

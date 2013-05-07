@@ -46,9 +46,9 @@ ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
     AIPosition *pp = malloc(sizeof(AIPosition));
     if (pp == NULL)
 	return ADFS_ERROR;
-
     _this->num++;
     sprintf(pp->zone_node, "%s#%s", zone, node);
+
     pp->pre = _this->tail;
     pp->next = NULL;
     if (_this->tail)
