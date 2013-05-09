@@ -1,4 +1,4 @@
-/* log.h
+/* log.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -35,6 +35,7 @@ int log_init(const char *filename)
 
 void log_release()
 {
+    fprintf(f_log, "\n");
     pthread_mutex_destroy(&mutex);
     fflush(f_log);
     fclose(f_log);
@@ -57,21 +58,21 @@ void log_out(const char *module, const char *info, LOG_LEVEL level)
     if (pthread_mutex_lock(&mutex) != 0)
 	return ;
 
-    fprintf(f_log, "%s ", stime);
+    fprintf(f_log, "%s\t", stime);
     switch (level) {
 	case 0:
-	    fprintf(f_log, "[0-fatal] "); break;
+	    fprintf(f_log, "fatal\t"); break;
 	case 1:
-	    fprintf(f_log, "[1-error] "); break;
+	    fprintf(f_log, "error\t"); break;
 	case 2:
-	    fprintf(f_log, "[2--warn] "); break;
+	    fprintf(f_log, "warn\t"); break;
 	case 3:
-	    fprintf(f_log, "[3--info] "); break;
+	    fprintf(f_log, "info\t"); break;
 	case 4:
-	    fprintf(f_log, "[4-debug] "); break;
+	    fprintf(f_log, "debug\t"); break;
     }
-    fprintf(f_log, "%s ", module);
-    fprintf(f_log, "%s ", info);
+    fprintf(f_log, "%s\t", module);
+    fprintf(f_log, "%s\t", info);
     fprintf(f_log, "\n");
     fflush(f_log);
 

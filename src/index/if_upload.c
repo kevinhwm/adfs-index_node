@@ -104,7 +104,6 @@ static nxweb_result upload_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp)
 { 
-    DBG_PRINTS("--- upload_on_request\n");
     if (strlen(req->uri) >= ADFS_MAX_PATH) {
 	nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
 	resp->keep_alive=0;
@@ -184,7 +183,6 @@ static void upload_request_data_finalize(
 	nxweb_http_response* resp, 
 	nxe_data data) 
 {
-    DBG_PRINTS("--- upload_request_data_finalize\n");
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) {
@@ -202,7 +200,6 @@ static nxweb_result upload_on_post_data(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    DBG_PRINTS("--- upload_on_post_data\n");
     if (req->content_length > g_MaxFileSize) {
 	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
 	resp->keep_alive=0;
@@ -230,7 +227,6 @@ static nxweb_result upload_on_post_data_complete(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    DBG_PRINTS("--- upload_on_post_data_complete\n");
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this

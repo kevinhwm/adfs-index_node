@@ -22,7 +22,6 @@ static void status_request_data_finalize(
 	nxweb_http_response* resp, 
 	nxe_data data) 
 {
-    DBG_PRINTS("--- status_request_data_finalize\n");
     struct SHARE_DATA * tmp = data.ptr;
     if (tmp && tmp->p) {
 	free(tmp->p);

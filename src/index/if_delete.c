@@ -16,7 +16,6 @@ static nxweb_result delete_on_request(
     char fname[ADFS_MAX_PATH] = {0};
     const char *name_space = NULL;
 
-    DBG_PRINTS("delete - request\n");
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
         nxweb_send_http_error(resp, 400, "Failed. Url is too long.");
 	resp->keep_alive = 0;

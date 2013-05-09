@@ -19,13 +19,11 @@ NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000);
 NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
+extern int g_erase_mode;
 
-// Command-line options:
 static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
-//static int ssl_port=8056;
-extern int g_clean_mode;
 
 // Server main():
 static void server_main() 
@@ -46,8 +44,9 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    aim_exit();
+    log_out("main", "ADFS Index exit. [Normal mode]", LOG_LEVEL_INFO);
     printf("ADFS Index exit.\n");
+    aim_exit();
 }
 
 static void show_help(void) 
@@ -69,7 +68,7 @@ static void show_help(void)
             " -x dir   set work dir    			(default: ./)\n"
 
             "\n"
-            "example:  indexserver -d -x ./ -l indexserver_http_log\n"
+            "example:  indexserver -d -x ./ \n"
           );
 }
 
@@ -158,13 +157,18 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    DBG_PRINTS("call aim_init\n");
+    printf("ADFS Index start... \n");
     if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
         return EXIT_FAILURE;
-    printf("ADFS-Index start ...\n");
+    printf("ADFS Index running... \n");
+    log_out("main", "ADFS Index running...", LOG_LEVEL_INFO);
 
-    if (g_clean_mode == 1)
+    if (g_erase_mode == 1) {
+	printf("ADFS Index exit. [erase mode]\n");
+	log_out("main", "ADFS Index exit. [erase mode]", LOG_LEVEL_INFO);
+	aim_exit();
 	return EXIT_SUCCESS;
+    }
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon)

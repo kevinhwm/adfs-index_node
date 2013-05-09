@@ -38,7 +38,7 @@ void r_create_uuid(AIRecord *_this)
     lt = localtime(&t);
     gettimeofday(&tv, NULL);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", lt);
-    sprintf(_this->uuid, "%s%06ld%04d", buf, tv.tv_usec, rand()%10000);
+    snprintf(_this->uuid, sizeof(_this->uuid), "%s%06ld%04d", buf, tv.tv_usec, rand()%10000);
 }
 
 ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
@@ -47,7 +47,7 @@ ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
     if (pp == NULL)
 	return ADFS_ERROR;
     _this->num++;
-    sprintf(pp->zone_node, "%s#%s", zone, node);
+    snprintf(pp->zone_node, sizeof(pp->zone_node), "%s#%s", zone, node);
 
     pp->pre = _this->tail;
     pp->next = NULL;
@@ -71,26 +71,21 @@ void r_release(AIRecord *_this)
 
 char * r_get_string(AIRecord *_this)
 {
-    DBG_PRINTSN("record 1");
     int len = ADFS_UUID_LEN + _this->num * sizeof(_this->head->zone_node);
     char *record = malloc(len);
     if (record == NULL)
 	return NULL;
-    DBG_PRINTSN("record 10");
     memset(record, 0, len);
     strcpy(record, _this->uuid);
 
-    DBG_PRINTSN("record 20");
     AIPosition *pp = _this->head;
     while (pp) {
 	strcat(record, pp->zone_node);
 	strcat(record, "|");
 	pp = pp->next;
     }
-    DBG_PRINTSN("record 30");
     // set the last "|" to be "\0"
     record[strlen(record)-1] = '\0';
-    DBG_PRINTSN("record 40");
     return record;
 }
 
