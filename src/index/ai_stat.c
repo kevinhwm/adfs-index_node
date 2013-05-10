@@ -32,8 +32,10 @@ ADFS_RESULT stat_init(AIStat *ps, unsigned long stat_start, int minutes)
 
 static void s_release(AIStat *ps)
 {
-    free(ps->count);
-    ps->count = NULL;
+    if (ps && ps->count) {
+	free(ps->count);
+	ps->count = NULL;
+    }
 }
 
 static int * s_get(AIStat *ps, time_t *t)

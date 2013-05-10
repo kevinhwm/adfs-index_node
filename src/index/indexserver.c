@@ -44,14 +44,15 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    log_out("main", "ADFS Index exit. [Normal mode]", LOG_LEVEL_INFO);
-    printf("ADFS Index exit.\n");
+    log_out("main", "ADFS Index exit. [Normal mode]", LOG_LEVEL_SYSTEM);
+    fprintf(stdout, "ADFS Index exit.\n");
     aim_exit();
 }
 
 static void show_help(void) 
 {
-    printf( "usage:    indexserver <options>\n\n"
+    fprintf(stdout, ""
+	    "usage:    indexserver <options>\n\n"
             " -d       run as daemon\n"
             " -s       shutdown nxweb\n"
             //" -l file  set log file    	(default: stderr or indexserver_error_log for daemon)\n"
@@ -82,7 +83,8 @@ int main(int argc, char** argv)
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
 
-    printf( "====================================================================\n"
+    fprintf(stdout, 
+	    "====================================================================\n"
 	    "                    ADFS - Index " ADFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
@@ -135,7 +137,7 @@ int main(int argc, char** argv)
             case 'x':
                 work_dir = optarg;
                 if (strlen(work_dir) > ADFS_FILENAME_LEN) {
-                    printf("path is too long\n");
+                    fprintf(stderr, "path is too long\n");
                     return 0;
                 }
                 break;
@@ -157,15 +159,20 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    printf("ADFS Index start... \n");
-    if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR)
+    fprintf(stdout, "ADFS Index start...\n");
+    if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR) {
+	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
+	fprintf(stdout, "ADFS Index exit. Init error\n");
+	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check config file.\n");
+	aim_exit();
         return EXIT_FAILURE;
-    printf("ADFS Index running... \n");
-    log_out("main", "ADFS Index running...", LOG_LEVEL_INFO);
+    }
+    log_out("main", "ADFS Index running...", LOG_LEVEL_SYSTEM);
+    fprintf(stdout, "ADFS Index running... \n");
 
     if (g_erase_mode == 1) {
-	printf("ADFS Index exit. [erase mode]\n");
-	log_out("main", "ADFS Index exit. [erase mode]", LOG_LEVEL_INFO);
+	log_out("main", "ADFS Index exit. [erase mode]", LOG_LEVEL_SYSTEM);
+	fprintf(stdout, "ADFS Index exit. [erase mode]\n");
 	aim_exit();
 	return EXIT_SUCCESS;
     }

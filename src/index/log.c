@@ -24,6 +24,7 @@ int log_init(const char *filename)
     if (f_log == NULL)
 	return -1;
     fprintf(f_log, "\n");
+    fprintf(f_log, "time\t\t\tlevel\tmodule\tinfo\n");
     fflush(f_log);
 
     if (pthread_mutex_init(&mutex, NULL) != 0) {
@@ -58,17 +59,22 @@ void log_out(const char *module, const char *info, LOG_LEVEL level)
     if (pthread_mutex_lock(&mutex) != 0)
 	return ;
 
+    if (f_log == NULL)
+	f_log = stdout;
+
     fprintf(f_log, "%s\t", stime);
     switch (level) {
 	case 0:
-	    fprintf(f_log, "fatal\t"); break;
+	    fprintf(f_log, "system\t"); break;
 	case 1:
-	    fprintf(f_log, "error\t"); break;
+	    fprintf(f_log, "fatal\t"); break;
 	case 2:
-	    fprintf(f_log, "warn\t"); break;
+	    fprintf(f_log, "error\t"); break;
 	case 3:
-	    fprintf(f_log, "info\t"); break;
+	    fprintf(f_log, "warn\t"); break;
 	case 4:
+	    fprintf(f_log, "info\t"); break;
+	case 5:
 	    fprintf(f_log, "debug\t"); break;
     }
     fprintf(f_log, "%s\t", module);

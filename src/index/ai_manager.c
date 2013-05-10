@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <dirent.h>     // opendir
-#include <sys/stat.h>   // mkdir
+//#include <sys/stat.h>   // mkdir
 #include <kclangc.h>
 #include <curl/curl.h>
 #include <time.h>
@@ -16,10 +16,10 @@
 #include "ai_record.h"
 
 
-static ADFS_RESULT m_init_zone(const char *conf_file);
-static ADFS_RESULT m_init_ns(const char *conf_file);
 static ADFS_RESULT m_init_log(const char *conf_file);
 static ADFS_RESULT m_init_stat(const char *conf_file);
+static ADFS_RESULT m_init_ns(const char *conf_file);
+static ADFS_RESULT m_init_zone(const char *conf_file);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
@@ -34,7 +34,7 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 
 AIManager g_manager;
 unsigned long g_MaxFileSize;
-LOG_LEVEL g_log_level;
+LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_erase_mode = 0;
 
 ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
@@ -45,29 +45,31 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 
     DIR *dirp = opendir(path);
     if( dirp == NULL ) {
-	snprintf(msg, 1024, "[%s]->path error", path);
+	snprintf(msg, sizeof(msg), "[%s]->path error", path);
 	log_out("manager", msg, LOG_LEVEL_ERROR);
         return ADFS_ERROR;
     }
     closedir(dirp);
+    snprintf(msg, sizeof(msg), "[%s]->init db path", path);
+    log_out("manager", msg, LOG_LEVEL_INFO);
 
     strncpy(pm->db_path, path, sizeof(pm->db_path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
-    // init zone
-    if (m_init_zone(conf_file) == ADFS_ERROR)
-        return ADFS_ERROR;
-    // init namespace
-    if (m_init_ns(conf_file) == ADFS_ERROR)
-	return ADFS_ERROR;
     // init log
     if (m_init_log(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
     // init statistics
     if (m_init_stat(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
+    // init namespace
+    if (m_init_ns(conf_file) == ADFS_ERROR)
+	return ADFS_ERROR;
+    // init zone
+    if (m_init_zone(conf_file) == ADFS_ERROR)
+        return ADFS_ERROR;
     g_MaxFileSize = max_file_size *1024*1024;
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
@@ -76,8 +78,12 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 
     // work mode 
     char value[ADFS_FILENAME_LEN] = {0};
-    if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR)
+    if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[work_mode]->config file error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
+    }
+    snprintf(msg, sizeof(msg), "[%s]->work mode", value);
+    log_out("manager", msg, LOG_LEVEL_INFO);
     if (strcmp(value, "erase") == 0) {
 	printf("\nIndex will work in 'erase mode'! \n"
 		"When it is done, you should restart it manually. \n");
@@ -86,7 +92,8 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 	    int i = getchar();
 	    if (i == 'y') {
 		g_erase_mode = 1;
-		printf("\nwork in 'erase' node.\n");
+		log_out("manager", "work in 'erase' mode", LOG_LEVEL_INFO);
+		printf("\nwork in 'erase' mode.\n");
 		if (m_erase() == ADFS_OK)
 		    log_out("manager", "erase ok.", LOG_LEVEL_INFO);
 		else
@@ -94,12 +101,18 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 		return ADFS_OK;
 	    }
 	    else if (i == 'n') {
-		break;
+		log_out("manager", "user quit", LOG_LEVEL_INFO);
+		return ADFS_ERROR;
 	    }
 	}
     }
-    printf("\nwork in 'normal' node.\n");
-    return ADFS_OK;
+    else if (strcmp(value, "normal") == 0) {
+	printf("\nwork in 'normal' node.\n");
+	return ADFS_OK;
+    }
+    else
+	log_out("manager", "[work_mode]->value error", LOG_LEVEL_ERROR);
+	return ADFS_ERROR;
 }
 
 void aim_exit()
@@ -376,7 +389,7 @@ char * aim_status()
 // private
 static ADFS_RESULT m_init_zone(const char *conf_file)
 {
-    //char msg[1024];
+    char msg[1024];	// log msg
     char value[ADFS_FILENAME_LEN] = {0};
     // create zone
     if (conf_read(conf_file, "zone_num", value, sizeof(value)) == ADFS_ERROR) {
@@ -385,7 +398,7 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
     }
     int zone_num = atoi(value);
     if (zone_num <= 0) {
-	log_out("manager", "[zone_num]->config file error", LOG_LEVEL_ERROR);
+	log_out("manager", "[zone_num]->value error", LOG_LEVEL_ERROR);
         return ADFS_ERROR;
     }
     for (int i=0; i<zone_num; ++i)
@@ -395,29 +408,53 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
         char weight[ADFS_FILENAME_LEN] = {0};
         char num[ADFS_FILENAME_LEN] = {0};
         snprintf(key, sizeof(key), "zone%d_name", i);
-        if (conf_read(conf_file, key, name, sizeof(name)) == ADFS_ERROR)
+        if (conf_read(conf_file, key, name, sizeof(name)) == ADFS_ERROR) {
+	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
             return ADFS_ERROR;
+	}
         snprintf(key, sizeof(key), "zone%d_weight", i);
-        if (conf_read(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR)
+        if (conf_read(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR) {
+	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
             return ADFS_ERROR;
+	}
 	AIZone *pz = m_create_zone(name, atoi(weight));
-	if (pz == NULL)
+	if (pz == NULL) {
+	    snprintf(msg, sizeof(msg), "[malloc]->create zone error");
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
 	    return ADFS_ERROR;
+	}
         snprintf(key, sizeof(key), "zone%d_num", i);
-        if (conf_read(conf_file, key, num, sizeof(num)) == ADFS_ERROR)
+        if (conf_read(conf_file, key, num, sizeof(num)) == ADFS_ERROR) {
+	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
             return ADFS_ERROR;
+	}
         int node_num = atoi(num);
-        if (node_num <= 0)
+        if (node_num <= 0) {
+	    snprintf(msg, sizeof(msg), "[node_num]->config file error");
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
             return ADFS_ERROR;
+	}
         for (int j=0; j<node_num; ++j) {
             snprintf(key, sizeof(key), "zone%d_%d", i, j);
-            if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR)
+	    if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR) {
+		snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+		log_out("manager", msg, LOG_LEVEL_ERROR);
+		return ADFS_ERROR;
+	    }
+            if (strlen(value) <= 0) {
+		snprintf(msg, sizeof(msg), "[%s]->value error", key);
+		log_out("manager", msg, LOG_LEVEL_ERROR);
                 return ADFS_ERROR;
-            if (strlen(value) <= 0)
-                return ADFS_ERROR;
+	    }
 	    // create node
-            if (pz->create(pz, value) == ADFS_ERROR) 
+            if (pz->create(pz, value) == ADFS_ERROR) {
+		snprintf(msg, sizeof(msg), "[malloc]->create node error");
+		log_out("manager", msg, LOG_LEVEL_ERROR);
                 return ADFS_ERROR;
+	    }
         }
     }
     return ADFS_OK;
@@ -425,23 +462,38 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
 
 static ADFS_RESULT m_init_ns(const char *conf_file)
 {
+    char msg[1024];
     char value[ADFS_FILENAME_LEN] = {0};
     // create namespace
-    if (conf_read(conf_file, "namespace_num", value, sizeof(value)) == ADFS_ERROR)
+    if (conf_read(conf_file, "namespace_num", value, sizeof(value)) == ADFS_ERROR) {
+	snprintf(msg, sizeof(msg), "[namespace_num]->config file error");
+	log_out("manager", msg, LOG_LEVEL_ERROR);
         return ADFS_ERROR;
+    }
     int ns_num = atoi(value);
-    if (ns_num <= 0 || ns_num >100)
+    if (ns_num <= 0 || ns_num >100) {
+	snprintf(msg, sizeof(msg), "[namespace_num]->value error");
+	log_out("manager", msg, LOG_LEVEL_ERROR);
         return ADFS_ERROR;
-    if (m_create_ns("default") == ADFS_ERROR)
+    }
+    if (m_create_ns("default") == ADFS_ERROR) {
+	snprintf(msg, sizeof(msg), "[default]->create namespace error");
+	log_out("manager", msg, LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
-    for (int i=0; i<ns_num; ++i)
-    {
+    }
+    for (int i=0; i<ns_num; ++i) {
         char key[ADFS_FILENAME_LEN] = {0};
 	snprintf(key, sizeof(key), "namespace_%d", i);
-	if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR)
+	if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR) {
+	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
 	    return ADFS_ERROR;
-	if (m_create_ns(value) == ADFS_ERROR)
+	}
+	if (m_create_ns(value) == ADFS_ERROR) {
+	    snprintf(msg, sizeof(msg), "[%s]->create namespace error", key);
+	    log_out("manager", msg, LOG_LEVEL_ERROR);
 	    return ADFS_ERROR;
+	}
     }
     return ADFS_OK;
 }
@@ -450,16 +502,24 @@ static ADFS_RESULT m_init_log(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // log_level
-    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR)
+    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
         return ADFS_ERROR;
+    }
     g_log_level = atoi(value);
-    if (g_log_level < 0 || g_log_level > 4)
+    if (g_log_level < 1 || g_log_level > 5) {
+	log_out("manager", "[log_level]->value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
+    }
+    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
+    if (log_init(value) != 0) {
+	log_out("manager", "[log_file]->value error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
 
-    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR)
-	return ADFS_ERROR;
-    if (log_init(value) != 0)
-	return ADFS_ERROR;
     return ADFS_OK;
 }
 
@@ -468,20 +528,30 @@ static ADFS_RESULT m_init_stat(const char *conf_file)
     AIManager *pm = &g_manager;
     char value[ADFS_FILENAME_LEN] = {0};
     // statistics
-    if (conf_read(conf_file, "stat_hour", value, sizeof(value)) == ADFS_ERROR)
+    if (conf_read(conf_file, "stat_hour", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[stat_hour]->config file error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
+    }
     int stat_hour = atoi(value);
-    if (stat_hour < 1 || stat_hour > 24)
+    if (stat_hour < 1 || stat_hour > 24) {
+	log_out("manager", "[stat_hour]->value error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
+    }
 
     unsigned long stat_start = (unsigned long)time(NULL);
     int stat_min = stat_hour * 60;
-    if (stat_init(&(pm->s_upload), stat_start, stat_min) == ADFS_ERROR)
+    if (stat_init(&(pm->s_upload), stat_start, stat_min) == ADFS_ERROR) {
+	log_out("manager", "[malloc]->stat init error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
-    if (stat_init(&(pm->s_download), stat_start, stat_min) == ADFS_ERROR)
+    }
+    if (stat_init(&(pm->s_download), stat_start, stat_min) == ADFS_ERROR) {
+	log_out("manager", "[malloc]->stat init error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
-    if (stat_init(&(pm->s_delete), stat_start, stat_min) == ADFS_ERROR)
+    }
+    if (stat_init(&(pm->s_delete), stat_start, stat_min) == ADFS_ERROR) {
+	log_out("manager", "[malloc]->stat init error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
+    }
     return ADFS_OK;
 }
 
