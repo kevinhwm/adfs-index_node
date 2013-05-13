@@ -24,7 +24,7 @@ int log_init(const char *filename)
     if (f_log == NULL)
 	return -1;
     fprintf(f_log, "\n");
-    fprintf(f_log, "time\t\t\tlevel\tmodule\tinfo\n");
+    fprintf(f_log, "TIME\t\t\tLEVEL\tMODULE\tINFORMATION\n");
     fflush(f_log);
 
     if (pthread_mutex_init(&mutex, NULL) != 0) {

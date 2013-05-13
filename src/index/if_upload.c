@@ -70,15 +70,13 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->filename_ready_to_receive == 1 )
-    {
+    if ( pufo->filename_ready_to_receive == 1 ) {
 	strncpy( pufo->filename, at, length );
 	pufo->filename_ready_to_receive = 0;
 	pufo->file_ready_to_receive = 1;
 	return 0;
     }
-    if ( pufo->file_ready_to_receive )
-    {
+    if ( pufo->file_ready_to_receive ) {
 	if ( pufo->ffilemem == NULL ) 
 	    return 0;
 	if ( pufo->ffilemem )
@@ -90,8 +88,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
 int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->ffilemem )
-    {
+    if ( pufo->ffilemem ) {
 	fclose( pufo->ffilemem );
 	pufo->file_complete = 1;
 	pufo->ffilemem=NULL;
@@ -109,8 +106,13 @@ static nxweb_result upload_on_request(
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
-    nxweb_set_response_content_type(resp, "text/html");
-    nxweb_set_response_charset(resp, "utf-8" );
+    if (req->content_length >= g_MaxFileSize) {
+	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
+	resp->keep_alive=0;
+	return NXWEB_ERROR;
+    }
+    //nxweb_set_response_content_type(resp, "text/html");
+    //nxweb_set_response_charset(resp, "utf-8");
     nxweb_parse_request_parameters(req, 0);
     const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
     const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
@@ -120,61 +122,64 @@ static nxweb_result upload_on_request(
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    if (fwb) 
-    {
+    int err = 0;
+    if (fwb) {
 	ufo->parser_settings.on_header_field = on_post_header_field;
 	ufo->parser_settings.on_header_value = on_post_header_value;
 	ufo->parser_settings.on_part_data = on_post_body;
 	ufo->parser_settings.on_body_end = on_post_finished;
-	ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
-	multipart_parser_set_data( ufo->parser, ufo );
-	ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
-	multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
-	multipart_parser_free( ufo->parser );
+	ufo->parser = multipart_parser_init(ufo->post_boundary, &ufo->parser_settings);
+	multipart_parser_set_data(ufo->parser, ufo);
+	ufo->ffilemem = open_memstream((char **)&ufo->file_ptr, &ufo->file_len);
+	multipart_parser_execute(ufo->parser, ufo->postdata_ptr, ufo->postdata_len);
+	multipart_parser_free(ufo->parser);
 
-	if ( strlen(ufo->filename) > 0 && ufo->file_complete ) 
-	{
+	if (strlen(ufo->filename) > 0 && ufo->file_complete) {
 	    char fname[ADFS_MAX_PATH] = {0};
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    if (get_filename_from_url(fname) != 0) {
-		nxweb_send_http_error(resp, 403, "Failed. Check file name and namespace.\n");
-		goto err;
+		nxweb_send_http_error(resp, 403, "Failed. Check file name and namespace.");
+		err = 1;
 	    }
 	    else if (strlen(fname) >= ADFS_FILENAME_LEN) {
-		nxweb_send_http_error(resp, 403, "Failed. File name is too long. It must be less than 250\n");
-		goto err;
+		nxweb_send_http_error(resp, 403, "Failed. File name is too long. It must be less than 250");
+		err = 1;
 	    }
 	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
-		nxweb_send_http_error(resp, 403, "Failed. Can not save.\n");
-		goto err;
+		nxweb_send_http_error(resp, 403, "Failed. Can not save.");
+		err = 1;
 	    }
 	    else {
-		nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>\n" );
+		nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>" );
 		nxweb_response_printf(resp, "OK" );
 	    }
 	}
 	else {
-	    nxweb_send_http_error(resp, 403, "Failed. Check file name and name length.\n");
-	    goto err;
+	    nxweb_send_http_error(resp, 403, "Failed. Check file name and name length.");
+	    err = 1;
 	}
+
 	if (ufo->file_ptr) {
-	    free( ufo->file_ptr );
+	    free(ufo->file_ptr);
 	    ufo->file_ptr = NULL;
 	}
     }
     else
-	nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>\n" );
+	nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>");
 
-    nxweb_response_printf(resp, ""
-	    "<form method='post' enctype='multipart/form-data'>\n"
-	    "File to upload: "
-	    "<input type='file' multiple name='uploadedfile' />"
-	    "<input type='submit' value='upload' />\n"
-	    "</form></body></html>\n" );
-    return NXWEB_OK;
-err:
-    resp->keep_alive = 0;
-    return NXWEB_OK;
+    if (err == 1) {
+	resp->keep_alive = 0;
+	return NXWEB_ERROR;
+    }
+    else {
+	nxweb_response_printf(resp, ""
+		"<form method='post' enctype='multipart/form-data'>\n"
+		"File to upload: "
+		"<input type='file' multiple name='uploadedfile' />"
+		"<input type='submit' value='upload' />\n"
+		"</form></body></html>\n" );
+	return NXWEB_OK;
+    }
 }
 
 static void upload_request_data_finalize(
@@ -200,11 +205,6 @@ static nxweb_result upload_on_post_data(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    if (req->content_length > g_MaxFileSize) {
-	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
-	resp->keep_alive=0;
-	return NXWEB_ERROR;
-    }
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
     nxd_fwbuffer* fwb = &ufo->fwbuffer;

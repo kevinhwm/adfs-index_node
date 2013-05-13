@@ -34,7 +34,6 @@ static nxweb_result download_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    DBG_PRINTS("download - request\n");
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
 	nxweb_send_http_error(resp, 400, "Failed. File name is too long.");
 	return NXWEB_ERROR;
@@ -48,13 +47,11 @@ static nxweb_result download_on_request(
 	return NXWEB_ERROR;
     }
 
-    DBG_PRINTS("download 20\n");
     void *pfile_data = NULL;
     size_t file_size = 0;
     anm_get(name_space, fname, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL || file_size == 0) {
 	nxweb_send_http_error(resp, 404, "Failed. No file.");
-	DBG_PRINTS("download 30\n");
 	return NXWEB_ERROR;
     }
     else {

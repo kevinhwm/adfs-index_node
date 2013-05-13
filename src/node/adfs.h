@@ -17,8 +17,7 @@
 
 #include <string.h>	// size_t
 
-typedef enum ADFS_RESULT
-{
+typedef enum {
     ADFS_ERROR	= -1,
     ADFS_OK	= 0,
 }ADFS_RESULT;
@@ -35,8 +34,9 @@ void trim_right_white(char * p);
 int get_filename_from_url(char *);
 
 // log.c
-typedef enum LOG_LEVEL{
-    LOG_LEVEL_FATAL = 0,
+typedef enum {
+    LOG_LEVEL_SYSTEM = 0,
+    LOG_LEVEL_FATAL,
     LOG_LEVEL_ERROR,
     LOG_LEVEL_WARN,
     LOG_LEVEL_INFO,

@@ -32,7 +32,8 @@ ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size
         if (strcmp(target, key))
             continue;
 
-        if (strlen(val) >= len) {
+	int val_len = strlen(val);
+        if (val_len == 0 || val_len >= len) {
             break;
         }
         else {

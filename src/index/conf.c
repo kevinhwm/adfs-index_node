@@ -8,7 +8,6 @@
 #include <string.h>
 #include "adfs.h"
 
-
 /* example:
  *
  * char buf[ADFS_FILENAME_LEN] = {0};

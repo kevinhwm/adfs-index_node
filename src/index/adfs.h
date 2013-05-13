@@ -36,11 +36,11 @@ int get_filename_from_url(char *);
 // log.c
 typedef enum {
     LOG_LEVEL_SYSTEM = 0,
-    LOG_LEVEL_FATAL = 1,
-    LOG_LEVEL_ERROR = 2,
-    LOG_LEVEL_WARN = 3,
-    LOG_LEVEL_INFO = 4,
-    LOG_LEVEL_DEBUG = 5
+    LOG_LEVEL_FATAL,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG
 }LOG_LEVEL;
 
 

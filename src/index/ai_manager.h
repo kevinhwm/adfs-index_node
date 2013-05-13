@@ -24,6 +24,7 @@ typedef struct AINameSpace
 typedef struct AIManager
 {
     char db_path[ADFS_MAX_PATH];	// database file path
+    char flag_path[ADFS_MAX_PATH];
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;

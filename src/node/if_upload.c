@@ -12,7 +12,6 @@
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
-
 typedef struct _upload_file_object
 {
     nxd_fwbuffer              fwbuffer;
@@ -100,8 +99,6 @@ static nxweb_result upload_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
-    DBG_PRINTS("--- upload_on_request\n");
-
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_set_response_charset(resp, "utf-8" );
     nxweb_response_printf(resp, ""
@@ -159,7 +156,6 @@ static void upload_request_data_finalize(
         nxweb_http_response* resp, 
         nxe_data data) 
 {
-    DBG_PRINTS("--- upload_request_data_finalize\n");
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) {
@@ -177,7 +173,6 @@ static nxweb_result upload_on_post_data(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    DBG_PRINTS("--- upload_on_post_data\n");
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
@@ -197,7 +192,6 @@ static nxweb_result upload_on_post_data_complete(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    DBG_PRINTS("--- upload_on_post_data_complete\n");
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.
     // Releasing resources in finalizer is the proper way of doing this

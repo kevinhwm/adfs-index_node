@@ -44,7 +44,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    log_out("main", "ADFS Index exit. [Normal mode]", LOG_LEVEL_SYSTEM);
+    log_out("main", "ADFS Index exit. [normal mode]", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Index exit.\n");
     aim_exit();
 }
@@ -52,24 +52,24 @@ static void server_main()
 static void show_help(void) 
 {
     fprintf(stdout, ""
-	    "usage:    indexserver <options>\n\n"
-            " -d       run as daemon\n"
-            " -s       shutdown nxweb\n"
-            //" -l file  set log file    	(default: stderr or indexserver_error_log for daemon)\n"
-            " -p file  set pid file    	(default: indexserver.pid)\n"
-            //" -u user  set process uid\n"
-            //" -g group set process gid\n"
-            " -P port  set http port\n"
-            " -h       show this help\n"
-            " -v       show version\n"
+	    "usage:    indexserver <options>\n"
+	    " -d       run as daemon\n"
+	    " -s       shutdown nxweb\n"
+	    //" -l file  set log file	(default: stderr or indexserver_error_log for daemon)\n"
+	    " -p file  set pid file			(default: indexserver.pid)\n"
+	    //" -u user  set process uid\n"
+	    //" -g group set process gid\n"
+	    " -P port  set http port\n"
+	    " -h       show this help\n"
+	    " -v       show version\n"
 
-            " -c file  config file			(default: ./indexserver.conf)\n"
-            " -m mem   set memory map size in MB	(default: 256)\n"
-            " -M fmax  set file max size in MB		(default: 128)\n"
-            " -x dir   set work dir    			(default: ./)\n"
+	    " -c file  config file			(default: ./indexserver.conf)\n"
+	    " -m mem   set memory map size in MB	(default: 256)\n"
+	    " -M fmax  set file max size in MB	(default: 128)\n"
+	    " -x dir   set work dir			(default: ./)\n"
 
-            "\n"
-            "example:  indexserver -d -x ./ \n"
+	    "\n"
+	    " example:  indexserver -d -x ./ \n"
           );
 }
 
@@ -77,9 +77,9 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char* work_dir="./";
-    const char* pid_file="indexserver.pid";
-    const char* conf_file="indexserver.conf";
+    const char *work_dir="./";
+    const char *pid_file="indexserver.pid";
+    const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:p:u:g:P:c:m:M:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:u:g:P:c:m:M:x:")) != -1) 
     {
         switch (c) 
         {
@@ -128,12 +128,14 @@ int main(int argc, char** argv)
                     fprintf(stderr, "invalid mem size: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
+		break;
             case 'M':
                 max_file_size = atoi(optarg);
                 if (max_file_size <= 0) {
                     fprintf(stderr, "invalid file size: %s\n\n", optarg);
                     return EXIT_FAILURE;
                 }
+		break;
             case 'x':
                 work_dir = optarg;
                 if (strlen(work_dir) > ADFS_FILENAME_LEN) {

@@ -54,19 +54,18 @@ static void show_help(void)
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
 	    //" -l file  set log file    		(default: stderr or nodeserver_error_log for daemon)\n"
-	    " -p file  set pid file    		(default: nodeserver.pid)\n"
+	    " -p file  set pid file			(default: nodeserver.pid)\n"
 	    //" -u user  set process uid\n"
 	    //" -g group set process gid\n"
 	    " -P port  set http port\n"
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file                  	(default: ./nodeserver.conf)\n"
-	    " -m mem   set memory map size in MB    	(default: 512)\n"
+	    " -c file  config file			(default: ./nodeserver.conf)\n"
+	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(default: ./)\n"
-
 	    "\n"
-	    "example:  nodeserver -d -x ./ -l nodeserver_http_log\n"
+	    " example:  nodeserver -d -x ./ \n"
 	  );
 }
 
@@ -83,9 +82,9 @@ int main(int argc, char** argv)
     printf( "====================================================================\n"
 	    "                    ADFS - Node " ADFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
-            "====================================================================\n" );
+	    "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsw:l:p:u:g:P:c:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsl:p:u:g:P:c:m:x:")) != -1) 
     {
 	switch (c) 
 	{
@@ -125,6 +124,7 @@ int main(int argc, char** argv)
 		    fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 		    return EXIT_FAILURE;
 		}
+		break;
 	    case 'x':
 		work_dir=optarg;
 		if (strlen(work_dir) > ADFS_FILENAME_LEN) {
@@ -147,7 +147,6 @@ int main(int argc, char** argv)
 	return EXIT_SUCCESS;
     }
     /////////////////////////////////////////////////////////////////////////////////
-    DBG_PRINTSN("call anm_init");
     if (anm_init(conf_file, work_dir, mem_size) == ADFS_ERROR)
 	return EXIT_FAILURE;
     /////////////////////////////////////////////////////////////////////////////////

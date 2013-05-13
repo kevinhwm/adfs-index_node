@@ -11,8 +11,7 @@
 static const char status_handler_key; 
 #define STATUS_HANDLER_KEY ((nxe_data)&status_handler_key)
 
-struct SHARE_DATA 
-{
+struct SHARE_DATA {
     char *p;
 };
 

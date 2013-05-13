@@ -6,7 +6,8 @@
 
 #include <string.h>
 #include <dirent.h>     // opendir
-//#include <sys/stat.h>   // mkdir
+#include <unistd.h>
+#include <sys/stat.h>   // chmod
 #include <kclangc.h>
 #include <curl/curl.h>
 #include <time.h>
@@ -14,7 +15,6 @@
 #include "adfs.h"
 #include "ai_manager.h"
 #include "ai_record.h"
-
 
 static ADFS_RESULT m_init_log(const char *conf_file);
 static ADFS_RESULT m_init_stat(const char *conf_file);
@@ -50,6 +50,27 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
         return ADFS_ERROR;
     }
     closedir(dirp);
+
+    char f_flag[1024] = {0};
+    snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
+    if (access(f_flag, F_OK) != -1) {
+	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
+	log_out("manager", msg, LOG_LEVEL_FATAL);
+	return ADFS_ERROR;
+    }
+    else {
+	time_t t = time(NULL);
+	struct tm * lt;
+	lt = localtime(&t);
+
+	FILE *f = fopen(f_flag, "wb+");
+	fprintf(f, "%s", asctime(lt));
+	fclose(f);
+
+	chmod(f_flag, S_IRWXU|S_IRWXG|S_IRWXO);
+	strncpy(pm->flag_path, f_flag, sizeof(pm->flag_path));
+    }
+
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
 
@@ -111,7 +132,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 	return ADFS_OK;
     }
     else
-	log_out("manager", "[work_mode]->value error", LOG_LEVEL_ERROR);
+	log_out("manager", "[work_mode]->config value error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
 }
 
@@ -135,12 +156,19 @@ void aim_exit()
         free(tmp);
     }
 
-    pm->s_upload.release(&(pm->s_upload));
-    pm->s_download.release(&(pm->s_download));
-    pm->s_delete.release(&(pm->s_delete));
+    if (pm->s_upload.release)
+	pm->s_upload.release(&(pm->s_upload));
+    if (pm->s_download.release)
+	pm->s_download.release(&(pm->s_download));
+    if (pm->s_delete.release)
+	pm->s_delete.release(&(pm->s_delete));
 
     log_release();
     curl_global_cleanup();
+    //remove(pm->flag_path);
+    //printf("unlink: %d\n", unlink(pm->flag_path));
+    printf("unlink: %d\n", unlink("/home/kevin/workspace/adfs-index_node/src/index/test/adfs.flag"));
+    printf("%d\n", errno);
 }
 
 ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
@@ -398,7 +426,7 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
     }
     int zone_num = atoi(value);
     if (zone_num <= 0) {
-	log_out("manager", "[zone_num]->value error", LOG_LEVEL_ERROR);
+	log_out("manager", "[zone_num]->config value error", LOG_LEVEL_ERROR);
         return ADFS_ERROR;
     }
     for (int i=0; i<zone_num; ++i)
@@ -445,7 +473,7 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
 		return ADFS_ERROR;
 	    }
             if (strlen(value) <= 0) {
-		snprintf(msg, sizeof(msg), "[%s]->value error", key);
+		snprintf(msg, sizeof(msg), "[%s]->config value error", key);
 		log_out("manager", msg, LOG_LEVEL_ERROR);
                 return ADFS_ERROR;
 	    }
@@ -472,7 +500,7 @@ static ADFS_RESULT m_init_ns(const char *conf_file)
     }
     int ns_num = atoi(value);
     if (ns_num <= 0 || ns_num >100) {
-	snprintf(msg, sizeof(msg), "[namespace_num]->value error");
+	snprintf(msg, sizeof(msg), "[namespace_num]->config value error");
 	log_out("manager", msg, LOG_LEVEL_ERROR);
         return ADFS_ERROR;
     }
@@ -508,7 +536,7 @@ static ADFS_RESULT m_init_log(const char *conf_file)
     }
     g_log_level = atoi(value);
     if (g_log_level < 1 || g_log_level > 5) {
-	log_out("manager", "[log_level]->value error", LOG_LEVEL_SYSTEM);
+	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
     }
     if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) {
@@ -516,7 +544,7 @@ static ADFS_RESULT m_init_log(const char *conf_file)
 	return ADFS_ERROR;
     }
     if (log_init(value) != 0) {
-	log_out("manager", "[log_file]->value error", LOG_LEVEL_SYSTEM);
+	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
     }
 
@@ -534,7 +562,7 @@ static ADFS_RESULT m_init_stat(const char *conf_file)
     }
     int stat_hour = atoi(value);
     if (stat_hour < 1 || stat_hour > 24) {
-	log_out("manager", "[stat_hour]->value error", LOG_LEVEL_ERROR);
+	log_out("manager", "[stat_hour]->config value error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
     }
 

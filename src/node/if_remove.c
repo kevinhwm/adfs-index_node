@@ -13,7 +13,6 @@ static nxweb_result remove_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    DBG_PRINTS("remove - request\n");
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
 	nxweb_send_http_error(resp, 400, "Failed. File name is too long.");
 	resp->keep_alive = 0;
