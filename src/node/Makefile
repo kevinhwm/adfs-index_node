@@ -9,7 +9,7 @@ LIBS = -lnxweb -lkyotocabinet -lrt
 TARGET = nodeserver
 OBJS = if_upload.o if_download.o if_remove.o if_status.o \
        an_namespace.o an_manager.o \
-       function.o multipart_parser.o nodeserver.o
+       conf.o log.o function.o multipart_parser.o nodeserver.o
 
 
 release:$(OBJS)
@@ -23,6 +23,8 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_status.o if_status.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_manager.o an_manager.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_namespace.o an_namespace.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o conf.o conf.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o log.o log.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o function.o function.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c

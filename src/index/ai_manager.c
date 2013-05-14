@@ -5,12 +5,12 @@
  */
 
 #include <string.h>
+#include <time.h>
 #include <dirent.h>     // opendir
 #include <unistd.h>
 #include <sys/stat.h>   // chmod
 #include <kclangc.h>
 #include <curl/curl.h>
-#include <time.h>
 
 #include "adfs.h"
 #include "ai_manager.h"
@@ -39,6 +39,8 @@ int g_erase_mode = 0;
 
 ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
 {
+    srand(time(NULL));
+
     char msg[1024] = {0};
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
@@ -66,37 +68,37 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 	FILE *f = fopen(f_flag, "wb+");
 	fprintf(f, "%s", asctime(lt));
 	fclose(f);
-
-	chmod(f_flag, S_IRWXU|S_IRWXG|S_IRWXO);
-	strncpy(pm->flag_path, f_flag, sizeof(pm->flag_path));
     }
-
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
 
+    DBG_PRINTSN("40");
     strncpy(pm->db_path, path, sizeof(pm->db_path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
+    DBG_PRINTSN("50");
     // init log
     if (m_init_log(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
+    DBG_PRINTSN("60");
     // init statistics
     if (m_init_stat(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
+    DBG_PRINTSN("70");
     // init namespace
     if (m_init_ns(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
+    DBG_PRINTSN("80");
     // init zone
     if (m_init_zone(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
     g_MaxFileSize = max_file_size *1024*1024;
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
-    // init rand
-    srand(time(NULL));
 
+    DBG_PRINTSN("100");
     // work mode 
     char value[ADFS_FILENAME_LEN] = {0};
     if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR) {
@@ -165,10 +167,7 @@ void aim_exit()
 
     log_release();
     curl_global_cleanup();
-    //remove(pm->flag_path);
-    //printf("unlink: %d\n", unlink(pm->flag_path));
-    printf("unlink: %d\n", unlink("/home/kevin/workspace/adfs-index_node/src/index/test/adfs.flag"));
-    printf("%d\n", errno);
+    remove("./adfs.flag");
 }
 
 ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
@@ -695,17 +694,21 @@ static ADFS_RESULT m_create_ns(const char *name)
 	    return ADFS_ERROR;
 	pns = pns->next;
     }
+    DBG_PRINTSN("m_create_ns 10");
     pns = malloc(sizeof(AINameSpace));
     if (pns == NULL) 
 	return ADFS_ERROR;
 
+    DBG_PRINTSN("m_create_ns 20");
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_PATH] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->db_path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+    DBG_PRINTSN(indexdb_path);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) 
         return ADFS_ERROR;
+    DBG_PRINTSN("m_create_ns 30");
 
     pns->pre = pm->ns_tail;
     pns->next = NULL;

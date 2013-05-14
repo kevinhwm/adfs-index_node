@@ -1,12 +1,13 @@
-/* Antiy Labs. Basic Platform R & D Center
- * nodeserver.c
+/* nodeserver.c
  *
  * huangtao@antiy.com
+ * Antiy Labs. Basic Platform R & D Center.
  */
 
 #include <nxweb/nxweb.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "adfs.h"
 #include "an_manager.h"
 
 extern nxweb_handler upload_file_handler;
@@ -44,8 +45,9 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    anm_exit();
+    log_out("main", "ADFS Index exit.", LOG_LEVEL_SYSTEM);
     printf("ADFS Node exit.\n");
+    anm_exit();
 }
 
 static void show_help(void) 
@@ -84,7 +86,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsl:p:u:g:P:c:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:u:g:P:c:m:x:")) != -1) 
     {
 	switch (c) 
 	{
@@ -147,8 +149,16 @@ int main(int argc, char** argv)
 	return EXIT_SUCCESS;
     }
     /////////////////////////////////////////////////////////////////////////////////
-    if (anm_init(conf_file, work_dir, mem_size) == ADFS_ERROR)
+    fprintf(stdout, "ADFS Node start...\n");
+    if (anm_init(conf_file, work_dir, mem_size) == ADFS_ERROR) {
+	log_out("main", "ADFS Node exit. Init error.", LOG_LEVEL_SYSTEM);
+	fprintf(stdout, "ADFS Node exit. Init error.\n");
+	fprintf(stdout, "\n>>> If log exists, check it. Otherwise the information on the screen.\n");
+	anm_exit();
 	return EXIT_FAILURE;
+    }
+    log_out("main", "ADFS Node running...", LOG_LEVEL_SYSTEM);
+    fprintf(stdout, "ADFS Node running...\n");
     /////////////////////////////////////////////////////////////////////////////////
     if (daemon) 
 	nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);

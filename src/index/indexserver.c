@@ -165,7 +165,7 @@ int main(int argc, char** argv)
     if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Index exit. Init error\n");
-	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check config file.\n");
+	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");
 	aim_exit();
         return EXIT_FAILURE;
     }
@@ -178,6 +178,9 @@ int main(int argc, char** argv)
 	aim_exit();
 	return EXIT_SUCCESS;
     }
+    // nxweb_run_xxx will change work dir,
+    // but it has been changed in "aim_init".
+    //work_dir = "./";
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon)

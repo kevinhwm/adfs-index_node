@@ -5,9 +5,13 @@
  */
 
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <kclangc.h>
+
+#include "adfs.h"
 #include "an_namespace.h"
 #include "an_manager.h"
 
@@ -16,30 +20,55 @@ static ADFS_RESULT split_db(ANNameSpace * pns);
 static int m_count_kch(const char * dir);
 static ADFS_RESULT m_identify_kch(char * name);
 static ANNameSpace * m_get_ns(const char * name_space);
+static ADFS_RESULT m_init_log(const char *conf_file);
 
 ANManager g_manager;
+LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 
 ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
-    memset(&g_manager, 0, sizeof(g_manager));
-    strncpy(g_manager.path, path, sizeof(g_manager.path));
-    g_manager.kc_apow = 0;
-    g_manager.kc_fbp = 10;
-    g_manager.kc_bnum = 1000000;
-    g_manager.kc_msiz = mem_size *1024*1024;
+    char msg[1024] = {0};
+    ANManager *pm = &g_manager;
+    memset(pm, 0, sizeof(*pm));
+    strncpy(pm->path, path, sizeof(pm->path));
+    pm->kc_apow = 0;
+    pm->kc_fbp = 10;
+    pm->kc_bnum = 1000000;
+    pm->kc_msiz = mem_size *1024*1024;
 
-    DIR *dp;
+    DIR *dirp;
     struct dirent *ent;
-    if( (dp = opendir(path)) == NULL ) 
+    if( (dirp = opendir(path)) == NULL ) 
 	return ADFS_ERROR;
 
-    while ((ent = readdir(dp)) != NULL) {
+    while ((ent = readdir(dirp)) != NULL) {
 	if (ent->d_type == 4 && ent->d_name[0] != '.') {
 	    DBG_PRINTSN(ent->d_name);
 	    m_create_ns(ent->d_name);
 	}
     }
-    closedir(dp);
+    closedir(dirp);
+    char f_flag[1024] = {0};
+    snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
+    if (access(f_flag, F_OK) != -1) {
+	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
+	log_out("manager", msg, LOG_LEVEL_FATAL);
+	return ADFS_ERROR;
+    }
+    else {
+	time_t t = time(NULL);
+	struct tm *lt = localtime(&t);
+
+	FILE *f = fopen(f_flag, "wb+");
+	fprintf(f, "%s", asctime(lt));
+	fclose(f);
+    }
+    snprintf(msg, sizeof(msg), "[%s]->init db path", path);
+    log_out("manager", msg, LOG_LEVEL_INFO);
+
+    // init log
+    if (m_init_log(conf_file) == ADFS_ERROR)
+	return ADFS_ERROR;
 
     return ADFS_OK;
 }
@@ -56,6 +85,8 @@ void anm_exit()
 	tmp->release_all(tmp);
 	free(tmp);
     }
+    log_release();
+    remove("./adfs.flag");
 }
 
 ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
@@ -266,5 +297,30 @@ static ANNameSpace * m_get_ns(const char * name_space)
 	tmp = tmp->next;
     }
     return NULL;
+}
+
+static ADFS_RESULT m_init_log(const char *conf_file)
+{
+    char value[ADFS_FILENAME_LEN] = {0};
+    // log_level
+    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
+        return ADFS_ERROR;
+    }
+    g_log_level = atoi(value);
+    if (g_log_level < 1 || g_log_level > 5) {
+	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
+    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) {
+	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
+    if (log_init(value) != 0) {
+	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
+
+    return ADFS_OK;
 }
 
