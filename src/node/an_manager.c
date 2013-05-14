@@ -101,6 +101,7 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     if (pns == NULL)
 	return ADFS_ERROR;
 
+    DBG_PRINTSN("10");
     // check number and split db
     NodeDB * node = pns->tail;
     if (node->number >= NODE_MAX_FILE_NUM) {
@@ -109,15 +110,19 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
 	node = pns->tail;
     }
 
+    DBG_PRINTSN("20");
     // save into db
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len))
 	return ADFS_ERROR;
+
+    DBG_PRINTSN("30");
     // save into index
     char buf[16] = {0};
     sprintf(buf, "%d", pns->tail->id);
     if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf)))
 	return ADFS_ERROR;
 
+    DBG_PRINTSN("40");
     return ADFS_OK;
 }
 
@@ -170,7 +175,8 @@ static ANNameSpace * m_create_ns(const char *name_space)
 	return NULL;
 
     char ns_path[ADFS_MAX_PATH] = {0};
-    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
+    //snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
+    snprintf(ns_path, sizeof(ns_path), "%s", name_space);
     int node_num = m_count_kch(ns_path);
     // index db of ADFS-Node
     char indexdb_path[ADFS_MAX_PATH] = {0};
@@ -261,7 +267,7 @@ static int m_count_kch(const char * dir)
 	    return 1;
     }
     else {
-	mkdir(dir, 0755);
+	mkdir(dir, 0744);
 	return 1;
     }
 }

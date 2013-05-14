@@ -8,8 +8,27 @@
 #include <string.h>
 #include "ai_manager.h"
 
+/*
 static const char download_handler_key;
 #define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)
+
+struct SHARE_DATA {
+    char *p;
+};
+
+static void download_request_data_finalize(
+	nxweb_http_server_connection* conn, 
+	nxweb_http_request* req, 
+	nxweb_http_response* resp, 
+	nxe_data data) 
+{
+    struct SHARE_DATA * tmp = data.ptr;
+    if (tmp && tmp->p) {
+	free(tmp->p);
+	tmp->p = NULL;
+    }
+}
+*/
 
 static nxweb_result download_on_request(
 	nxweb_http_server_connection* conn, 
@@ -40,7 +59,10 @@ static nxweb_result download_on_request(
 	return ADFS_ERROR;
     }
 
+    //struct SHARE_DATA *tmp = nxb_alloc_obj(req->nxb, sizeof(struct SHARE_DATA));
+    //nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void*)tmp, download_request_data_finalize);
     char *redirect_url = aim_download(name_space, fname, history);
+    //tmp->p = redirect_url;
     if (redirect_url == NULL) {
 	nxweb_send_http_error(resp, 404, "Failed. No file");
 	resp->keep_alive = 0;

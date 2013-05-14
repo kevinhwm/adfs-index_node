@@ -6,8 +6,9 @@
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-#include "multipart_parser.h"
+#include "adfs.h"
 #include "an_manager.h"
+#include "multipart_parser.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -93,85 +94,103 @@ int on_post_finished(multipart_parser * mp_obj)
     return 0;
 }
 
-
 static nxweb_result upload_on_request(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp)
 { 
     nxweb_set_response_content_type(resp, "text/html");
-    nxweb_set_response_charset(resp, "utf-8" );
-    nxweb_response_printf(resp, ""
-            "<html><head><title>Upload Module</title></head><body>"
-            "<form method='post' enctype='multipart/form-data'>"
-            "File(s) to upload: "
-            "<input type='file' multiple name='uploadedfile' />"
-            "<input type='submit' value='Upload' />"
-            "</form>\n"
-            "</body>\n"
-            "</html>\n"
-            );
-
+    nxweb_set_response_charset(resp, "utf-8");
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
+
+    int res = 0;
+    char fname[ADFS_MAX_PATH] = {0};
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) {
-        ufo->parser_settings.on_header_field = on_post_header_field;
-        ufo->parser_settings.on_header_value = on_post_header_value;
-        ufo->parser_settings.on_part_data = on_post_body;
-        ufo->parser_settings.on_body_end = on_post_finished;
-        ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
+	ufo->parser_settings.on_header_field = on_post_header_field;
+	ufo->parser_settings.on_header_value = on_post_header_value;
+	ufo->parser_settings.on_part_data = on_post_body;
+	ufo->parser_settings.on_body_end = on_post_finished;
+	ufo->parser = multipart_parser_init( ufo->post_boundary, &ufo->parser_settings );
 
-        multipart_parser_set_data( ufo->parser, ufo );
-        ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
-        multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
-        multipart_parser_free( ufo->parser );
+	multipart_parser_set_data( ufo->parser, ufo );
+	ufo->ffilemem = open_memstream( (char **)&ufo->file_ptr, &ufo->file_len );
+	multipart_parser_execute( ufo->parser, ufo->postdata_ptr, ufo->postdata_len );
+	multipart_parser_free( ufo->parser );
 
-        if ( strlen(ufo->filename) > 0 && ufo->file_complete ) {
-            char fname[ADFS_MAX_PATH] = {0};
-            strncpy(fname, req->path_info, sizeof(fname));
-            if (get_filename_from_url(fname) == ADFS_ERROR)
-                nxweb_send_http_error(resp, 400, "Failed. Check file name.");
-            else if (anm_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR)
-                nxweb_send_http_error(resp, 400, "Failed. Can not save.");
-            else
-                nxweb_response_printf(resp, "OK.\n");
-        }
-        else
-            nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.");
+	if ( strlen(ufo->filename) > 0 && ufo->file_complete ) {
+	    strncpy(fname, req->path_info, sizeof(fname));
+	    if (get_filename_from_url(fname) == ADFS_ERROR) {
+		nxweb_send_http_error(resp, 400, "Failed. Check file name.");
+		res = -1;
+	    }
+	    else if (anm_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
+		nxweb_send_http_error(resp, 400, "Failed. Can not save.");
+		res = -1;
+	    }
+	    else  {
+		nxweb_response_printf(resp, "OK.\n");
+		res = 1;
+	    }
+	}
+	else {
+	    nxweb_send_http_error(resp, 400, "Failed. Check file name and name length.");
+	    res = -1;
+	}
 
-        if (ufo->file_ptr) {
-            free( ufo->file_ptr );
-            ufo->file_ptr = NULL;
-        }
+	if (ufo->file_ptr) {
+	    free( ufo->file_ptr );
+	    ufo->file_ptr = NULL;
+	}
     }
 
+    char msg[1024] = {0};
+    if (res < 0) {
+	snprintf(msg, sizeof(msg), "[%s]->error.[%s]", fname, conn->remote_addr);
+	log_out("upload", msg, LOG_LEVEL_INFO);
+	resp->keep_alive = 0;
+	return NXWEB_ERROR;
+    }
+    else if (res > 0) 
+	snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr);
+    else
+	snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr);
+
+    log_out("upload", msg, LOG_LEVEL_INFO);
+    nxweb_response_printf(resp, ""
+	    "<html><head><title>Upload Module</title></head><body>\n"
+	    "<form method='post' enctype='multipart/form-data'>\n"
+	    "File(s) to upload: "
+	    "<input type='file' multiple name='uploadedfile' />\n"
+	    "<input type='submit' value='Upload' />\n"
+	    "</form></body></html>");
     return NXWEB_OK;
 }
 
 static void upload_request_data_finalize(
-        nxweb_http_server_connection* conn, 
-        nxweb_http_request* req, 
-        nxweb_http_response* resp, 
-        nxe_data data) 
+	nxweb_http_server_connection* conn, 
+	nxweb_http_request* req, 
+	nxweb_http_response* resp, 
+	nxe_data data) 
 {
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
     if (fwb && fwb->fd) {
-        fclose(fwb->fd);
-        fwb->fd=0;
+	fclose(fwb->fd);
+	fwb->fd=0;
     }
     if( ufo->postdata_ptr ) {
-        free( ufo->postdata_ptr );
-        ufo->postdata_ptr = NULL;
+	free( ufo->postdata_ptr );
+	ufo->postdata_ptr = NULL;
     }
 }
 
 static nxweb_result upload_on_post_data(
-        nxweb_http_server_connection* conn, 
-        nxweb_http_request* req, 
-        nxweb_http_response* resp) 
+	nxweb_http_server_connection* conn, 
+	nxweb_http_request* req, 
+	nxweb_http_response* resp) 
 {
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
     memset( ufo, 0, sizeof( upload_file_object ) );
@@ -188,9 +207,9 @@ static nxweb_result upload_on_post_data(
 }
 
 static nxweb_result upload_on_post_data_complete(
-        nxweb_http_server_connection* conn, 
-        nxweb_http_request* req, 
-        nxweb_http_response* resp) 
+	nxweb_http_server_connection* conn, 
+	nxweb_http_request* req, 
+	nxweb_http_response* resp) 
 {
     // It is not strictly necessary to close the file here
     // as we are closing it anyway in request data finalizer.

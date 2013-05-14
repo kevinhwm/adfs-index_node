@@ -122,7 +122,9 @@ static nxweb_result upload_on_request(
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
-    int err = 0;
+
+    int res = 0;
+    char fname[ADFS_MAX_PATH] = {0};
     if (fwb) {
 	ufo->parser_settings.on_header_field = on_post_header_field;
 	ufo->parser_settings.on_header_value = on_post_header_value;
@@ -135,28 +137,28 @@ static nxweb_result upload_on_request(
 	multipart_parser_free(ufo->parser);
 
 	if (strlen(ufo->filename) > 0 && ufo->file_complete) {
-	    char fname[ADFS_MAX_PATH] = {0};
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    if (get_filename_from_url(fname) != 0) {
 		nxweb_send_http_error(resp, 403, "Failed. Check file name and namespace.");
-		err = 1;
+		res = -1;
 	    }
 	    else if (strlen(fname) >= ADFS_FILENAME_LEN) {
 		nxweb_send_http_error(resp, 403, "Failed. File name is too long. It must be less than 250");
-		err = 1;
+		res = -1;
 	    }
 	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
 		nxweb_send_http_error(resp, 403, "Failed. Can not save.");
-		err = 1;
+		res = -1;
 	    }
 	    else {
 		nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>" );
 		nxweb_response_printf(resp, "OK" );
+		res = 1;
 	    }
 	}
 	else {
 	    nxweb_send_http_error(resp, 403, "Failed. Check file name and name length.");
-	    err = 1;
+	    res = -1;
 	}
 
 	if (ufo->file_ptr) {
@@ -167,19 +169,26 @@ static nxweb_result upload_on_request(
     else
 	nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>");
 
-    if (err == 1) {
+    char msg[1024] = {0};
+    if (res < 0) {
+	snprintf(msg, sizeof(msg), "[%s]->error.[%s]", fname, conn->remote_addr);
+	log_out("upload", msg, LOG_LEVEL_INFO);
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    else {
-	nxweb_response_printf(resp, ""
-		"<form method='post' enctype='multipart/form-data'>\n"
-		"File to upload: "
-		"<input type='file' multiple name='uploadedfile' />"
-		"<input type='submit' value='upload' />\n"
-		"</form></body></html>\n" );
-	return NXWEB_OK;
-    }
+    else if (res > 0) 
+	snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr);
+    else
+	snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr);
+
+    log_out("upload", msg, LOG_LEVEL_INFO);
+    nxweb_response_printf(resp, ""
+	    "<form method='post' enctype='multipart/form-data'>\n"
+	    "File to upload: "
+	    "<input type='file' multiple name='uploadedfile' />\n"
+	    "<input type='submit' value='upload' />\n"
+	    "</form></body></html>\n");
+    return NXWEB_OK;
 }
 
 static void upload_request_data_finalize(

@@ -172,7 +172,6 @@ void aim_exit()
 
 ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
-    log_out("upload", "upload", LOG_LEVEL_INFO);
     AIManager *pm = &g_manager;
 
     int exist = 1;
@@ -269,8 +268,6 @@ err1:
 char * aim_download(const char *ns, const char *fname, const char *history)
 {
     AIManager *pm = &g_manager;
-    log_out("download", "download", LOG_LEVEL_INFO);
-    //AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL)
 	name_space = "default";
@@ -298,11 +295,11 @@ char * aim_download(const char *ns, const char *fname, const char *history)
 
     char *record = m_get_history(line, order);
     if (record == NULL)
-	return NULL;
+	goto err2;
 
     AIZone *pz = m_choose_zone(record + ADFS_UUID_LEN);
     if (pz == NULL)
-	goto err1;
+	goto err3;
 
     char *pos_zone = strstr(record, pz->name);
     char *pos_sharp = strstr(pos_zone, "#");
@@ -318,15 +315,17 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     free(record);
     kcfree(line);
     return url;
-err1:
+err3:
     free(record);
+err2:
+    free(url);
+err1:
     kcfree(line);
     return NULL;
 }
 
 ADFS_RESULT aim_delete(const char *ns, const char *fname)
 {
-    log_out("delete", "delete", LOG_LEVEL_INFO);
     AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL)
@@ -629,8 +628,7 @@ static AIZone * m_choose_zone(const char *record)
 static AINameSpace * m_get_ns(const char *ns)
 {
     AINameSpace *pns = g_manager.ns_head;
-    while (pns)
-    {
+    while (pns) {
 	if (strcmp(pns->name, ns) == 0)
 	    return pns;
 	pns = pns->next;
@@ -725,29 +723,27 @@ static char * m_get_history(const char *line, int order)
 {
     int len = strlen(line);
     char *record;
-    int count = 0;
-    int pos=-1, pos1=len-1, pos2=-1;
-    int size;
-    for (pos=len-1; pos>=0; --pos) {
-	if (line[pos] == '$') {
+    int count = 0, size;
+    int pos_cur=len-1, pos_tail=len-1, pos_head=0;
+
+    for (pos_cur=len-1; pos_cur>=0; --pos_cur) {
+	if (line[pos_cur] == '$') {
 	    ++count;
 	    if (count == order)
-		pos1 = pos-1;
+		pos_tail = pos_cur-1;
 	    if (count == order+1)
-		pos2 = pos+1;
+		pos_head = pos_cur+1;
 	}
     }
     if (count < order)
 	return NULL;
-    else if (count == order)
-	pos2 = 0;
 
-    size = pos1 - pos2 + 1;
+    size = pos_tail - pos_head + 1;
     record = malloc(size+1);
     if (record == NULL)
 	return NULL;
-    memset(record, 0, size);
-    strncpy(record, &(line[pos2]), size);
+    memset(record, 0, size+1);
+    strncpy(record, &(line[pos_head]), size);
 
     return record;
 }
