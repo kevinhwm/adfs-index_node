@@ -1,48 +1,38 @@
+#############################################
 # huangtao@antiy.com
 #############################################
 
 CC = gcc
-CFLAGS = -c -std=c99 -Wall 
+CFLAGS = -std=c99 -Wall
 INCLUDE = -I../include
 LIBS = -lnxweb -lkyotocabinet -lrt
-
 TARGET = nodeserver
-OBJS = multipart_parser.o an_manager.o an_namespace.o an_function.o if_upload.o if_download.o nodeserver.o
-#if_delete.o if_status.o 
+OBJS = if_upload.o if_download.o if_remove.o if_status.o \
+       an_namespace.o an_manager.o \
+       conf.o log.o function.o multipart_parser.o nodeserver.o
 
 
-all:$(OBJS)
-	$(CC) -std=c99 -Wall -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS) -static-libgcc 
+release:$(OBJS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
 
-nodeserver.o:nodeserver.c
-multipart_parser.o:multipart_parser.c
-an_manager.o:an_manager.c
-an_namespace.o:an_namespace.c
-an_function.o:an_function.c
-if_upload.o:if_upload.c
-if_download.o:if_download.c
-#if_delete.o:if_delete.c
-#if_status.o:if_status.c
-
-
-#nodeserver.o:nodeserver.c
-#	$(CC) $(CFLAGS) -o nodeserver.o nodeserver.c -static-libgcc
-#multipart_parser.o:multipart_parser.c
-#	$(CC) $(CFLAGS) -o multipart_parser.o multipart_parser.c -static-libgcc
-#an_manager.o:an_manager.c
-#	$(CC) $(CFLAGS) -o an_manager.o an_manager.c -static-libgcc
-#an_namespace.o:an_namespace.c
-#	$(CC) $(CFLAGS) -o an_namespace.o an_namespace.c -static-libgcc
-#an_function.o:an_function.c
-#	$(CC) $(CFLAGS) -o an_function.o an_function.c -static-libgcc
-#if_upload.o:if_upload.c
-#	$(CC) $(CFLAGS) -o if_upload.o if_upload.c -static-libgcc
-#if_download.o:if_download.c
-#	$(CC) $(CFLAGS) -o if_download.o if_download.c -static-libgcc
+debug:
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_upload.o if_upload.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_download.o if_download.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_remove.o if_remove.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_status.o if_status.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_manager.o an_manager.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_namespace.o an_namespace.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o conf.o conf.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o log.o log.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o function.o function.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c
+	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
 
 .PHONY:clean
 clean:
 	rm -rf $(OBJS) $(TARGET)
+
 

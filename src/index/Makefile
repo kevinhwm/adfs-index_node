@@ -1,30 +1,35 @@
+#############################################
 # huangtao@antiy.com
-#
 #############################################
 
 CC = gcc
-CFLAGS = -std=c99 -Wall -Wl,-rpath=./
-LIBS = -lnxweb -lkyotocabinet -lrt
-
+CFLAGS = -std=c99 -Wall
+LIBS = -lnxweb -lkyotocabinet -lrt -lcurl -pthread
 TARGET = indexserver
-OBJS = indexserver.o an_manager.o an_namespace.o multipart_parser.o if_upload.o if_download.o 
-#if_delete.o if_status.o 
+OBJS = if_upload.o if_download.o if_delete.o if_status.o \
+       ai_record.o ai_zone.o ai_connect.o ai_stat.o ai_manager.o \
+       conf.o log.o function.o multipart_parser.o indexserver.o
 
 
-all:$(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+release:$(OBJS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
-
-
-indexserver.o:indexserver.c
-an_manager.o:an_manager.c
-an_namespace.o:an_namespace.c
-multipart_parser.o:multipart_parser.c
-if_upload.o:if_upload.c
-if_download.o:if_download.c
-#if_delete.o:if_delete.c
-#if_status.o:if_status.c
-
+debug:
+	$(CC) $(CFLAGS) -DDEBUG -c -o if_upload.o if_upload.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o if_download.o if_download.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o if_delete.o if_delete.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o if_status.o if_status.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_record.o ai_record.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_zone.o ai_zone.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_connect.o ai_connect.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_stat.o ai_stat.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_manager.o ai_manager.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o conf.o conf.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o log.o log.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o function.o function.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o multipart_parser.o multipart_parser.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
+	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
 
 .PHONY:clean

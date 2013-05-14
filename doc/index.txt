@@ -1,64 +1,90 @@
-index node 详细设计文档
+ADFS - Index
 
-一 概述：
-1. index-node存储系统,逻辑上分为三个组成部分：index，node，sql-db。
-2. index只有一份实例，node有一份或多份实例。index与node之间为一对多关系，即任一index对应一个或多个node，任一node只隶属与一个index。
-3. index存储样本列表，node存储实际样本文件。
-4. node中以一个常数来分割实体存储文件
+一 概述
+Index作为ADFS的一个组成部分，起到接受用户请求、负载均衡、监控系统状态等作用。
 
-二 组成：
-1. index。
-	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
-2. node。
-	（1）kyotocabinet 数据库。（2）nxweb HTTP服务器。
-3. sql-db。
-	（1）PostgreSQL 数据库。
+1.1 环境
+1.1.1 操作系统
+开发系统为Fedora 18 x86_64环境。
+测试系统为CentOS 6.3 x86_64环境。
 
+1.1.2 依赖项
+1.1.2.1 开发依赖项
+(a) gcc
+(b) make
+(c) libcurl-devel
+(d) kyotocabinet-1.2.76
+(e) nxweb-3.1.0 修改版
+(f) zlib-devel (kyotocabinet需要)
 
-三 处理流程
+1.1.2.2 运行依赖项
+(a) kyotocabinet-1.2.76
+(b) nxweb-3.1.0 修改版
+(c) libcurl
+(d) zlib
 
-（一）主启动进程
-1. 启动程序，设置参数
-	"-l <ip_addr>  interface to listen on, default is 0.0.0.0\n"
-	"-p <num>      TCP port number to listen on (default: 1218)\n"
-	"-m            max upload file buffer, default is 10m, input is mb base\n"
-	"-u [pidfile]  pidfile if needed.\n"
-	"-c            conf file\n"
-	"-d            run as a daemon.\n"
-	"-v            print version\n\n\n"
-	"-h            print this help and exit\n";
-2. 设置若干信号的响应函数
-	SIGINT, SIGKILL（无效）, SIGQUIT, SIGHUP, SIGTERM
-3. 根据 -d 参数，确定是否创建后台进程。fork实现。
-4. 根据 -u 参数，确定是否创建 pid 文件。
-5. 启动 http 服务器。
+1.2 组成及结构
+1.2.1 安装后的文件
+(a) indexserver。主文件，二进制可执行文件。
+(b) indexserver.conf。本地配置文件，文本文件。
+(c) libkyotocabinet.so.16。kyotocabinet的动态链接库文件。
+(d) libnxweb.so.0。nxweb的动态链接库文件。
+说明：以上文件在同一目录下。
 
-（二）http接口函数
-1. "upload"		cb_UploadFile
-（1）查找是否设置 overwirte 参数。
-（2）判断文件大小是否超过上限，如果超过则【return】。
-略：判断 http_header : checksum。
-（3）计算收到文件的MD5，并与文件名比较。
-	不同：【return】
-（4）查询是否有可用node
-	没有：【return】
-（5）没有设置 overwrite 参数，且当前样本已存在，【return】
-（6）设置 overwrite 参数，且当前样本已存在。随机选择node，存入样本
-（7）样本不存在，则保存到node。
+1.2.2 运行时文件
+index.kch
 
-2. "uploadkey"	cb_UploadData
-3. "download"	cb_Download
-11. "delete"	cb_DeleteKey
+1.2.2.1 index.kch
+1.2.2.1.1 格式
+key: filename
+value: uuid1#zone1#node1|uuid2#zone2#node1|uuid3#zone3#node2|...
 
-4. "status"		cb_Status
-5. "config"		cb_Config
-6. "manage"		cb_Manage
-7. "retnNode"	cb_Retnnode
-8. "retn"		cb_RetnIndex
-9. "monitor"	cb_Monitor
-10. "view"		cb_ViewConfig
-12. "history"	cb_History
-13. "gethistory"	cb_GetHistory
-14. "exists"	cb_Exists
-15. ""		cb_Index
+1.2.2.1.2 说明
+(a) “filename”：文件名。合法的文件名可以包含大小写字母，数字，“.”，除首尾字符外可以包含“/”。
+(b) “#”：不同元素之间的分隔符，属于内部关键字。在表达含义上优先与“|”。
+(c) “|”：相同元素之间的分隔符。属于内部关键字。在解析顺序上优先于“#”。
+(d) “uuid”：唯一标识符。标识一个样本的历史唯一性，同时在内部作为索引的一部分。由当前时间和随机数构成，格式为“YYYYmmddHHMMSSuuuuuurrrr”，共24个数字。
+(e) “zone”：组织Node的基本单位，任意个Node组成一个zone。不同的zone之间所存储的文件完全相同，但是Node数量和结构可以不同。详见Node相关文档。
+(f) “node”：Node的标识符。格式为“ip:port”形式，其为有效的ip和端口数据。
+(g) “...”：省略号。表示uuid可以有多个，理论上没有数量限制。最后一个“|”后的样本为当前“存在”样本，且是默认可下载样本。
+
+1.3 名词
+Index：
+Node：
+Zone(域)：
+Namespace(命名空间)：最多允许100个。
+
+1.4 源代码结构
+ai.h
+node.h
+node.c
+zone.h
+zone.c
+manager.c
+indexserver.c
+
+二 程序流程
+2.1 启动
+1- 检查数据库目录是否存在，如果不存在则返回失败。
+检查配置文件是否存在
+读取相关配置项，并检查值是否在合法范围内
+初始化
+
+2.2 说明
+(a) "1-": 系统不新建目录，因为无法确定这个路径的输入是有意还是无意的。如果是无意的失误，将丢失已经存在的数据信息。
+
+2.2接口
+2.2.1 上传 - upload
+(a) 检验url并从中解析出filename、namespace和overwrite。如有不合法的地方返回失败。
+(b) 如果没有指定namespace，则namespace为默认值“default”。
+(c) 如果记录为空，且没有指定覆盖参数，则返回OK。
+(d) 在每个zone中选择一个node，并上传样本。
+(e)* 如果有node上传失败，记录到单独的错误库中。
+(f) 生成记录合并进数据库。
+
+* 数据一致性暂未解决。
+
+2.2.2 下载 - download
+
+2.2.3 删除 - delete
 
