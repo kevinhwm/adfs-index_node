@@ -59,10 +59,13 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 	    return 0;
 	}
     }
-
     pfname += 10;
+
     char *pfname_end = strstr( pfname+1, "\"" );
-    strncpy( pufo->filename, pfname, pfname_end - pfname );
+    if (pfname_end == NULL)
+	memset(pufo->filename, 0, sizeof(pufo->filename));
+    else
+	strncpy(pufo->filename, pfname, pfname_end - pfname);
     pufo->file_ready_to_receive = 1;
     return 0;
 }
@@ -70,17 +73,17 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length )
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->filename_ready_to_receive == 1 ) {
-	strncpy( pufo->filename, at, length );
+    if (pufo->filename_ready_to_receive == 1) {
+	strncpy(pufo->filename, at, length);
 	pufo->filename_ready_to_receive = 0;
 	pufo->file_ready_to_receive = 1;
 	return 0;
     }
-    if ( pufo->file_ready_to_receive ) {
-	if ( pufo->ffilemem == NULL ) 
+    if (pufo->file_ready_to_receive) {
+	if (pufo->ffilemem == NULL)
 	    return 0;
-	if ( pufo->ffilemem )
-	    fwrite( at, 1, length, pufo->ffilemem);
+	if (pufo->ffilemem)
+	    fwrite(at, 1, length, pufo->ffilemem);
     }
     return 0;
 }
@@ -111,8 +114,8 @@ static nxweb_result upload_on_request(
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
-    //nxweb_set_response_content_type(resp, "text/html");
-    //nxweb_set_response_charset(resp, "utf-8");
+    nxweb_set_response_content_type(resp, "text/html");
+    nxweb_set_response_charset(resp, "utf-8");
     nxweb_parse_request_parameters(req, 0);
     const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
     const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
@@ -221,10 +224,13 @@ static nxweb_result upload_on_post_data(
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
-    if (req->content_length > g_MaxFileSize)
+
+    if (req->content_length > g_MaxFileSize) {
 	ufo->fpostmem = fopen("/dev/null", "wb");
-    else
+    }
+    else {
 	ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
+    }
     nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxFileSize);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);

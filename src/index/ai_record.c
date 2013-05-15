@@ -38,7 +38,7 @@ void r_create_uuid(AIRecord *_this)
     lt = localtime(&t);
     gettimeofday(&tv, NULL);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", lt);
-    snprintf(_this->uuid, sizeof(_this->uuid), "%s%06ld%04d", buf, tv.tv_usec, rand()%10000);
+    snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
 }
 
 ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
