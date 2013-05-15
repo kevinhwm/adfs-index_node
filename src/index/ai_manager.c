@@ -36,6 +36,7 @@ AIManager g_manager;
 unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_erase_mode = 0;
+int g_another_running = 0;
 
 ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
 {
@@ -58,13 +59,12 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     if (access(f_flag, F_OK) != -1) {
 	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
 	log_out("manager", msg, LOG_LEVEL_FATAL);
+	g_another_running = 1;
 	return ADFS_ERROR;
     }
     else {
 	time_t t = time(NULL);
-	struct tm * lt;
-	lt = localtime(&t);
-
+	struct tm * lt = localtime(&t);
 	FILE *f = fopen(f_flag, "wb+");
 	fprintf(f, "%s", asctime(lt));
 	fclose(f);
@@ -72,8 +72,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
 
-    DBG_PRINTSN("40");
-    strncpy(pm->db_path, path, sizeof(pm->db_path));
+    strncpy(pm->path, path, sizeof(pm->path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
@@ -167,26 +166,31 @@ void aim_exit()
 
     log_release();
     curl_global_cleanup();
-    remove("./adfs.flag");
+
+    if (!g_another_running) {
+	char f_flag[1024] = {0};
+	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->path);
+	remove(f_flag);
+    }
 }
 
-ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len)
+ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
     AIManager *pm = &g_manager;
 
     int exist = 1;
     char *old_list = NULL;
     size_t old_list_len;
-    AINameSpace *pns = NULL;
-    if (name_space)
-	pns = m_get_ns(name_space);
-    else
-	pns = m_get_ns("default");
+    const char *name_space = ns;
+    if (name_space == NULL)
+	name_space = "default";
 
+    AINameSpace *pns = NULL;
+    pns = m_get_ns(name_space);
     if (pns == NULL) 
 	return ADFS_ERROR;
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
-    if (old_list == NULL || old_list[old_list_len-1] == '|')
+    if (old_list == NULL || old_list[old_list_len-1] == '$')
         exist = 0;
     if (exist && !overwrite)		// exist and not overwrite
 	goto ok1;
@@ -200,10 +204,7 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
     while (pz) {
 	AINode * pn = pz->rand_choose(pz);
 	char url[ADFS_MAX_PATH] = {0};
-	if (name_space)
-	    snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	else
-	    snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
+	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 
 	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
 	    printf("upload error: %s\n", url);
@@ -218,16 +219,21 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
     if (record == NULL)
 	goto err1;
 
+    DBG_PRINTSN(record);
     if (old_list == NULL) {
 	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
     else {
-	long len = old_list_len + strlen(record) + 2;
+	long len = strlen(record) + 2;
 	char *new_list = malloc(len);
 	if (new_list == NULL) 
 	    goto err2;
-	snprintf(new_list, len, "%s$%s", old_list, record);
-	kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
+	if (exist)
+	    snprintf(new_list, len, "$%s", record);
+	else
+	    snprintf(new_list, len, "%s", record);
+	// kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
+	kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	free(new_list);
     }
     pm->s_upload.inc(&(pm->s_upload));
@@ -237,7 +243,6 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
 ok1:
     kcfree(old_list);
     return ADFS_OK;
-
 rollback:
     pp = air.head;
     while (pp) {
@@ -246,10 +251,10 @@ rollback:
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
 	    if (name_space)
-		snprintf(url, sizeof(url), "http://%s/remove/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
+		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 	    else
-		snprintf(url, sizeof(url), "http://%s/remove/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
-	    aic_remove(pn, url);		// do not care about success or failure.
+		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
+	    aic_erase(pn, url);		// do not care about success or failure.
 	}
 	pp = pp->next;
     }
@@ -685,7 +690,6 @@ static AIZone * m_create_zone(const char *name, int weight)
 static ADFS_RESULT m_create_ns(const char *name)
 {
     AIManager * pm = &g_manager;
-
     AINameSpace *pns = pm->ns_head;
     while (pns) {
     	if (strcmp(pns->name, name) == 0)
@@ -701,7 +705,7 @@ static ADFS_RESULT m_create_ns(const char *name)
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_PATH] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-            pm->db_path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+            pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     DBG_PRINTSN(indexdb_path);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) 
@@ -769,7 +773,10 @@ static ADFS_RESULT e_traverse(AINameSpace *pns)
     kccurjump(cur);
     while ((kbuf = kccurget(cur, &ksiz, &cvbuf, &vsiz, 0)) != NULL) {
 	const char *hold = e_parse(pns->name, kbuf, cvbuf);
-	kccursetvalue(cur, hold, strlen(hold), 1);
+	if (strlen(hold) > 0)
+	    kccursetvalue(cur, hold, strlen(hold), 1);
+	else
+	    kccurremove(cur);
 	kcfree(kbuf);
     }
     kccurdel(cur);
@@ -794,6 +801,7 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
     char *r = malloc(len+1);
     if (r == NULL)
 	return ADFS_ERROR;
+    memset(r, 0, len+1);
     strncpy(r, record, len);
 
     char *rest = r;
@@ -810,11 +818,14 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
-	    if (ns)
-		snprintf(url, sizeof(url), "http://%s/remove/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, r, ns);
-	    else
-		snprintf(url, sizeof(url), "http://%s/remove/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r);
-	    aic_remove(pn, url);		// do not care about success or failure.
+	    if (ns) {
+		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", 
+			pn->ip_port, fname, ADFS_UUID_LEN, r, ns);
+	    }
+	    else {
+		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r);
+	    }
+	    aic_erase(pn, url);		// do not care about success or failure.
 	}
     }
 

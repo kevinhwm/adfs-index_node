@@ -31,13 +31,18 @@ static nxweb_result delete_on_request(
         return NXWEB_ERROR;
     }
 
+    char msg[1024] = {0};
     if (aim_delete(name_space, fname) == ADFS_ERROR) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
 	resp->keep_alive = 0;
+	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);
+	log_out("delete", msg, LOG_LEVEL_INFO);
         return NXWEB_ERROR;
     }
     else {
         nxweb_response_printf(resp, "OK.\n");
+	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
+	log_out("delete", msg, LOG_LEVEL_INFO);
         return NXWEB_OK;
     }
 }

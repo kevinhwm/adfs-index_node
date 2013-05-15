@@ -8,28 +8,6 @@
 #include <string.h>
 #include "ai_manager.h"
 
-/*
-static const char download_handler_key;
-#define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)
-
-struct SHARE_DATA {
-    char *p;
-};
-
-static void download_request_data_finalize(
-	nxweb_http_server_connection* conn, 
-	nxweb_http_request* req, 
-	nxweb_http_response* resp, 
-	nxe_data data) 
-{
-    struct SHARE_DATA * tmp = data.ptr;
-    if (tmp && tmp->p) {
-	free(tmp->p);
-	tmp->p = NULL;
-    }
-}
-*/
-
 static nxweb_result download_on_request(
 	nxweb_http_server_connection* conn, 
 	nxweb_http_request* req, 
@@ -59,17 +37,19 @@ static nxweb_result download_on_request(
 	return ADFS_ERROR;
     }
 
-    //struct SHARE_DATA *tmp = nxb_alloc_obj(req->nxb, sizeof(struct SHARE_DATA));
-    //nxweb_set_request_data(req, DOWNLOAD_HANDLER_KEY, (nxe_data)(void*)tmp, download_request_data_finalize);
+    char msg[1024] = {0};
     char *redirect_url = aim_download(name_space, fname, history);
-    //tmp->p = redirect_url;
     if (redirect_url == NULL) {
 	nxweb_send_http_error(resp, 404, "Failed. No file");
 	resp->keep_alive = 0;
+	snprintf(msg, sizeof(msg), "[%s:%s:%s]->no file.[%s]", name_space, fname, history, conn->remote_addr);
+	log_out("download", msg, LOG_LEVEL_INFO);
 	return ADFS_ERROR;
     }
     else {
 	nxweb_send_redirect(resp, 303, redirect_url, conn->secure);
+	snprintf(msg, sizeof(msg), "[%s:%s:%s-%s]->ok.[%s]", name_space, fname, history, redirect_url, conn->remote_addr);
+	log_out("download", msg, LOG_LEVEL_INFO);
 	free(redirect_url);
 	return NXWEB_OK;
     }

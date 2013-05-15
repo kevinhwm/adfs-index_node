@@ -12,12 +12,12 @@
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
-extern nxweb_handler remove_handler;
+extern nxweb_handler erase_handler;
 extern nxweb_handler status_handler;
 
 NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
-NXWEB_SET_HANDLER(remove, "/remove", &remove_handler, .priority=1000); 
+NXWEB_SET_HANDLER(erase, "/erase", &erase_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 
 // Command-line options:
@@ -77,7 +77,8 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char* work_dir="./";
-    const char* pid_file="nodeserver.pid";
+    const char* db_path="./";
+    const char* pid_file="adfs.pid";
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
@@ -128,8 +129,8 @@ int main(int argc, char** argv)
 		}
 		break;
 	    case 'x':
-		work_dir=optarg;
-		if (strlen(work_dir) > ADFS_FILENAME_LEN) {
+		db_path=optarg;
+		if (strlen(db_path) > ADFS_FILENAME_LEN) {
 		    printf("path is too long\n");
 		    return 0;
 		}
@@ -150,15 +151,17 @@ int main(int argc, char** argv)
     }
     /////////////////////////////////////////////////////////////////////////////////
     fprintf(stdout, "ADFS Node start...\n");
-    if (anm_init(conf_file, work_dir, mem_size) == ADFS_ERROR) {
+    if (anm_init(conf_file, db_path, mem_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Node exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Node exit. Init error.\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise the information on the screen.\n");
-	anm_exit();
+	anm_exit();  
 	return EXIT_FAILURE;
     }
     log_out("main", "ADFS Node running...", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Node running...\n");
+    // nxweb_run_xxx will call "chdir", but it has been changed in "anm_init".
+    //work_dir = "./";
     /////////////////////////////////////////////////////////////////////////////////
     if (daemon) 
 	nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);

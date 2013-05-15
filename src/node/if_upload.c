@@ -151,15 +151,15 @@ static nxweb_result upload_on_request(
 
     char msg[1024] = {0};
     if (res < 0) {
-	snprintf(msg, sizeof(msg), "[%s]->error.[%s]", fname, conn->remote_addr);
+	snprintf(msg, sizeof(msg), "[%s:%s]->error.[%s]", name_space, fname, conn->remote_addr);
 	log_out("upload", msg, LOG_LEVEL_INFO);
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
     else if (res > 0) 
-	snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr);
+	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
     else
-	snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr);
+	snprintf(msg, sizeof(msg), "[%s:%s]->request.[%s]", name_space, fname, conn->remote_addr);
 
     log_out("upload", msg, LOG_LEVEL_INFO);
     nxweb_response_printf(resp, ""

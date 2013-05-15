@@ -24,52 +24,55 @@ static ADFS_RESULT m_init_log(const char *conf_file);
 
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
+int g_another_running = 0;
 
 ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     char msg[1024] = {0};
+
     ANManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
-    strncpy(pm->path, path, sizeof(pm->path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
+    strncpy(pm->path, path, sizeof(pm->path));
 
     DIR *dirp;
     struct dirent *ent;
-    if( (dirp = opendir(path)) == NULL ) 
+    if( (dirp = opendir(path)) == NULL ) {
+	snprintf(msg, sizeof(msg), "[%s]->path error", path);
+	log_out("manager", msg, LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
-
+    }
     while ((ent = readdir(dirp)) != NULL) {
-	if (ent->d_type == 4 && ent->d_name[0] != '.') {
-	    DBG_PRINTSN(ent->d_name);
+	if (ent->d_type == 4 && ent->d_name[0] != '.')
 	    m_create_ns(ent->d_name);
-	}
     }
     closedir(dirp);
+
     char f_flag[1024] = {0};
     snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
     if (access(f_flag, F_OK) != -1) {
 	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
-	log_out("manager", msg, LOG_LEVEL_FATAL);
+	log_out("manager", msg, LOG_LEVEL_SYSTEM);
+	g_another_running = 1;
 	return ADFS_ERROR;
     }
     else {
 	time_t t = time(NULL);
 	struct tm *lt = localtime(&t);
-
 	FILE *f = fopen(f_flag, "wb+");
 	fprintf(f, "%s", asctime(lt));
 	fclose(f);
     }
+
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
 
     // init log
     if (m_init_log(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
-
     return ADFS_OK;
 }
 
@@ -86,7 +89,12 @@ void anm_exit()
 	free(tmp);
     }
     log_release();
-    remove("./adfs.flag");
+
+    if (!g_another_running) {
+	char f_flag[1024] = {0};
+	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->path);
+	remove(f_flag);
+    }
 }
 
 ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
@@ -147,7 +155,7 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     kcfree(id);
 }
 
-ADFS_RESULT anm_remove(const char *ns, const char *fname)
+ADFS_RESULT anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
@@ -175,10 +183,8 @@ static ANNameSpace * m_create_ns(const char *name_space)
 	return NULL;
 
     char ns_path[ADFS_MAX_PATH] = {0};
-    //snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
-    snprintf(ns_path, sizeof(ns_path), "%s", name_space);
+    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
     int node_num = m_count_kch(ns_path);
-    // index db of ADFS-Node
     char indexdb_path[ADFS_MAX_PATH] = {0};
     if (snprintf(indexdb_path, sizeof(indexdb_path), "%s/index.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
 		ns_path, pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz) >= sizeof(indexdb_path))
@@ -200,8 +206,8 @@ static ANNameSpace * m_create_ns(const char *name_space)
     for (int i=1; i <= node_num; i++)
     {
 	memset(tmp_path, 0, sizeof(tmp_path));
-	if (snprintf(tmp_path, sizeof(tmp_path), "%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-		    ns_path, i, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(tmp_path))
+	if (snprintf(tmp_path, sizeof(tmp_path), "%s/%s/%d.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+		    pm->path, name_space, i, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(tmp_path))
 	{
 	    return NULL;
 	}
@@ -237,8 +243,8 @@ static ADFS_RESULT split_db(ANNameSpace * pns)
 	return ADFS_ERROR;
 
     char path[ADFS_MAX_PATH] = {0};
-    if (snprintf(path, sizeof(path), "%s/%lu.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-		pm->path, pns->number, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(path))
+    if (snprintf(path, sizeof(path), "%s/%s/%lu.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+		pm->path, pns->name, pns->number, pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz) >= sizeof(path))
     {
 	return ADFS_ERROR;
     }

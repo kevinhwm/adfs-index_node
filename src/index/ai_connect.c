@@ -18,7 +18,7 @@ enum FLAG_CONNECTION
 };
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
-static ADFS_RESULT c_remove(CURL *curl, const char *url);
+static ADFS_RESULT c_erase(CURL *curl, const char *url);
 static ADFS_RESULT c_status(CURL *curl, const char *url);
 static void c_reconnect(AINode *pn, int pos, int flag);
 
@@ -50,7 +50,7 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     return res;
 }
 
-ADFS_RESULT aic_remove(AINode *pn, const char *url)
+ADFS_RESULT aic_erase(AINode *pn, const char *url)
 {
     ADFS_RESULT res = ADFS_ERROR;
     if (pn == NULL)
@@ -62,7 +62,7 @@ ADFS_RESULT aic_remove(AINode *pn, const char *url)
         {
 	    if (pn->flag[i] != 0 && pn->flag[i] != FLAG_REMOVE)
 		c_reconnect(pn, i, FLAG_REMOVE);
-            res = c_remove(pn->curl[i], url);
+            res = c_erase(pn->curl[i], url);
             pthread_mutex_unlock(pn->curl_mutex + i);
             return res;
         }
@@ -72,7 +72,7 @@ ADFS_RESULT aic_remove(AINode *pn, const char *url)
     pthread_mutex_lock(pmutex);
     if (pn->flag[ADFS_NODE_CURL_NUM-1] != 0 && pn->flag[ADFS_NODE_CURL_NUM-1] != FLAG_REMOVE)
 	c_reconnect(pn, ADFS_NODE_CURL_NUM-1, FLAG_REMOVE);
-    res = c_remove(pn->curl[ADFS_NODE_CURL_NUM -1], url);
+    res = c_erase(pn->curl[ADFS_NODE_CURL_NUM -1], url);
     pthread_mutex_unlock(pmutex);
     return res;
 }
@@ -148,7 +148,7 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     return adfs_res;
 }
 
-static ADFS_RESULT c_remove(CURL *curl, const char *url)
+static ADFS_RESULT c_erase(CURL *curl, const char *url)
 {
     if (curl == NULL)
         return ADFS_ERROR;

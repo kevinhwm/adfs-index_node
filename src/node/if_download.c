@@ -47,11 +47,14 @@ static nxweb_result download_on_request(
 	return NXWEB_ERROR;
     }
 
+    char msg[1024] = {0};
     void *pfile_data = NULL;
     size_t file_size = 0;
     anm_get(name_space, fname, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL || file_size == 0) {
 	nxweb_send_http_error(resp, 404, "Failed. No file.");
+	snprintf(msg, sizeof(msg), "[%s:%s]->error.[%s]", name_space, fname, conn->remote_addr);
+	log_out("download", msg, LOG_LEVEL_INFO);
 	return NXWEB_ERROR;
     }
     else {
@@ -67,6 +70,8 @@ static nxweb_result download_on_request(
 	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-ADFS_UUID_LEN), file_name);
 	nxweb_add_response_header(resp, "Content-disposition", resp_name );
 	nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
+	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
+	log_out("download", msg, LOG_LEVEL_INFO);
     }
     return NXWEB_OK;
 }
