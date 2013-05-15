@@ -60,7 +60,10 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 
     pfname += 10;
     char *pfname_end = strstr( pfname+1, "\"" );
-    strncpy( pufo->filename, pfname, pfname_end - pfname );
+    if (pfname_end == NULL)
+	memset(pufo->filename, 0, sizeof(pufo->filename));
+    else
+	strncpy( pufo->filename, pfname, pfname_end - pfname );
     pufo->file_ready_to_receive = 1;
     return 0;
 }
