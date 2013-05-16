@@ -77,19 +77,15 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
-    DBG_PRINTSN("50");
     // init log
     if (m_init_log(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
-    DBG_PRINTSN("60");
     // init statistics
     if (m_init_stat(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
-    DBG_PRINTSN("70");
     // init namespace
     if (m_init_ns(conf_file) == ADFS_ERROR)
 	return ADFS_ERROR;
-    DBG_PRINTSN("80");
     // init zone
     if (m_init_zone(conf_file) == ADFS_ERROR)
         return ADFS_ERROR;
@@ -97,7 +93,6 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
 
-    DBG_PRINTSN("100");
     // work mode 
     char value[ADFS_FILENAME_LEN] = {0};
     if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR) {
@@ -219,7 +214,6 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
     if (record == NULL)
 	goto err1;
 
-    DBG_PRINTSN(record);
     if (old_list == NULL) {
 	kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));
     }
@@ -232,17 +226,16 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	    snprintf(new_list, len, "$%s", record);
 	else
 	    snprintf(new_list, len, "%s", record);
-	// kcdbset(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	free(new_list);
     }
     pm->s_upload.inc(&(pm->s_upload));
-
     free(record);
     air.release(&air);
 ok1:
     kcfree(old_list);
     return ADFS_OK;
+
 rollback:
     pp = air.head;
     while (pp) {
@@ -250,10 +243,7 @@ rollback:
 	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
-	    if (name_space)
-		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	    else
-		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid);
+	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 	    aic_erase(pn, url);		// do not care about success or failure.
 	}
 	pp = pp->next;
@@ -365,7 +355,7 @@ err1:
 
 char * aim_status()
 {
-    int size = 8192;
+    int size = 1024 * 32;
     char *p = malloc(size);
     if (p == NULL)
 	return NULL;
@@ -696,21 +686,17 @@ static ADFS_RESULT m_create_ns(const char *name)
 	    return ADFS_ERROR;
 	pns = pns->next;
     }
-    DBG_PRINTSN("m_create_ns 10");
     pns = malloc(sizeof(AINameSpace));
     if (pns == NULL) 
 	return ADFS_ERROR;
 
-    DBG_PRINTSN("m_create_ns 20");
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_PATH] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-    DBG_PRINTSN(indexdb_path);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) 
         return ADFS_ERROR;
-    DBG_PRINTSN("m_create_ns 30");
 
     pns->pre = pm->ns_tail;
     pns->next = NULL;
@@ -798,6 +784,7 @@ static const char * e_parse(const char *ns, const char *fname, const char *recor
 
 static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *record, int len)
 {
+    ADFS_RESULT res = ADFS_OK;
     char *r = malloc(len+1);
     if (r == NULL)
 	return ADFS_ERROR;
@@ -805,7 +792,7 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
     strncpy(r, record, len);
 
     char *rest = r;
-    while (rest) {
+    while (rest && res == ADFS_OK) {
 	AINode *pn = NULL;
 	char *pos_sharp = strstr(rest, "#");
 	char *pos_split = strstr(pos_sharp, "|");
@@ -825,11 +812,11 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 	    else {
 		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r);
 	    }
-	    aic_erase(pn, url);		// do not care about success or failure.
+	    res = aic_erase(pn, url);		// do not care about success or failure.
 	}
     }
 
     free(r);
-    return ADFS_OK;
+    return res;
 }
 

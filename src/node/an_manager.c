@@ -38,19 +38,13 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
     pm->kc_msiz = mem_size *1024*1024;
     strncpy(pm->path, path, sizeof(pm->path));
 
-    DIR *dirp;
-    struct dirent *ent;
-    if( (dirp = opendir(path)) == NULL ) {
+    DIR *dirp = opendir(path);
+    if( dirp == NULL ) {
 	snprintf(msg, sizeof(msg), "[%s]->path error", path);
 	log_out("manager", msg, LOG_LEVEL_ERROR);
-	return ADFS_ERROR;
-    }
-    while ((ent = readdir(dirp)) != NULL) {
-	if (ent->d_type == 4 && ent->d_name[0] != '.')
-	    m_create_ns(ent->d_name);
+        return ADFS_ERROR;
     }
     closedir(dirp);
-
     char f_flag[1024] = {0};
     snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
     if (access(f_flag, F_OK) != -1) {
@@ -66,6 +60,14 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
 	fprintf(f, "%s", asctime(lt));
 	fclose(f);
     }
+
+    struct dirent *ent;
+    dirp = opendir(path);
+    while ((ent = readdir(dirp)) != NULL) {
+	if (ent->d_type == 4 && ent->d_name[0] != '.')
+	    m_create_ns(ent->d_name);
+    }
+    closedir(dirp);
 
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
@@ -163,11 +165,11 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
 	name_space = "default";
     pns = m_get_ns(name_space);
     if (pns == NULL)
-	return ADFS_ERROR;
+	return ADFS_OK;
     size_t len = 0;
     char *id = kcdbseize(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL)
-	return ADFS_ERROR;
+	return ADFS_OK;
     NodeDB *pn = pns->get(pns, atoi(id));
     kcdbremove(pn->db, fname, strlen(fname));
     kcfree(id);

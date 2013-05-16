@@ -14,8 +14,7 @@ static AINode * z_rand_choose(AIZone *_this);
 
 ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
 {
-    if (_this)
-    {
+    if (_this) {
         memset(_this, 0, sizeof(AIZone));
         strncpy(_this->name, name, sizeof(_this->name));
         _this->weight = weight;
@@ -32,20 +31,16 @@ ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
 static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
 {
     AINode *pn = _this->head;
-    while (pn)
-    {
+    while (pn) {
         if (strcmp(pn->ip_port, ip_port) == 0)
             return ADFS_ERROR;
         pn = pn->next;
     }
-
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
     if (new_node == NULL)
         return ADFS_ERROR;
-
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
-    for (int i=0; i<ADFS_NODE_CURL_NUM; ++i)
-    {
+    for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         new_node->curl[i] = curl_easy_init();
         if (new_node->curl[i] == NULL)
             return ADFS_ERROR;
@@ -53,9 +48,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
         if ( pthread_mutex_init(new_node->curl_mutex+i, NULL) != 0)
             return ADFS_ERROR;
     }
-
     _this->num += 1;
-
     new_node->pre = _this->tail;
     new_node->next = NULL;
     if (_this->tail)
@@ -63,22 +56,18 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
     else
         _this->head = new_node;
     _this->tail = new_node;
-
     return ADFS_OK;
 }
 
 static void z_release_all(AIZone *_this)
 {
-    while (_this->tail)
-    {
+    while (_this->tail) {
         AINode *pn = _this->tail;
         _this->tail = _this->tail->pre;
 
-        for (int i=0; i<ADFS_NODE_CURL_NUM; ++i)
-        {
+        for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
             curl_easy_cleanup(pn->curl[i]);
             pn->curl[i]= NULL;
-
             pthread_mutex_destroy(pn->curl_mutex + i);
         }
         free(pn);

@@ -11,7 +11,7 @@
 #include <curl/curl.h>
 #include "adfs.h"
 
-#define ADFS_NODE_CURL_NUM  4
+#define ADFS_NODE_CURL_NUM  3
 
 
 typedef struct AINode
