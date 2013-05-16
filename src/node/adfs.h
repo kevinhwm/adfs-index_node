@@ -66,6 +66,8 @@ void log_out(const char *module, const char *info, LOG_LEVEL level);
 #define DBG_PRINTSN(x)
 #define DBG_PRINTI(x)
 #define DBG_PRINTIN(x)
+#define DBG_PRINTU(x)
+#define DBG_PRINTUN(x)
 #define DBG_PRINTP(x)
 #define DBG_PRINTPN(x)
 #endif // DEBUG
