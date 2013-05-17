@@ -39,14 +39,15 @@ static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
     if (new_node == NULL)
         return ADFS_ERROR;
+    memset(new_node, 0, sizeof(AINode));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         new_node->curl[i] = curl_easy_init();
         if (new_node->curl[i] == NULL)
             return ADFS_ERROR;
-
         if ( pthread_mutex_init(new_node->curl_mutex+i, NULL) != 0)
             return ADFS_ERROR;
+	new_node->flag[i] = 0;
     }
     _this->num += 1;
     new_node->pre = _this->tail;
