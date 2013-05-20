@@ -125,9 +125,6 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 
     CURLcode res = curl_easy_perform(curl);
-    DBG_PRINTPN(curl);
-    DBG_PRINTSN(url);
-    DBG_PRINTUN(res);
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);

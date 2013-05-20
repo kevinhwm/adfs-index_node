@@ -111,28 +111,23 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     if (pns == NULL)
 	return ADFS_ERROR;
 
-    DBG_PRINTSN("10");
     // check number and split db
-    NodeDB * node = pns->tail;
-    if (node->number >= NODE_MAX_FILE_NUM) {
+    if (pns->tail->number >= NODE_MAX_FILE_NUM) {
 	if (split_db(pns) == ADFS_ERROR)
 	    return ADFS_ERROR;
-	node = pns->tail;
     }
 
-    DBG_PRINTSN("20");
     // save into db
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len))
 	return ADFS_ERROR;
+    pns->tail->number += 1;
 
-    DBG_PRINTSN("30");
     // save into index
     char buf[16] = {0};
     sprintf(buf, "%d", pns->tail->id);
     if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf)))
 	return ADFS_ERROR;
 
-    DBG_PRINTSN("40");
     return ADFS_OK;
 }
 

@@ -25,6 +25,7 @@ static nxweb_result delete_on_request(
     nxweb_parse_request_parameters(req, 0);
     name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
     strncpy(fname, req->path_info, sizeof(fname));
+    nxweb_url_decode(fname, NULL);
     if (get_filename_from_url(fname) != 0) {
         nxweb_send_http_error(resp, 400, "Failed. File name is illegal.");
 	resp->keep_alive = 0;

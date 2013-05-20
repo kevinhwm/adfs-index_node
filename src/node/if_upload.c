@@ -125,6 +125,7 @@ static nxweb_result upload_on_request(
 
 	if ( strlen(ufo->filename) > 0 && ufo->file_complete ) {
 	    strncpy(fname, req->path_info, sizeof(fname));
+	    nxweb_url_decode(fname, NULL);
 	    if (get_filename_from_url(fname) == ADFS_ERROR) {
 		nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 		res = -1;

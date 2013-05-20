@@ -16,11 +16,14 @@ TODO:
 . 上传一个文件
 . 上传一个0大小文件
 . 上传一个超限的大文件
+. 上传一个超长文件名的大文件
 . 重复上传相同文件
-. 使用overwrite参数
-. 使用不同namespace
-. 混合使用namespace和overwrite参数
+
+. 使用overwrite参数，重复以上步骤
+. 使用不同namespace，重复以上步骤
+. 混合使用namespace和overwrite参数，重复以上步骤
 . 多次上传时对Node的随机选取表现
+. 检查Node存储超过100000个文件时是否分库
 
 三 download
 . 下载一个存在的文件

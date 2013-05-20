@@ -141,6 +141,7 @@ static nxweb_result upload_on_request(
 
 	if (strlen(ufo->filename) > 0 && ufo->file_complete) {
 	    strncpy(fname, req->path_info, sizeof(fname));
+	    nxweb_url_decode(fname, NULL);
 	    if (get_filename_from_url(fname) != 0) {
 		nxweb_send_http_error(resp, 403, "Failed. Check file name and namespace.");
 		res = -1;
@@ -225,7 +226,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (req->content_length > g_MaxFileSize) {
+    if (strlen(req->uri) >= ADFS_MAX_PATH || req->content_length > g_MaxFileSize) {
 	ufo->fpostmem = fopen("/dev/null", "wb");
     }
     else {

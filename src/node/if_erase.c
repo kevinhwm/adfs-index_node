@@ -21,6 +21,7 @@ static nxweb_result erase_on_request(
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
+    nxweb_url_decode(fname, NULL);
     if (get_filename_from_url(fname) == ADFS_ERROR) {
 	nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 	resp->keep_alive = 0;
