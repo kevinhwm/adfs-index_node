@@ -11,11 +11,11 @@
 #include <curl/curl.h>
 #include "adfs.h"
 
-#define ADFS_NODE_CURL_NUM  4
-
+#define ADFS_NODE_CURL_NUM  3
 
 typedef struct AINode
 {
+    char name[ADFS_NODENAME_LEN];
     char ip_port[ADFS_NODENAME_LEN];
     CURL *curl[ADFS_NODE_CURL_NUM];
     pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
@@ -37,11 +37,10 @@ typedef struct AIZone
     struct AIZone *pre;
     struct AIZone *next;
     // function
-    ADFS_RESULT (*create)(struct AIZone *, const char *);
+    ADFS_RESULT (*create)(struct AIZone *, const char *, const char *);
     void (*release_all)(struct AIZone *);
     AINode * (*rand_choose)(struct AIZone *);
 }AIZone;
-
 
 ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight);
 

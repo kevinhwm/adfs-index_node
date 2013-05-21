@@ -23,8 +23,7 @@ typedef struct AINameSpace
 
 typedef struct AIManager
 {
-    char db_path[ADFS_MAX_PATH];	// database file path
-    char flag_path[ADFS_MAX_PATH];
+    char path[ADFS_MAX_PATH];
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
@@ -52,7 +51,7 @@ char * aim_status();
 
 // connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
-ADFS_RESULT aic_remove(AINode *pn, const char *url);
+ADFS_RESULT aic_erase(AINode *pn, const char *url);
 ADFS_RESULT aic_status(AINode *pn, const char *url);
 
 #endif // __MANAGER_H__

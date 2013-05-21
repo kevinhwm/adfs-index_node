@@ -78,6 +78,7 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char *work_dir="./";
+    const char *db_path="./";
     const char *pid_file="indexserver.pid";
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -137,8 +138,8 @@ int main(int argc, char** argv)
                 }
 		break;
             case 'x':
-                work_dir = optarg;
-                if (strlen(work_dir) > ADFS_FILENAME_LEN) {
+                db_path = optarg;
+                if (strlen(db_path) > ADFS_FILENAME_LEN) {
                     fprintf(stderr, "path is too long\n");
                     return 0;
                 }
@@ -162,7 +163,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     fprintf(stdout, "ADFS Index start...\n");
-    if (aim_init(conf_file, work_dir, mem_size, max_file_size) == ADFS_ERROR) {
+    if (aim_init(conf_file, db_path, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Index exit. Init error\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");
@@ -178,8 +179,7 @@ int main(int argc, char** argv)
 	aim_exit();
 	return EXIT_SUCCESS;
     }
-    // nxweb_run_xxx will change work dir,
-    // but it has been changed in "aim_init".
+    // nxweb_run_xxx will call "chdir", but it has been changed in "aim_init".
     //work_dir = "./";
     /////////////////////////////////////////////////////////////////////////////////
 

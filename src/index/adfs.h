@@ -55,15 +55,19 @@ void log_out(const char *module, const char *info, LOG_LEVEL level);
 
 #define DBG_PRINTS(x)	printf("%s", x)
 #define DBG_PRINTSN(x)	printf("%s\n", x)
-#define DBG_PRINTI(x)	printf("%ld", x)
-#define DBG_PRINTIN(x)	printf("%ld\n", x)
-#define DBG_PRINTP(x)	printf("%lu", x)
-#define DBG_PRINTPN(x)	printf("%lu\n", x)
+#define DBG_PRINTI(x)	printf("%d", x)
+#define DBG_PRINTIN(x)	printf("%d\n", x)
+#define DBG_PRINTU(x)	printf("%lu", x)
+#define DBG_PRINTUN(x)	printf("%lu\n", x)
+#define DBG_PRINTP(x)	printf("%p", x)
+#define DBG_PRINTPN(x)	printf("%p\n", x)
 #else
 #define DBG_PRINTS(x)
 #define DBG_PRINTSN(x)
 #define DBG_PRINTI(x)
 #define DBG_PRINTIN(x)
+#define DBG_PRINTU(x)
+#define DBG_PRINTUN(x)
 #define DBG_PRINTP(x)
 #define DBG_PRINTPN(x)
 #endif // DEBUG

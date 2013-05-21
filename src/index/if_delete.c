@@ -25,19 +25,25 @@ static nxweb_result delete_on_request(
     nxweb_parse_request_parameters(req, 0);
     name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
     strncpy(fname, req->path_info, sizeof(fname));
+    nxweb_url_decode(fname, NULL);
     if (get_filename_from_url(fname) != 0) {
         nxweb_send_http_error(resp, 400, "Failed. File name is illegal.");
 	resp->keep_alive = 0;
         return NXWEB_ERROR;
     }
 
+    char msg[1024] = {0};
     if (aim_delete(name_space, fname) == ADFS_ERROR) {
         nxweb_send_http_error(resp, 404, "Failed. No file");
 	resp->keep_alive = 0;
+	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);
+	log_out("delete", msg, LOG_LEVEL_INFO);
         return NXWEB_ERROR;
     }
     else {
         nxweb_response_printf(resp, "OK.\n");
+	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
+	log_out("delete", msg, LOG_LEVEL_INFO);
         return NXWEB_OK;
     }
 }
