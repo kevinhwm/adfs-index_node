@@ -8,7 +8,7 @@
 #include <string.h>
 #include "ai_zone.h"
 
-static ADFS_RESULT z_create(AIZone *_this, const char *ip_port);
+static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port);
 static void z_release_all(AIZone *_this);
 static AINode * z_rand_choose(AIZone *_this);
 
@@ -28,18 +28,18 @@ ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
     return ADFS_ERROR;
 }
 
-static ADFS_RESULT z_create(AIZone *_this, const char *ip_port)
+static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port)
 {
-    AINode *pn = _this->head;
-    while (pn) {
-        if (strcmp(pn->ip_port, ip_port) == 0)
+    for (AINode *pn = _this->head; pn; pn = pn->next) {
+        if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0)
             return ADFS_ERROR;
-        pn = pn->next;
     }
+
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
     if (new_node == NULL)
         return ADFS_ERROR;
     memset(new_node, 0, sizeof(AINode));
+    strncpy(new_node->name, name, sizeof(new_node->name));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         new_node->curl[i] = curl_easy_init();

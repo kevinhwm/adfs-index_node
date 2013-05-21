@@ -23,7 +23,7 @@ static ADFS_RESULT m_init_zone(const char *conf_file);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
-static AINode * m_get_node(const char *node, size_t len);
+static AINode * m_get_node_by_name(const char *node_name, size_t len);
 static AIZone * m_choose_zone(const char * record);
 static char * m_get_history(const char *, int);
 
@@ -205,7 +205,7 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	    printf("upload error: %s\n", url);
 	    goto rollback;
 	}
-	air.add(&air, pz->name, pn->ip_port);
+	air.add(&air, pz->name, pn->name);
 	pz = pz->next;
     }
 
@@ -240,7 +240,7 @@ rollback:
     pp = air.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
-	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
+	AINode *pn = m_get_node_by_name(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
 	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
@@ -299,10 +299,16 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     char *pos_zone = strstr(record, pz->name);
     char *pos_sharp = strstr(pos_zone, "#");
     char *pos_split = strstr(pos_sharp, "|");
-    if (pos_split)
-	snprintf(url, ADFS_MAX_PATH, "http://%.*s/download/%s%.*s", (int)(pos_split-pos_sharp-1), pos_sharp+1, fname, ADFS_UUID_LEN, record);
-    else
-	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", pos_sharp+1, fname, ADFS_UUID_LEN, record);
+    if (pos_split) {
+	char node_name[ADFS_FILENAME_LEN] = {0};
+	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
+	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", 
+		m_get_node_by_name(node_name, strlen(node_name))->ip_port, fname, ADFS_UUID_LEN, record);
+    }
+    else {
+	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", 
+		m_get_node_by_name(pos_sharp+1, strlen(pos_sharp+1))->ip_port, fname, ADFS_UUID_LEN, record);
+    }
     strncat(url, "?namespace=", ADFS_MAX_PATH);
     strncat(url, pns->name, ADFS_MAX_PATH);
     pm->s_download.inc(&(pm->s_download));
@@ -459,19 +465,32 @@ static ADFS_RESULT m_init_zone(const char *conf_file)
             return ADFS_ERROR;
 	}
         for (int j=0; j<node_num; ++j) {
-            snprintf(key, sizeof(key), "zone%d_%d", i, j);
-	    if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR) {
+	    char node_name[ADFS_FILENAME_LEN] = {0};
+	    char node_addr[ADFS_FILENAME_LEN] = {0};
+            snprintf(key, sizeof(key), "zone%d_%d_name", i, j);
+	    if (conf_read(conf_file, key, node_name, sizeof(node_name)) == ADFS_ERROR) {
 		snprintf(msg, sizeof(msg), "[%s]->config file error", key);
 		log_out("manager", msg, LOG_LEVEL_ERROR);
 		return ADFS_ERROR;
 	    }
-            if (strlen(value) <= 0) {
+            if (strlen(node_name) <= 0) {
+		snprintf(msg, sizeof(msg), "[%s]->config value error", key);
+		log_out("manager", msg, LOG_LEVEL_ERROR);
+                return ADFS_ERROR;
+	    }
+            snprintf(key, sizeof(key), "zone%d_%d_addr", i, j);
+	    if (conf_read(conf_file, key, node_addr, sizeof(node_addr)) == ADFS_ERROR) {
+		snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+		log_out("manager", msg, LOG_LEVEL_ERROR);
+		return ADFS_ERROR;
+	    }
+            if (strlen(node_addr) <= 0) {
 		snprintf(msg, sizeof(msg), "[%s]->config value error", key);
 		log_out("manager", msg, LOG_LEVEL_ERROR);
                 return ADFS_ERROR;
 	    }
 	    // create node
-            if (pz->create(pz, value) == ADFS_ERROR) {
+            if (pz->create(pz, node_name, node_addr) == ADFS_ERROR) {
 		snprintf(msg, sizeof(msg), "[malloc]->create node error");
 		log_out("manager", msg, LOG_LEVEL_ERROR);
                 return ADFS_ERROR;
@@ -586,8 +605,7 @@ static AIZone * m_choose_zone(const char *record)
     AIZone *least_z = NULL;
 
     AIZone *pz = pm->z_head;
-    for (; pz; pz = pz->next)
-    {
+    for (; pz; pz = pz->next) {
         if (strstr(record, pz->name) == NULL)
             continue;
 
@@ -606,6 +624,7 @@ static AIZone * m_choose_zone(const char *record)
                 least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;
         }
     }
+
     if (biggest_z) {
 	biggest_z->count += 1;
 	if (biggest_z == least_z) {
@@ -631,18 +650,18 @@ static AINameSpace * m_get_ns(const char *ns)
     return NULL;
 }
 
-static AINode * m_get_node(const char *node, size_t len)
+static AINode * m_get_node_by_name(const char *node_name, size_t len)
 {
     char *p = malloc(len+1);
     if (p == NULL)
 	return NULL;
-    strncpy(p, node, len);
+    strncpy(p, node_name, len);
 
     AIZone *pz = g_manager.z_head;
     while (pz) {
 	AINode *pn = pz->head;
 	while (pn) {
-	    if (strcmp(pn->ip_port, p) == 0) {
+	    if (strcmp(pn->name, p) == 0) {
 		free(p);
 		return pn;
 	    }
@@ -695,7 +714,7 @@ static ADFS_RESULT m_create_ns(const char *name)
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE) == 0) 
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) 
         return ADFS_ERROR;
 
     pns->pre = pm->ns_tail;
@@ -799,9 +818,9 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 	rest = pos_split;
 
 	if (pos_split)
-	    pn = m_get_node(pos_sharp +1, pos_split - pos_sharp -1);
+	    pn = m_get_node_by_name(pos_sharp +1, pos_split - pos_sharp -1);
 	else 
-	    pn = m_get_node(pos_sharp +1, strlen(pos_sharp +1));
+	    pn = m_get_node_by_name(pos_sharp +1, strlen(pos_sharp +1));
 
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
