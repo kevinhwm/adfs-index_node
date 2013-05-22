@@ -143,7 +143,18 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL)
 	return ;
+    /*
+    int nID = atoi(id);
+    if (nID < 0)
+	DBG_PRINTIN(nID);
+    NodeDB *pn = pns->get(pns, nID);
+    */
     NodeDB *pn = pns->get(pns, atoi(id));
+    if (pn == NULL) {
+	DBG_PRINTSN("id error");
+	kcfree(id);
+	return;
+    }
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
     kcfree(id);
 }

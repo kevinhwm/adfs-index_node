@@ -78,11 +78,11 @@ static void ns_release_all(ANNameSpace * _this)
 
 static NodeDB * ns_get(ANNameSpace * _this, int id)
 {
-    NodeDB * tmp = _this->tail;
-    while (tmp) {
-        if (tmp->id == id)
-            return tmp;
-        tmp = tmp->next;
+    NodeDB * pn = _this->head;
+    while (pn) {
+        if (pn->id == id)
+            return pn;
+        pn = pn->next;
     }
     return NULL;
 }
