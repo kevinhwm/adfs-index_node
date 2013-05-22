@@ -105,12 +105,12 @@ static nxweb_result upload_on_request(
 	nxweb_http_response* resp)
 { 
     if (strlen(req->uri) >= ADFS_MAX_PATH) {
-	nxweb_send_http_error(resp, 414, "Faild. Request URI Too Large");
+	nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
     if (req->content_length >= g_MaxFileSize) {
-	nxweb_send_http_error(resp, 413, "Faild. Request Entity Too Large");
+	nxweb_send_http_error(resp, 413, "Request Entity Too Large");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
@@ -143,15 +143,15 @@ static nxweb_result upload_on_request(
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    nxweb_url_decode(fname, NULL);
 	    if (get_filename_from_url(fname) != 0) {
-		nxweb_send_http_error(resp, 403, "Failed. Check file name and namespace.");
+		nxweb_send_http_error(resp, 403, "Forbidden. Check file name.");
 		res = -1;
 	    }
 	    else if (strlen(fname) >= ADFS_FILENAME_LEN) {
-		nxweb_send_http_error(resp, 403, "Failed. File name is too long. It must be less than 250");
+		nxweb_send_http_error(resp, 403, "Forbidden. File name is too long.");
 		res = -1;
 	    }
 	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
-		nxweb_send_http_error(resp, 403, "Failed. Can not save.");
+		nxweb_send_http_error(resp, 403, "Forbidden. Can not save.");
 		res = -1;
 	    }
 	    else {
@@ -161,7 +161,7 @@ static nxweb_result upload_on_request(
 	    }
 	}
 	else {
-	    nxweb_send_http_error(resp, 403, "Failed. Check file name and name length.");
+	    nxweb_send_http_error(resp, 403, "Forbidden. Check file name and name length.");
 	    res = -1;
 	}
 

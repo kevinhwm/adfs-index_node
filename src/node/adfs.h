@@ -39,7 +39,6 @@ typedef enum {
     LOG_LEVEL_DEBUG
 }LOG_LEVEL;
 
-
 int log_init(const char *filename);
 void log_release();
 void log_out(const char *module, const char *info, LOG_LEVEL level);

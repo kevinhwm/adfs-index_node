@@ -17,7 +17,7 @@ static nxweb_result delete_on_request(
     const char *name_space = NULL;
 
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
-        nxweb_send_http_error(resp, 400, "Failed. Url is too long.");
+        nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive = 0;
         return NXWEB_ERROR;
     }
@@ -27,14 +27,14 @@ static nxweb_result delete_on_request(
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, NULL);
     if (get_filename_from_url(fname) != 0) {
-        nxweb_send_http_error(resp, 400, "Failed. File name is illegal.");
+        nxweb_send_http_error(resp, 403, "Forbidden");
 	resp->keep_alive = 0;
         return NXWEB_ERROR;
     }
 
     char msg[1024] = {0};
     if (aim_delete(name_space, fname) == ADFS_ERROR) {
-        nxweb_send_http_error(resp, 404, "Failed. No file");
+        nxweb_send_http_error(resp, 500, "Internal Server Error");
 	resp->keep_alive = 0;
 	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);
 	log_out("delete", msg, LOG_LEVEL_INFO);
