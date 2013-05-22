@@ -6,7 +6,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "adfs.h"
+
+static void trim_left_white(char * p);
+static void trim_right_white(char * p);
 
 /* example:
  *
@@ -48,7 +52,7 @@ ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size
     return res;
 }
 
-// parse config file, then get the value of specified key
+// parse config file, get the value of specified key
 int conf_split(char *line, char *key, char *value)
 {
     char *pos, *tmp;
@@ -67,5 +71,66 @@ int conf_split(char *line, char *key, char *value)
     trim_left_white(value);
     trim_right_white(value);
     return 1;
+}
+
+int get_filename_from_url(char * p)
+{
+    if (p == NULL)
+	return -1;
+
+    char *pos = strstr(p, "?");
+    if (pos != NULL)
+        pos[0] = '\0';
+
+    int len = 0;
+    len = strlen(p);
+    if (len == 0)
+        return -1;
+
+    if (p[len-1] == '/')
+        p[len-1] = '\0';
+
+    len = strlen(p);
+    if (len == 0)
+        return -1;
+
+    if (p[0] == '/')
+        for (int i=1; i<=len; ++i)
+            p[i-1] = p[i];
+    if (strlen(p) <= 0)
+	return -1;
+
+    return 0;
+}
+
+static void trim_left_white(char * p)
+{
+    int i=0, j=0;
+    if (p == NULL)
+	return;
+
+    for (; i<strlen(p); ++i) {
+        if (isspace(p[i]))
+            continue;
+        else
+            break;
+    }
+
+    for (; i<=strlen(p); ++j, ++i)
+        p[j] = p[i];
+}
+
+static void trim_right_white(char * p)
+{
+    if (p == NULL)
+	return ;
+
+    int i = strlen(p)-1;
+    for (; i>=0; --i) {
+        if (isspace(p[i]))
+            p[i] = '\0';
+        else
+            break;
+    }
 }
 

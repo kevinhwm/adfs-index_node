@@ -27,10 +27,6 @@ typedef enum {
 // conf.c
 ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);
 int conf_split(char *p, char *key, char *value);
-
-// function.c
-void trim_left_white(char * p);
-void trim_right_white(char * p);
 int get_filename_from_url(char *);
 
 // log.c
