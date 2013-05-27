@@ -57,7 +57,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     char f_flag[1024] = {0};
     snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
     if (access(f_flag, F_OK) != -1) {
-	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
+	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
 	log_out("manager", msg, LOG_LEVEL_FATAL);
 	g_another_running = 1;
 	return ADFS_ERROR;

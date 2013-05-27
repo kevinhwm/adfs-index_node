@@ -10,7 +10,7 @@
 #define ADFS_VERSION		"3.0"
 #define ADFS_MAX_PATH		1024
 #define ADFS_FILENAME_LEN	256
-#define ADFS_NODENAME_LEN	24
+#define ADFS_NODENAME_LEN	128
 #define ADFS_ZONENAME_LEN	128
 #define ADFS_NAMESPACE_LEN	128
 #define ADFS_UUID_LEN		24		// exactly 24 bytes

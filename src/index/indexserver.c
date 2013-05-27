@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:u:g:P:c:m:M:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:x:")) != -1) 
     {
         switch (c) 
         {
@@ -107,6 +107,9 @@ int main(int argc, char** argv)
                 break;
             case 'p':
                 pid_file=optarg;
+                break;
+            case 'w':
+                work_dir=optarg;
                 break;
             case 'u':
                 user_name=optarg;
@@ -162,6 +165,12 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
+    if (chdir(work_dir) < 0) {
+	fprintf(stdout, "work dir error\n");
+	return EXIT_FAILURE;
+    }
+    // nxweb_run_xxx will call "chdir" again.
+    work_dir = "./";
     fprintf(stdout, "ADFS Index start...\n");
     if (aim_init(conf_file, db_path, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
@@ -179,8 +188,6 @@ int main(int argc, char** argv)
 	aim_exit();
 	return EXIT_SUCCESS;
     }
-    // nxweb_run_xxx will call "chdir", but it has been changed in "aim_init".
-    //work_dir = "./";
     /////////////////////////////////////////////////////////////////////////////////
 
     if (daemon)

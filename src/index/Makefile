@@ -12,7 +12,7 @@ OBJS = if_upload.o if_download.o if_delete.o if_status.o \
 
 
 release:$(OBJS)
-	$(CC) $(CFLAGS) -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o $(TARGET) $(OBJS) $(LIBS)
 
 debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o if_upload.o if_upload.c
@@ -30,8 +30,15 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
+.PHONY:install
+install:
+	cp indexserver /usr/local/bin
+
+.PHONY:uninstall
+uninstall:
+	rm -rf /usr/local/bin/indexserver
 
 .PHONY:clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	-rm -rf $(OBJS) $(TARGET)
 

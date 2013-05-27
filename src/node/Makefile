@@ -29,9 +29,16 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
+.PHONY:install
+install:
+	cp nodeserver /usr/local/bin
+
+.PHONY:uninstall
+uninstall:
+	rm -rf /usr/local/bin/nodeserver
 
 .PHONY:clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	-rm -rf $(OBJS) $(TARGET)
 
 
