@@ -76,8 +76,8 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char* work_dir="./";
-    const char* db_path="./";
+    const char* work_dir="/usr/local/adfs/node";
+    const char* db_path=NULL;
     const char* pid_file="adfs.pid";
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
@@ -159,6 +159,10 @@ int main(int argc, char** argv)
     }
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
+    if (db_path == NULL) {
+	printf("please check the \"-x\" arg.\n");
+	return EXIT_FAILURE;
+    }
     fprintf(stdout, "ADFS Node start...\n");
     if (anm_init(conf_file, db_path, mem_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Node exit. Init error.", LOG_LEVEL_SYSTEM);
@@ -169,8 +173,6 @@ int main(int argc, char** argv)
     }
     log_out("main", "ADFS Node running...", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Node running...\n");
-    // nxweb_run_xxx will call "chdir", but it has been changed in "anm_init".
-    //work_dir = "./";
     /////////////////////////////////////////////////////////////////////////////////
     if (daemon) 
 	nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);

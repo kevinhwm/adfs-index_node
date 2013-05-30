@@ -13,7 +13,7 @@ OBJS = if_upload.o if_download.o if_erase.o if_status.o \
 
 
 release:$(OBJS)
-	$(CC) $(CFLAGS) -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
 
 debug:
@@ -31,11 +31,14 @@ debug:
 
 .PHONY:install
 install:
+	mkdir /usr/local/adfs/node
+	cp nodeserver.conf /usr/local/adfs/node
 	cp nodeserver /usr/local/bin
 
 .PHONY:uninstall
 uninstall:
-	rm -rf /usr/local/bin/nodeserver
+	rm -f /usr/local/bin/nodeserver
+	rm -rf /usr/local/adfs/node
 
 .PHONY:clean
 clean:

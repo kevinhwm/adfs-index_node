@@ -77,8 +77,8 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char *work_dir="./";
-    const char *db_path="./";
+    const char *work_dir="/usr/local/adfs/index";
+    const char *db_path=NULL;
     const char *pid_file="indexserver.pid";
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -171,6 +171,10 @@ int main(int argc, char** argv)
     }
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
+    if (db_path == NULL) {
+	printf("please check the \"-x\" arg.\n");
+	return EXIT_FAILURE;
+    }
     fprintf(stdout, "ADFS Index start...\n");
     if (aim_init(conf_file, db_path, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);

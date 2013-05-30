@@ -32,11 +32,14 @@ debug:
 
 .PHONY:install
 install:
+	mkdir -p /usr/local/adfs/index
+	cp indexserver.conf /usr/local/adfs/index
 	cp indexserver /usr/local/bin
 
 .PHONY:uninstall
 uninstall:
-	rm -rf /usr/local/bin/indexserver
+	rm -rf /usr/local/adfs/index
+	rm -f /usr/local/bin/indexserver
 
 .PHONY:clean
 clean:
