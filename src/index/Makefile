@@ -8,11 +8,11 @@ LIBS = -lnxweb -lkyotocabinet -lrt -lcurl -pthread
 TARGET = indexserver
 OBJS = if_upload.o if_download.o if_delete.o if_status.o \
        ai_record.o ai_zone.o ai_connect.o ai_stat.o ai_manager.o \
-       conf.o log.o function.o multipart_parser.o indexserver.o
+       conf.o log.o multipart_parser.o indexserver.o
 
 
 release:$(OBJS)
-	$(CC) $(CFLAGS) -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o $(TARGET) $(OBJS) $(LIBS)
 
 debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o if_upload.o if_upload.c
@@ -26,13 +26,22 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o ai_manager.o ai_manager.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o conf.o conf.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o log.o log.c
-	$(CC) $(CFLAGS) -DDEBUG -c -o function.o function.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -o $(TARGET) $(OBJS) $(LIBS)
 
+.PHONY:install
+install:
+	mkdir -p /usr/local/adfs/index
+	cp indexserver.conf /usr/local/adfs/index
+	cp indexserver /usr/local/bin
+
+.PHONY:uninstall
+uninstall:
+	rm -rf /usr/local/adfs/index
+	rm -f /usr/local/bin/indexserver
 
 .PHONY:clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	-rm -rf $(OBJS) $(TARGET)
 

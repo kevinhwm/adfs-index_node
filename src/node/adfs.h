@@ -10,7 +10,7 @@
 #define ADFS_VERSION		"3.0"
 #define ADFS_MAX_PATH		1024
 #define ADFS_FILENAME_LEN	256
-#define ADFS_NODENAME_LEN	24
+#define ADFS_NODENAME_LEN	128
 #define ADFS_ZONENAME_LEN	128
 #define ADFS_NAMESPACE_LEN	128
 #define ADFS_UUID_LEN		24		// exactly 24 bytes
@@ -27,10 +27,6 @@ typedef enum {
 // conf.c
 ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);
 int conf_split(char *p, char *key, char *value);
-
-// function.c
-void trim_left_white(char * p);
-void trim_right_white(char * p);
 int get_filename_from_url(char *);
 
 // log.c
@@ -42,7 +38,6 @@ typedef enum {
     LOG_LEVEL_INFO,
     LOG_LEVEL_DEBUG
 }LOG_LEVEL;
-
 
 int log_init(const char *filename);
 void log_release();

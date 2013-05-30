@@ -57,7 +57,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     char f_flag[1024] = {0};
     snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
     if (access(f_flag, F_OK) != -1) {
-	snprintf(msg, sizeof(msg), "[%s]->there is another instance is running.", f_flag);
+	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
 	log_out("manager", msg, LOG_LEVEL_FATAL);
 	g_another_running = 1;
 	return ADFS_ERROR;
@@ -288,27 +288,38 @@ char * aim_download(const char *ns, const char *fname, const char *history)
 	goto err1;
     memset(url, 0, ADFS_MAX_PATH);
 
+    DBG_PRINTSN("10");
     char *record = m_get_history(line, order);
     if (record == NULL)
 	goto err2;
 
+    DBG_PRINTSN("20");
     AIZone *pz = m_choose_zone(record + ADFS_UUID_LEN);
     if (pz == NULL)
 	goto err3;
 
+    DBG_PRINTSN("30");
     char *pos_zone = strstr(record, pz->name);
     char *pos_sharp = strstr(pos_zone, "#");
     char *pos_split = strstr(pos_sharp, "|");
+    DBG_PRINTSN("35");
     if (pos_split) {
 	char node_name[ADFS_FILENAME_LEN] = {0};
 	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
+	AINode *pn = m_get_node_by_name(node_name, strlen(node_name));
+	if (pn == NULL)
+	    goto err3;
 	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", 
-		m_get_node_by_name(node_name, strlen(node_name))->ip_port, fname, ADFS_UUID_LEN, record);
+		pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
     else {
+	AINode *pn = m_get_node_by_name(pos_sharp+1, strlen(pos_sharp+1));
+	if (pn == NULL)
+	    goto err3;
 	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", 
-		m_get_node_by_name(pos_sharp+1, strlen(pos_sharp+1))->ip_port, fname, ADFS_UUID_LEN, record);
+		pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
+    DBG_PRINTSN("40");
     strncat(url, "?namespace=", ADFS_MAX_PATH);
     strncat(url, pns->name, ADFS_MAX_PATH);
     pm->s_download.inc(&(pm->s_download));
@@ -655,7 +666,9 @@ static AINode * m_get_node_by_name(const char *node_name, size_t len)
     char *p = malloc(len+1);
     if (p == NULL)
 	return NULL;
+    p[len] = '\0';
     strncpy(p, node_name, len);
+    DBG_PRINTSN(p);
 
     AIZone *pz = g_manager.z_head;
     while (pz) {

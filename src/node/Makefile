@@ -9,11 +9,11 @@ LIBS = -lnxweb -lkyotocabinet -lrt
 TARGET = nodeserver
 OBJS = if_upload.o if_download.o if_erase.o if_status.o \
        an_namespace.o an_manager.o \
-       conf.o log.o function.o multipart_parser.o nodeserver.o
+       conf.o log.o multipart_parser.o nodeserver.o
 
 
 release:$(OBJS)
-	$(CC) $(CFLAGS) -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
 
 debug:
@@ -25,14 +25,23 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o an_namespace.o an_namespace.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o conf.o conf.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o log.o log.c
-	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o function.o function.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c
 	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
+.PHONY:install
+install:
+	mkdir /usr/local/adfs/node
+	cp nodeserver.conf /usr/local/adfs/node
+	cp nodeserver /usr/local/bin
+
+.PHONY:uninstall
+uninstall:
+	rm -f /usr/local/bin/nodeserver
+	rm -rf /usr/local/adfs/node
 
 .PHONY:clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	-rm -rf $(OBJS) $(TARGET)
 
 
