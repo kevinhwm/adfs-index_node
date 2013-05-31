@@ -9,7 +9,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 
 extern int g_log_level;
 static char log_file[256] = {0};

@@ -6,7 +6,7 @@
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 #include "ai_zone.h"
 
 enum FLAG_CONNECTION

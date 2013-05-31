@@ -8,7 +8,7 @@
 #define __STAT_H__
 
 #include <time.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 
 typedef struct AIStat 
 {

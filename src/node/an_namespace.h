@@ -7,7 +7,7 @@
 #ifndef __NAMESPACE_H__
 #define __NAMESPACE_H__
 
-#include "adfs.h"
+#include "../include/adfs.h"
 #include <kclangc.h>
 
 #define NODE_MAX_FILE_NUM       100000

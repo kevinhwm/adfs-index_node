@@ -12,14 +12,14 @@
 #include <kclangc.h>
 #include <curl/curl.h>
 
-#include "adfs.h"
 #include "ai_manager.h"
 #include "ai_record.h"
+#include "../include/cJSON.h"
 
-static ADFS_RESULT m_init_log(const char *conf_file);
-static ADFS_RESULT m_init_stat(const char *conf_file);
-static ADFS_RESULT m_init_ns(const char *conf_file);
-static ADFS_RESULT m_init_zone(const char *conf_file);
+static ADFS_RESULT m_init_log(cJSON *json);
+static ADFS_RESULT m_init_stat(cJSON *json);
+static ADFS_RESULT m_init_ns(cJSON *json);
+static ADFS_RESULT m_init_zone(cJSON *json);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
@@ -77,31 +77,30 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
     pm->kc_msiz = mem_size *1024*1024;
-    // init log
-    if (m_init_log(conf_file) == ADFS_ERROR)
-	return ADFS_ERROR;
-    // init statistics
-    if (m_init_stat(conf_file) == ADFS_ERROR)
-	return ADFS_ERROR;
-    // init namespace
-    if (m_init_ns(conf_file) == ADFS_ERROR)
-	return ADFS_ERROR;
-    // init zone
-    if (m_init_zone(conf_file) == ADFS_ERROR)
-        return ADFS_ERROR;
+
+    cJSON *json = conf_parse(conf_file);
+    if (json == NULL) {
+	log_out("manager", "Config file error. Make sure that it is json format except lines which start with '#'.", LOG_LEVEL_ERROR);
+	goto err1;
+    }
+    if (m_init_log(json) == ADFS_ERROR) {goto err1;}
+    if (m_init_stat(json) == ADFS_ERROR) {goto err1;}
+    if (m_init_ns(json) == ADFS_ERROR) {goto err1;}
+    if (m_init_zone(json) == ADFS_ERROR) {goto err1;}
+
     g_MaxFileSize = max_file_size *1024*1024;
     // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
 
     // work mode 
-    char value[ADFS_FILENAME_LEN] = {0};
-    if (conf_read(conf_file, "work_mode", value, sizeof(value)) == ADFS_ERROR) {
+    cJSON *j_tmp = cJSON_GetObjectItem(json, "work_mode");
+    if (j_tmp == NULL) {
 	log_out("manager", "[work_mode]->config file error", LOG_LEVEL_ERROR);
-	return ADFS_ERROR;
+	goto err1;
     }
-    snprintf(msg, sizeof(msg), "[%s]->work mode", value);
+    snprintf(msg, sizeof(msg), "[%s]->work mode", j_tmp->valuestring);
     log_out("manager", msg, LOG_LEVEL_INFO);
-    if (strcmp(value, "erase") == 0) {
+    if (strcmp(j_tmp->valuestring, "erase") == 0) {
 	printf("\nIndex will work in 'erase mode'! \n"
 		"When it is done, you should restart it manually. \n");
 	while (1) {
@@ -115,21 +114,23 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 		    log_out("manager", "erase ok.", LOG_LEVEL_INFO);
 		else
 		    log_out("manager", "erase failed.", LOG_LEVEL_INFO);
-		return ADFS_OK;
+		break;
 	    }
 	    else if (i == 'n') {
 		log_out("manager", "user quit", LOG_LEVEL_INFO);
-		return ADFS_ERROR;
+		goto err1;
 	    }
 	}
     }
-    else if (strcmp(value, "normal") == 0) {
-	printf("\nwork in 'normal' node.\n");
-	return ADFS_OK;
-    }
-    else
-	log_out("manager", "[work_mode]->config value error", LOG_LEVEL_ERROR);
-	return ADFS_ERROR;
+    else if (strcmp(j_tmp->valuestring, "normal") == 0) {printf("\nwork in 'normal' node.\n");}
+    else {log_out("manager", "[work_mode]->config value error", LOG_LEVEL_ERROR); goto err1;}
+
+    conf_release(json);
+    return ADFS_OK;
+
+err1:
+    conf_release(json);
+    return ADFS_ERROR;
 }
 
 void aim_exit()
@@ -425,165 +426,108 @@ char * aim_status()
 }
 
 // private
-static ADFS_RESULT m_init_zone(const char *conf_file)
+static ADFS_RESULT m_init_zone(cJSON *json)
 {
-    char msg[1024];	// log msg
-    char value[ADFS_FILENAME_LEN] = {0};
-    // create zone
-    if (conf_read(conf_file, "zone_num", value, sizeof(value)) == ADFS_ERROR) {
-	log_out("manager", "[zone_num]->config file error", LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
-    }
-    int zone_num = atoi(value);
-    if (zone_num <= 0) {
-	log_out("manager", "[zone_num]->config value error", LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
-    }
-    for (int i=0; i<zone_num; ++i)
-    {
-        char key[ADFS_FILENAME_LEN] = {0};
-        char name[ADFS_FILENAME_LEN] = {0};
-        char weight[ADFS_FILENAME_LEN] = {0};
-        char num[ADFS_FILENAME_LEN] = {0};
-        snprintf(key, sizeof(key), "zone%d_name", i);
-        if (conf_read(conf_file, key, name, sizeof(name)) == ADFS_ERROR) {
-	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-            return ADFS_ERROR;
-	}
-        snprintf(key, sizeof(key), "zone%d_weight", i);
-        if (conf_read(conf_file, key, weight, sizeof(weight)) == ADFS_ERROR) {
-	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-            return ADFS_ERROR;
-	}
-	AIZone *pz = m_create_zone(name, atoi(weight));
-	if (pz == NULL) {
-	    snprintf(msg, sizeof(msg), "[malloc]->create zone error");
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-	    return ADFS_ERROR;
-	}
-        snprintf(key, sizeof(key), "zone%d_num", i);
-        if (conf_read(conf_file, key, num, sizeof(num)) == ADFS_ERROR) {
-	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-            return ADFS_ERROR;
-	}
-        int node_num = atoi(num);
-        if (node_num <= 0) {
-	    snprintf(msg, sizeof(msg), "[node_num]->config file error");
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-            return ADFS_ERROR;
-	}
-        for (int j=0; j<node_num; ++j) {
-	    char node_name[ADFS_FILENAME_LEN] = {0};
-	    char node_addr[ADFS_FILENAME_LEN] = {0};
-            snprintf(key, sizeof(key), "zone%d_%d_name", i, j);
-	    if (conf_read(conf_file, key, node_name, sizeof(node_name)) == ADFS_ERROR) {
-		snprintf(msg, sizeof(msg), "[%s]->config file error", key);
+    char msg[1024];
+    cJSON *j_tmp = cJSON_GetObjectItem(json, "zone");
+    if (j_tmp && (j_tmp = j_tmp->child)) {
+	while (j_tmp) {
+	    cJSON *j_name = cJSON_GetObjectItem(j_tmp, "name");
+	    cJSON *j_weight = cJSON_GetObjectItem(j_tmp, "weight");
+	    AIZone *pz = m_create_zone(j_name->valuestring, j_weight->valueint);
+	    if (pz == NULL) {
+		snprintf(msg, sizeof(msg), "[%s]->create zone error", j_name->valuestring);
 		log_out("manager", msg, LOG_LEVEL_ERROR);
 		return ADFS_ERROR;
 	    }
-            if (strlen(node_name) <= 0) {
-		snprintf(msg, sizeof(msg), "[%s]->config value error", key);
-		log_out("manager", msg, LOG_LEVEL_ERROR);
-                return ADFS_ERROR;
+
+	    cJSON *node_list = cJSON_GetObjectItem(j_tmp, "node");
+	    cJSON *node = node_list->child;
+	    while (node) {
+		if (pz->create(pz, node->string, node->valuestring) == ADFS_ERROR) {
+		    snprintf(msg, sizeof(msg), "[%s]->create node error", node->string);
+		    log_out("manager", msg, LOG_LEVEL_ERROR);
+		    return ADFS_ERROR;
+		}
+		node = node->next;
 	    }
-            snprintf(key, sizeof(key), "zone%d_%d_addr", i, j);
-	    if (conf_read(conf_file, key, node_addr, sizeof(node_addr)) == ADFS_ERROR) {
-		snprintf(msg, sizeof(msg), "[%s]->config file error", key);
-		log_out("manager", msg, LOG_LEVEL_ERROR);
-		return ADFS_ERROR;
-	    }
-            if (strlen(node_addr) <= 0) {
-		snprintf(msg, sizeof(msg), "[%s]->config value error", key);
-		log_out("manager", msg, LOG_LEVEL_ERROR);
-                return ADFS_ERROR;
-	    }
-	    // create node
-            if (pz->create(pz, node_name, node_addr) == ADFS_ERROR) {
-		snprintf(msg, sizeof(msg), "[malloc]->create node error");
-		log_out("manager", msg, LOG_LEVEL_ERROR);
-                return ADFS_ERROR;
-	    }
-        }
+	    j_tmp = j_tmp->next;
+	}
     }
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_ns(const char *conf_file)
+static ADFS_RESULT m_init_ns(cJSON *json)
 {
     char msg[1024];
-    char value[ADFS_FILENAME_LEN] = {0};
-    // create namespace
-    if (conf_read(conf_file, "namespace_num", value, sizeof(value)) == ADFS_ERROR) {
-	snprintf(msg, sizeof(msg), "[namespace_num]->config file error");
-	log_out("manager", msg, LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
+    cJSON *j_tmp = NULL;
+
+    j_tmp = cJSON_GetObjectItem(json, "namespace");
+    if (j_tmp && (j_tmp = j_tmp->child)) {
+	while (j_tmp) {
+	    if (strlen(j_tmp->valuestring) == 0) {
+		snprintf(msg, sizeof(msg), "[namespace]->config file error");
+		log_out("manager", msg, LOG_LEVEL_ERROR);
+		return ADFS_ERROR;
+	    }
+	    if (m_create_ns(j_tmp->valuestring) == ADFS_ERROR) {
+		snprintf(msg, sizeof(msg), "[%s]->create namespace error", j_tmp->valuestring);
+		log_out("manager", msg, LOG_LEVEL_ERROR);
+		return ADFS_ERROR;
+	    }
+	    j_tmp = j_tmp->next;
+	}
     }
-    int ns_num = atoi(value);
-    if (ns_num <= 0 || ns_num >100) {
-	snprintf(msg, sizeof(msg), "[namespace_num]->config value error");
-	log_out("manager", msg, LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
-    }
+    
     if (m_create_ns("default") == ADFS_ERROR) {
 	snprintf(msg, sizeof(msg), "[default]->create namespace error");
 	log_out("manager", msg, LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
     }
-    for (int i=0; i<ns_num; ++i) {
-        char key[ADFS_FILENAME_LEN] = {0};
-	snprintf(key, sizeof(key), "namespace_%d", i);
-	if (conf_read(conf_file, key, value, sizeof(value)) == ADFS_ERROR) {
-	    snprintf(msg, sizeof(msg), "[%s]->config file error", key);
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-	    return ADFS_ERROR;
-	}
-	if (m_create_ns(value) == ADFS_ERROR) {
-	    snprintf(msg, sizeof(msg), "[%s]->create namespace error", key);
-	    log_out("manager", msg, LOG_LEVEL_ERROR);
-	    return ADFS_ERROR;
-	}
-    }
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_log(const char *conf_file)
+static ADFS_RESULT m_init_log(cJSON *json)
 {
-    char value[ADFS_FILENAME_LEN] = {0};
     // log_level
-    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) {
+    cJSON *j_tmp = NULL;
+    j_tmp = cJSON_GetObjectItem(json, "log_level");
+    if (j_tmp == NULL) {
 	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
         return ADFS_ERROR;
     }
-    g_log_level = atoi(value);
+    g_log_level = j_tmp->valueint;
+    DBG_PRINTS("log_level: ");
+    DBG_PRINTIN(g_log_level);
     if (g_log_level < 1 || g_log_level > 5) {
 	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
     }
-    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) {
+
+    // log_file
+    j_tmp = cJSON_GetObjectItem(json, "log_file");
+    if (j_tmp == NULL) { 
 	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
     }
-    if (log_init(value) != 0) {
+    if (log_init(j_tmp->valuestring) != 0) {
 	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
     }
-
     return ADFS_OK;
 }
 
-static ADFS_RESULT m_init_stat(const char *conf_file)
+static ADFS_RESULT m_init_stat(cJSON *json)
 {
     AIManager *pm = &g_manager;
-    char value[ADFS_FILENAME_LEN] = {0};
     // statistics
-    if (conf_read(conf_file, "stat_hour", value, sizeof(value)) == ADFS_ERROR) {
+    cJSON *j_tmp = NULL;
+    j_tmp = cJSON_GetObjectItem(json, "stat_hour");
+    if (j_tmp == NULL) {
 	log_out("manager", "[stat_hour]->config file error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
     }
-    int stat_hour = atoi(value);
+    long stat_hour = j_tmp->valueint;
     if (stat_hour < 1 || stat_hour > 24) {
 	log_out("manager", "[stat_hour]->config value error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;

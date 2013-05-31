@@ -6,7 +6,7 @@
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-#include "adfs.h"
+//#include "adfs.h"
 #include "an_manager.h"
 #include "multipart_parser.h"
 

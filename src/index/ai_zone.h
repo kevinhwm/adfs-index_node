@@ -9,7 +9,7 @@
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 
 #define ADFS_NODE_CURL_NUM  3
 

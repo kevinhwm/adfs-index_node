@@ -4,11 +4,11 @@
 
 CC = gcc
 CFLAGS = -std=c99 -Wall
-LIBS = -lnxweb -lkyotocabinet -lrt -lcurl -pthread
+LIBS = -lnxweb -lkyotocabinet -lrt -lm -lcurl -pthread
 TARGET = indexserver
 OBJS = if_upload.o if_download.o if_delete.o if_status.o \
-       ai_record.o ai_zone.o ai_connect.o ai_stat.o ai_manager.o \
-       conf.o log.o multipart_parser.o indexserver.o
+       ai_record.o ai_zone.o ai_connect.o ai_stat.o ai_manager.o ai_function.o \
+       cJSON.o log.o multipart_parser.o indexserver.o
 
 
 release:$(OBJS)
@@ -24,7 +24,8 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG -c -o ai_connect.o ai_connect.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o ai_stat.o ai_stat.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o ai_manager.o ai_manager.c
-	$(CC) $(CFLAGS) -DDEBUG -c -o conf.o conf.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o ai_function.o ai_function.c
+	$(CC) $(CFLAGS) -DDEBUG -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o log.o log.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG -c -o indexserver.o indexserver.c

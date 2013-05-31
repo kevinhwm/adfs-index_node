@@ -7,7 +7,7 @@
 #ifndef __MANAGER_H___
 #define __MANAGER_H___
 
-#include "adfs.h"
+#include "../include/adfs.h"
 
 typedef struct ANManager
 {

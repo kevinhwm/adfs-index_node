@@ -12,9 +12,9 @@
 #include <sys/stat.h>
 #include <kclangc.h>
 
-#include "adfs.h"
 #include "an_namespace.h"
 #include "an_manager.h"
+#include "../include/adfs.h"
 
 static ANNameSpace * m_create_ns(const char *name_space);
 static ADFS_RESULT split_db(ANNameSpace * pns);
@@ -22,6 +22,8 @@ static ANNameSpace * m_get_ns(const char * name_space);
 static ADFS_RESULT m_init_log(const char *conf_file);
 static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
+
+ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);
 
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;

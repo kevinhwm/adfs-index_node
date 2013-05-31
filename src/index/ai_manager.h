@@ -10,7 +10,7 @@
 #include <kclangc.h>
 #include "ai_zone.h"
 #include "ai_stat.h"
-#include "adfs.h"
+#include "../include/adfs.h"
 
 
 typedef struct AINameSpace

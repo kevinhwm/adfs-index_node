@@ -7,7 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "adfs.h"
+#include "../include/adfs.h"
+
+
+int conf_split(char *line, char *key, char *value);
 
 static void trim_left_white(char * p);
 static void trim_right_white(char * p);
