@@ -17,7 +17,6 @@
 #include "../include/adfs.h"
 
 static ANNameSpace * m_create_ns(const char *name_space);
-static ADFS_RESULT split_db(ANNameSpace * pns);
 static ANNameSpace * m_get_ns(const char * name_space);
 static ADFS_RESULT m_init_log(const char *conf_file);
 static int m_scan_kch(const char * dir);
@@ -35,6 +34,7 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
 
     ANManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
+    pthread_rwlock_init(&pm->ns_lock, NULL);
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = 1000000;
@@ -76,14 +76,14 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
     log_out("manager", msg, LOG_LEVEL_INFO);
 
     // init log
-    if (m_init_log(conf_file) == ADFS_ERROR)
-	return ADFS_ERROR;
+    if (m_init_log(conf_file) == ADFS_ERROR) {return ADFS_ERROR;}
     return ADFS_OK;
 }
 
 void anm_exit() 
 {
     ANManager * pm = &g_manager;
+    pthread_rwlock_destroy(&pm->ns_lock);
     ANNameSpace * pns = pm->head;
     while (pns) {
 	ANNameSpace *tmp = pns;
@@ -104,28 +104,23 @@ void anm_exit()
 
 ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
 {
+    ANManager *pm = &g_manager;
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
-    if (name_space == NULL)
-	name_space = "default";
+    if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL && (pns = m_create_ns(name_space)) == NULL)
-	return ADFS_ERROR;
-
-    if (pns->tail->count >= NODE_MAX_FILE_NUM) {
-	if (split_db(pns) == ADFS_ERROR)
-	    return ADFS_ERROR;
+    if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return ADFS_ERROR;}
+    if (pns->needto_split(pns)) {
+	char db_args[ADFS_MAX_PATH] = {0};
+	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz);
+	if (pns->split_db(pns, pm->path, db_args) == ADFS_ERROR) {return ADFS_ERROR;}
     }
-
-    if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len))
-	return ADFS_ERROR;
-    pns->tail->count += 1;
-
+    if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return ADFS_ERROR;}
+    pns->count_add(pns);
+    //pns->tail->count += 1;
     char buf[16] = {0};
     sprintf(buf, "%d", pns->tail->id);
-    if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf)))
-	return ADFS_ERROR;
-
+    if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf))) {return ADFS_ERROR;}
     return ADFS_OK;
 }
 
@@ -135,28 +130,15 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     *pfile_size = 0;
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
-    if (name_space == NULL)
-	name_space = "default";
+    if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL)
-	return ;
+    if (pns == NULL) {return ;}
 
     size_t len = 0;
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
-    if (id == NULL)
-	return ;
-    /*
-    int nID = atoi(id);
-    if (nID < 0)
-	DBG_PRINTIN(nID);
-    NodeDB *pn = pns->get(pns, nID);
-    */
+    if (id == NULL) {return ;}
     NodeDB *pn = pns->get(pns, atoi(id));
-    if (pn == NULL) {
-	DBG_PRINTSN("id error");
-	kcfree(id);
-	return;
-    }
+    if (pn == NULL) {kcfree(id); return;}
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
     kcfree(id);
 }
@@ -185,10 +167,18 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
 //private
 static ANNameSpace * m_create_ns(const char *name_space)
 {
+    if (strlen(name_space) >= ADFS_NAMESPACE_LEN) {return NULL;}
     ANManager *pm = &g_manager;
-    if (strlen(name_space) >= ADFS_NAMESPACE_LEN)
-	return NULL;
 
+    pthread_rwlock_wrlock(&pm->ns_lock);
+    ANNameSpace * tmp = pm->head;
+    while (tmp) {
+	if (strcmp(tmp->name, name_space) == 0) {
+	    pthread_rwlock_unlock(&pm->ns_lock);
+	    return tmp;
+	}
+	tmp = tmp->next;
+    }
     char ns_path[ADFS_MAX_PATH] = {0};
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
     int max_id = m_scan_kch(ns_path);
@@ -196,17 +186,19 @@ static ANNameSpace * m_create_ns(const char *name_space)
     snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz);
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
+    if (pns == NULL) {
+	pthread_rwlock_unlock(&pm->ns_lock);
+	return NULL;
+    }
     anns_init(pns, name_space);
 
     char indexdb_path[ADFS_MAX_PATH] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s/index.kch%s", pm->path, name_space, db_args);
     pns->index_db = kcdbnew();
     int32_t res = kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK);
-    if ( !res )
-	goto err1;
+    if (!res) {goto err1;}
 
-    for (int i=0; i <= max_id; ++i)
-    {
+    for (int i=0; i <= max_id; ++i) {
 	if (i < max_id) {
 	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) == ADFS_ERROR)
 		goto err1;
@@ -219,27 +211,15 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     pns->pre = pm->tail;
     pns->next = NULL;
-    if (pm->tail)
-	pm->tail->next = pns;
-    else
-	pm->head = pns;
+    if (pm->tail) {pm->tail->next = pns;}
+    else {pm->head = pns;}
     pm->tail = pns;
+    pthread_rwlock_unlock(&pm->ns_lock);
     return pns;
 err1:
     free(pns);
+    pthread_rwlock_unlock(&pm->ns_lock);
     return NULL;
-}
-
-// private
-static ADFS_RESULT split_db(ANNameSpace * pns)
-{
-    ANManager * pm = &g_manager;
-    if (pns->switch_state(pns, pns->tail->id, S_READ_ONLY) == ADFS_ERROR)
-	return ADFS_ERROR;
-    char db_args[ADFS_MAX_PATH] = {0};
-    snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-		pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz);
-    return pns->create(pns, pm->path, db_args, S_READ_WRITE);
 }
 
 // private
@@ -266,17 +246,13 @@ static int m_scan_kch(const char * dir)
 static int m_get_fileid(char * name)
 {
     const int max_len = 8;
-    if (name == NULL)
-	return -1;
-    if (strlen(name) > max_len)
-	return -1;
+    if (name == NULL) {return -1;}
+    if (strlen(name) > max_len) {return -1;}
     char *pos = strstr(name, ".kch");
-    if (pos == NULL)
-	return -1;
-    if (strcmp(pos, ".kch") != 0)
-	return -1;
+    if (pos == NULL) {return -1;}
+    if (strcmp(pos, ".kch") != 0) {return -1;}
 
-    for (int i=0; i < pos-name; i++) {
+    for (int i=0; i<pos-name; ++i) {
 	if (name[i] < '0' || name[i] > '9')
 	    return -1;
     }
@@ -288,12 +264,16 @@ static int m_get_fileid(char * name)
 // private
 static ANNameSpace * m_get_ns(const char * name_space)
 {
+    pthread_rwlock_rdlock(&g_manager.ns_lock);
     ANNameSpace * tmp = g_manager.head;
     while (tmp) {
-	if (strcmp(tmp->name, name_space) == 0)
+	if (strcmp(tmp->name, name_space) == 0) {
+	    pthread_rwlock_unlock(&g_manager.ns_lock);
 	    return tmp;
+	}
 	tmp = tmp->next;
     }
+    pthread_rwlock_unlock(&g_manager.ns_lock);
     return NULL;
 }
 

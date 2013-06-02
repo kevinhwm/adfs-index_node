@@ -13,8 +13,8 @@
 typedef struct AIStat 
 {
     unsigned long start;
-    int scope;		// in minutes
-    int pos_last; 	// last record 
+    unsigned long pos_last; 	// last record 
+    unsigned long scope;		// in minutes
     int *count;
 
     void (*release)(struct AIStat *);

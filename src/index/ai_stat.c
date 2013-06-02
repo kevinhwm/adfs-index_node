@@ -23,31 +23,24 @@ ADFS_RESULT stat_init(AIStat *ps, unsigned long stat_start, int minutes)
 	ps->inc = s_inc;
 	ps->release = s_release;
 	ps->count = malloc(sizeof(int) * ps->scope);
-	if (ps->count == NULL)
-	    return ADFS_ERROR;
+	if (ps->count == NULL) {return ADFS_ERROR;}
 	memset(ps->count, 0, sizeof(int) * ps->scope);
     }
     return ADFS_OK;
 }
 
-static void s_release(AIStat *ps)
-{
-    if (ps && ps->count) {
-	free(ps->count);
-	ps->count = NULL;
-    }
-}
+static void s_release(AIStat *ps) {if(ps && ps->count) {free(ps->count); ps->count = NULL;}}
 
 static int * s_get(AIStat *ps, time_t *t)
 {
-    unsigned long t_cur = (unsigned long)*t;
-    unsigned long interval = (t_cur - ps->start + 60)/60;
-    if (interval >= ps->scope)
-	memset(ps->count, 0, ps->scope);
+    unsigned long t_cur, pos_cur, interval;
 
-    int pos_cur = interval % ps->scope;
+    t_cur = (unsigned long)*t;
+    interval = (t_cur - ps->start + 60)/60;
+    if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
+    pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
-	__sync_and_and_fetch(ps->count + pos_cur, 0);
+	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;
     }
     return ps->count + pos_cur;
@@ -55,15 +48,14 @@ static int * s_get(AIStat *ps, time_t *t)
 
 static void s_inc(AIStat *ps)
 {
-    unsigned long t_cur;
-    t_cur = (unsigned long)time(NULL);
-    unsigned long interval = (t_cur - ps->start + 60)/60;
-    if (interval >= ps->scope)
-	memset(ps->count, 0, ps->scope);
+    unsigned long t_cur, interval, pos_cur;
 
-    int pos_cur = interval % ps->scope;
+    t_cur = (unsigned long)time(NULL);
+    interval = (t_cur - ps->start + 60)/60;
+    if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
+    pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
-	__sync_and_and_fetch(ps->count + pos_cur, 0);
+	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;
     }
     __sync_add_and_fetch(ps->count + pos_cur, 1);
