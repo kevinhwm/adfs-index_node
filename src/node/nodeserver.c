@@ -7,7 +7,7 @@
 #include <nxweb/nxweb.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 #include "an_manager.h"
 
 extern nxweb_handler upload_file_handler;

@@ -3,9 +3,9 @@
 #############################################
 
 CC = gcc
-CFLAGS = -std=c99 -Wall
+CFLAGS = -std=c99 -Wall -D_GNU_SOURCE
 INCLUDE = -I../include
-LIBS = -lnxweb -lkyotocabinet -lrt
+LIBS = -lnxweb -lkyotocabinet -lrt -lpthread
 TARGET = nodeserver
 OBJS = if_upload.o if_download.o if_erase.o if_status.o \
        an_namespace.o an_manager.o \
@@ -27,11 +27,11 @@ debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o log.o log.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o nodeserver.o nodeserver.c
-	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib $(INCLUDE) -o $(TARGET) $(OBJS) $(LIBS)
 
 .PHONY:install
 install:
-	mkdir /usr/local/adfs/node
+	mkdir -p /usr/local/adfs/node
 	cp nodeserver.conf /usr/local/adfs/node
 	cp nodeserver /usr/local/bin
 

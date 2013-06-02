@@ -36,26 +36,22 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
     }
 
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
-    if (new_node == NULL)
-        return ADFS_ERROR;
+    if (new_node == NULL) {return ADFS_ERROR;}
     memset(new_node, 0, sizeof(AINode));
     strncpy(new_node->name, name, sizeof(new_node->name));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         new_node->curl[i] = curl_easy_init();
-        if (new_node->curl[i] == NULL)
-            return ADFS_ERROR;
-        if ( pthread_mutex_init(new_node->curl_mutex+i, NULL) != 0)
-            return ADFS_ERROR;
+        if (new_node->curl[i] == NULL) {return ADFS_ERROR;}
+        if ( pthread_mutex_init(new_node->curl_mutex+i, NULL) != 0) {return ADFS_ERROR;}
 	new_node->flag[i] = 0;
     }
     _this->num += 1;
+
     new_node->pre = _this->tail;
     new_node->next = NULL;
-    if (_this->tail)
-        _this->tail->next = new_node;
-    else
-        _this->head = new_node;
+    if (_this->tail) {_this->tail->next = new_node;}
+    else {_this->head = new_node;}
     _this->tail = new_node;
     return ADFS_OK;
 }
@@ -79,9 +75,7 @@ static AINode * z_rand_choose(AIZone *_this)
 {
     int n = rand()%(_this->num);
     AINode *pn = _this->head;
-    for (int i=0; i<n; ++i)
-        pn = pn->next;
-
+    for (int i=0; i<n; ++i) {pn = pn->next;}
     return pn;
 }
 

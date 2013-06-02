@@ -6,7 +6,7 @@
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 #include "ai_zone.h"
 
 enum FLAG_CONNECTION
@@ -25,16 +25,17 @@ static void c_reconnect(AINode *pn, int pos);
 
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
+    DBG_PRINTSN("aic_upload 10");
     ADFS_RESULT res = ADFS_ERROR;
-    if (pn == NULL)
-        return res;
+    if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         if (pthread_mutex_trylock(pn->curl_mutex + i) == 0) {
-	    if (pn->flag[i] != 0 && pn->flag[i] != FLAG_UPLOAD)
-		c_reconnect(pn, i);
+	    if (pn->flag[i] != 0 && pn->flag[i] != FLAG_UPLOAD) {c_reconnect(pn, i);}
+	    DBG_PRINTIN(i);
             res = c_upload(pn->curl[i], url, fname, fdata, fdata_len);
 	    pn->flag[i] = FLAG_UPLOAD;
             pthread_mutex_unlock(pn->curl_mutex + i);
+	    DBG_PRINTSN("aic_upload 20");
             return res;
         }
     }
@@ -45,6 +46,7 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     res = c_upload(pn->curl[ADFS_NODE_CURL_NUM -1], url, fname, fdata, fdata_len);
     pn->flag[ADFS_NODE_CURL_NUM -1] = FLAG_UPLOAD;
     pthread_mutex_unlock(pmutex);
+    DBG_PRINTSN("aic_upload 30");
     return res;
 }
 
@@ -107,9 +109,9 @@ static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata)
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
+    DBG_PRINTSN("c_upload 10");
     ADFS_RESULT adfs_res = ADFS_ERROR;
-    if (curl == NULL)
-        return ADFS_ERROR;
+    if (curl == NULL) {return ADFS_ERROR;}
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastpost = NULL;
     curl_formadd(&formpost, &lastpost,
@@ -118,20 +120,18 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
             CURLFORM_BUFFERPTR, fdata,
             CURLFORM_BUFFERLENGTH, fdata_len,
             CURLFORM_END);
-
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 7);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
-
     CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (res == CURLE_OK && res_code == 200)
-            adfs_res = ADFS_OK;
+        if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
     }
     curl_formfree(formpost);
+    DBG_PRINTSN("c_upload 20");
     return adfs_res;
 }
 

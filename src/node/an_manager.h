@@ -7,13 +7,15 @@
 #ifndef __MANAGER_H___
 #define __MANAGER_H___
 
-#include "adfs.h"
+#include <pthread.h>
+#include "../include/adfs.h"
 
 typedef struct ANManager
 {
     char path[ADFS_MAX_PATH];
     struct ANNameSpace * head;
     struct ANNameSpace * tail;
+    pthread_rwlock_t ns_lock;
 
     unsigned long kc_apow;
     unsigned long kc_fbp;

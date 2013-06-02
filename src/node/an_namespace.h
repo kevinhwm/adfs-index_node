@@ -7,8 +7,9 @@
 #ifndef __NAMESPACE_H__
 #define __NAMESPACE_H__
 
-#include "adfs.h"
+#include <pthread.h>
 #include <kclangc.h>
+#include "../include/adfs.h"
 
 #define NODE_MAX_FILE_NUM       100000
 
@@ -36,6 +37,7 @@ typedef struct ANNameSpace
     char name[ADFS_NAMESPACE_LEN];
     KCDB * index_db;
     unsigned long number;
+    pthread_rwlock_t lock;
 
     struct NodeDB * head;
     struct NodeDB * tail;
@@ -43,10 +45,12 @@ typedef struct ANNameSpace
     struct ANNameSpace * next;
 
     // functions
-    ADFS_RESULT (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
     void (*release_all)(struct ANNameSpace *);
+    ADFS_RESULT (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
     struct NodeDB * (*get)(struct ANNameSpace *, int);
-    ADFS_RESULT (*switch_state)(struct ANNameSpace *, int, ADFS_NODE_STATE);
+    int (*needto_split)(struct ANNameSpace * _this);
+    ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
+    void (*count_add)(struct ANNameSpace *_this);
 }ANNameSpace;
 
 // an_namespace.c

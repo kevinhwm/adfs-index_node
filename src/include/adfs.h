@@ -7,15 +7,16 @@
 #ifndef __ADFS_H__
 #define __ADFS_H__
 
-#define ADFS_VERSION		"3.0"
+#define ADFS_VERSION		"3.1.0"
 #define ADFS_MAX_PATH		1024
 #define ADFS_FILENAME_LEN	256
-#define ADFS_NODENAME_LEN	128
 #define ADFS_ZONENAME_LEN	128
 #define ADFS_NAMESPACE_LEN	128
+#define ADFS_NODENAME_LEN	128
 #define ADFS_UUID_LEN		24		// exactly 24 bytes
 
 #include <string.h>	// size_t
+#include "cJSON.h"
 
 typedef enum {
     ADFS_ERROR	= -1,
@@ -24,10 +25,11 @@ typedef enum {
 
 //==============================================================================
 
-// conf.c
-ADFS_RESULT conf_read(const char * pfile, const char * s, char *buf, size_t len);
-int conf_split(char *p, char *key, char *value);
-int get_filename_from_url(char *);
+// ai_function.c
+cJSON * conf_parse(const char *conf_file);
+void conf_release(cJSON *json);
+int get_filename_from_url(char * p);
+
 
 // log.c
 typedef enum {

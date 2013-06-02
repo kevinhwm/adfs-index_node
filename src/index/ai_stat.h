@@ -8,13 +8,13 @@
 #define __STAT_H__
 
 #include <time.h>
-#include "adfs.h"
+#include "../include/adfs.h"
 
 typedef struct AIStat 
 {
     unsigned long start;
-    int scope;		// in minutes
-    int pos_last; 	// last record 
+    unsigned long pos_last; 	// last record 
+    unsigned long scope;		// in minutes
     int *count;
 
     void (*release)(struct AIStat *);
