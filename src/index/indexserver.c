@@ -57,21 +57,21 @@ static void show_help(void)
 	    "usage:    indexserver <options>\n"
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
-	    //" -l file  set log file	(default: stderr or indexserver_error_log for daemon)\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
+	    " -w file  set work dir			(default: /usr/local/adfs/index)\n"
 	    //" -u user  set process uid\n"
 	    //" -g group set process gid\n"
 	    " -P port  set http port\n"
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file			(default: ./indexserver.conf)\n"
+	    " -c file  config file			(default: indexserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
-	    " -x dir   set work dir			(default: ./)\n"
+	    " -x dir   set database dir		(no default, must be set.)\n"
 
 	    "\n"
-	    " example:  indexserver -d -x ./ \n"
+	    " example:  indexserver -w ./ -x ./ -c indexserver.conf -d \n"
           );
 }
 
