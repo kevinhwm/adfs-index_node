@@ -55,7 +55,6 @@ static void show_help(void)
     printf( "usage:    nodeserver <options>\n"
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
-	    //" -l file  set log file    		(default: stderr or nodeserver_error_log for daemon)\n"
 	    " -p file  set pid file			(default: nodeserver.pid)\n"
 	    " -w file  set work dir			(default: /usr/local/adfs/node)\n"
 	    //" -u user  set process uid\n"
