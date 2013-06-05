@@ -89,7 +89,6 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     if (m_init_zone(json) == ADFS_ERROR) {goto err1;}
 
     g_MaxFileSize = max_file_size *1024*1024;
-    // init libcurl
     curl_global_init(CURL_GLOBAL_ALL);
 
     // work mode 
@@ -101,7 +100,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     snprintf(msg, sizeof(msg), "[%s]->work mode", j_tmp->valuestring);
     log_out("manager", msg, LOG_LEVEL_INFO);
     if (strcmp(j_tmp->valuestring, "erase") == 0) {
-	printf("\nIndex will work in 'erase mode'! \n"
+	printf( "\nIndex will work in 'erase mode'!\n"
 		"When it is done, you should restart it manually. \n");
 	while (1) {
 	    printf("\nAre you sure ? (y/n) ");
@@ -110,10 +109,8 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 		g_erase_mode = 1;
 		log_out("manager", "work in 'erase' mode", LOG_LEVEL_INFO);
 		printf("\nwork in 'erase' mode.\n");
-		if (m_erase() == ADFS_OK)
-		    log_out("manager", "erase ok.", LOG_LEVEL_INFO);
-		else
-		    log_out("manager", "erase failed.", LOG_LEVEL_INFO);
+		if (m_erase() == ADFS_OK) {log_out("manager", "erase ok.", LOG_LEVEL_INFO);}
+		else {log_out("manager", "erase failed.", LOG_LEVEL_INFO);}
 		break;
 	    }
 	    else if (i == 'n') {
@@ -127,7 +124,6 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
 
     conf_release(json);
     return ADFS_OK;
-
 err1:
     conf_release(json);
     return ADFS_ERROR;
@@ -697,10 +693,8 @@ static ADFS_RESULT e_traverse(AINameSpace *pns)
     kccurjump(cur);
     while ((kbuf = kccurget(cur, &ksiz, &cvbuf, &vsiz, 0)) != NULL) {
 	const char *hold = e_parse(pns->name, kbuf, cvbuf);
-	if (strlen(hold) > 0)
-	    kccursetvalue(cur, hold, strlen(hold), 1);
-	else
-	    kccurremove(cur);
+	if (strlen(hold) > 0) {kccursetvalue(cur, hold, strlen(hold), 1);}
+	else {kccurremove(cur);}
 	kcfree(kbuf);
     }
     kccurdel(cur);
@@ -724,8 +718,7 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 {
     ADFS_RESULT res = ADFS_OK;
     char *r = malloc(len+1);
-    if (r == NULL)
-	return ADFS_ERROR;
+    if (r == NULL) {return ADFS_ERROR;}
     memset(r, 0, len+1);
     strncpy(r, record, len);
 
@@ -736,24 +729,16 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 	char *pos_split = strstr(pos_sharp, "|");
 	rest = pos_split;
 
-	if (pos_split)
-	    pn = m_get_node_by_name(pos_sharp +1, pos_split - pos_sharp -1);
-	else 
-	    pn = m_get_node_by_name(pos_sharp +1, strlen(pos_sharp +1));
+	if (pos_split) {pn = m_get_node_by_name(pos_sharp +1, pos_split - pos_sharp -1);}
+	else {pn = m_get_node_by_name(pos_sharp +1, strlen(pos_sharp +1));}
 
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
-	    if (ns) {
-		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", 
-			pn->ip_port, fname, ADFS_UUID_LEN, r, ns);
-	    }
-	    else {
-		snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r);
-	    }
+	    if (ns) { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, r, ns); }
+	    else { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r); }
 	    res = aic_erase(pn, url);		// do not care about success or failure.
 	}
     }
-
     free(r);
     return res;
 }

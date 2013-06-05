@@ -64,7 +64,7 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, const char *path, const char *
 
     char dbpath[ADFS_MAX_PATH] = {0};
     snprintf(dbpath, sizeof(dbpath), "%s/%s/%d.kch%s", path, _this->name, new_node->id, args);
-    if (db_create(new_node->db, dbpath, state) == ADFS_ERROR) {goto err1;}
+    if (db_create(new_node->db, dbpath, state) == ADFS_ERROR) {free(new_node); return ADFS_ERROR;}
     strncpy(new_node->path, dbpath, sizeof(new_node->path));
     _this->number += 1;
     new_node->count = kcdbcount(new_node->db);
@@ -76,9 +76,6 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, const char *path, const char *
     else {_this->head = new_node;}
     _this->tail = new_node;
     return ADFS_OK;
-err1:
-    free(new_node);
-    return ADFS_ERROR;
 }
 
 static NodeDB * ns_get(ANNameSpace * _this, int id)
