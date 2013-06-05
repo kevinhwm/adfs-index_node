@@ -60,10 +60,8 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 
     pfname += 10;
     char *pfname_end = strstr( pfname+1, "\"" );
-    if (pfname_end == NULL)
-	memset(pufo->filename, 0, sizeof(pufo->filename));
-    else
-	strncpy( pufo->filename, pfname, pfname_end - pfname );
+    if (pfname_end == NULL) {memset(pufo->filename, 0, sizeof(pufo->filename));}
+    else {strncpy( pufo->filename, pfname, pfname_end - pfname );}
     pufo->file_ready_to_receive = 1;
     return 0;
 }
@@ -78,10 +76,8 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
         return 0;
     }
     if ( pufo->file_ready_to_receive ) {
-        if ( pufo->ffilemem == NULL ) 
-            return 0;
-        if ( pufo->ffilemem )
-            fwrite( at, 1, length, pufo->ffilemem);
+        if ( pufo->ffilemem == NULL ) {return 0;}
+        if ( pufo->ffilemem ) {fwrite( at, 1, length, pufo->ffilemem);}
     }
     return 0;
 }
@@ -144,10 +140,7 @@ static nxweb_result upload_on_request(
 	    res = -1;
 	}
 
-	if (ufo->file_ptr) {
-	    free( ufo->file_ptr );
-	    ufo->file_ptr = NULL;
-	}
+	if (ufo->file_ptr) { free( ufo->file_ptr ); ufo->file_ptr = NULL; }
     }
 
     char msg[1024] = {0};
@@ -157,10 +150,8 @@ static nxweb_result upload_on_request(
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    else if (res > 0) 
-	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
-    else
-	snprintf(msg, sizeof(msg), "[%s:%s]->request.[%s]", name_space, fname, conn->remote_addr);
+    else if (res > 0) {snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);}
+    else {snprintf(msg, sizeof(msg), "[%s:%s]->request.[%s]", name_space, fname, conn->remote_addr);}
 
     log_out("upload", msg, LOG_LEVEL_INFO);
     nxweb_response_printf(resp, ""
@@ -181,14 +172,8 @@ static void upload_request_data_finalize(
 {
     upload_file_object *ufo = data.ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
-    if (fwb && fwb->fd) {
-	fclose(fwb->fd);
-	fwb->fd=0;
-    }
-    if( ufo->postdata_ptr ) {
-	free( ufo->postdata_ptr );
-	ufo->postdata_ptr = NULL;
-    }
+    if (fwb && fwb->fd) { fclose(fwb->fd); fwb->fd=0; }
+    if (ufo->postdata_ptr) { free( ufo->postdata_ptr ); ufo->postdata_ptr = NULL; }
 }
 
 static nxweb_result upload_on_post_data(

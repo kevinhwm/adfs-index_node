@@ -164,15 +164,12 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
-    if (name_space == NULL)
-	name_space = "default";
+    if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL)
-	return ADFS_OK;
+    if (pns == NULL) {return ADFS_OK;}
     size_t len = 0;
     char *id = kcdbseize(pns->index_db, fname, strlen(fname), &len);
-    if (id == NULL)
-	return ADFS_OK;
+    if (id == NULL) {return ADFS_OK;}
     NodeDB *pn = pns->get(pns, atoi(id));
     kcdbremove(pn->db, fname, strlen(fname));
     kcfree(id);
@@ -203,10 +200,7 @@ static ANNameSpace * m_create_ns(const char *name_space)
     snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz);
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
-    if (pns == NULL) {
-	pthread_rwlock_unlock(&pm->ns_lock);
-	return NULL;
-    }
+    if (pns == NULL) { pthread_rwlock_unlock(&pm->ns_lock); return NULL; }
     anns_init(pns, name_space);
 
     char indexdb_path[ADFS_MAX_PATH] = {0};
@@ -270,8 +264,7 @@ static int m_get_fileid(char * name)
     if (strcmp(pos, ".kch") != 0) {return -1;}
 
     for (int i=0; i<pos-name; ++i) {
-	if (name[i] < '0' || name[i] > '9')
-	    return -1;
+	if (name[i] < '0' || name[i] > '9') {return -1;}
     }
     char tmp[max_len];
     strncpy(tmp, name, pos-name);
