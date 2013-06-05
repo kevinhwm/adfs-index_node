@@ -40,8 +40,8 @@ static int * s_get(AIStat *ps, time_t *t)
     if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
     pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
-	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;
+	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
     }
     return ps->count + pos_cur;
 }
@@ -55,8 +55,8 @@ static void s_inc(AIStat *ps)
     if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
     pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
-	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;
+	__sync_and_and_fetch(ps->count + ps->pos_last, 0);
     }
     __sync_add_and_fetch(ps->count + pos_cur, 1);
 }

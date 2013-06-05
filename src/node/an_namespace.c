@@ -13,6 +13,7 @@ static NodeDB * ns_get(ANNameSpace * _this, int id);
 static int ns_needto_split(ANNameSpace * _this);
 static ADFS_RESULT ns_split_db(ANNameSpace * _this, const char *path, const char *args);
 static void ns_count_add(ANNameSpace * _this);
+static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state);
 
 // just functions
 static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state);
@@ -29,6 +30,7 @@ ADFS_RESULT anns_init(ANNameSpace * _this, const char *name_space)
 	_this->needto_split = ns_needto_split;
 	_this->split_db = ns_split_db;
 	_this->count_add = ns_count_add;
+	_this->switch_state = ns_switch_state;
 	_this->number = 0;
 	pthread_rwlock_init(&_this->lock, NULL);
         strncpy(_this->name, name_space, sizeof(_this->name));
@@ -139,6 +141,24 @@ static void ns_count_add(ANNameSpace * _this)
     DBG_PRINTSN("unlock ns_count_add");
 }
 
+static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state)
+{
+    pthread_rwlock_wrlock(&_this->lock);
+    DBG_PRINTSN("lock ns_set_all_state");
+    NodeDB *pn = _this->head;
+    while (pn && pn != _this->tail) {
+	if (pn->state != state) {
+	    kcdbclose(pn->db);
+	    pn->state = state;
+	    if (db_create(pn->db, pn->path, pn->state) == ADFS_ERROR) {return ADFS_ERROR;}
+	}
+	pn = pn->next;
+    }
+    pthread_rwlock_unlock(&_this->lock);
+    DBG_PRINTSN("unlock ns_set_all_state");
+    return ADFS_OK;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 // private function
 static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state)
@@ -148,7 +168,7 @@ static ADFS_RESULT db_create(KCDB * db, char * path, ADFS_NODE_STATE state)
             if (!kcdbopen(db, path, KCOREADER)) {return ADFS_ERROR;}
             break;
         case S_READ_WRITE:
-            if (!kcdbopen(db, path, KCOREADER|KCOCREATE|KCOWRITER|KCOTRYLOCK)) {return ADFS_ERROR;}
+            if (!kcdbopen(db, path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK)) {return ADFS_ERROR;}
             break;
     }
     return ADFS_OK;

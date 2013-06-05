@@ -143,6 +143,23 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     kcfree(id);
 }
 
+ADFS_RESULT anm_switch(int s_write)
+{
+    ADFS_RESULT res = ADFS_OK;
+    ANManager *pm = &g_manager;
+    ADFS_NODE_STATE state = S_READ_ONLY;
+    if (s_write) {state = S_READ_WRITE;}
+
+    pthread_rwlock_wrlock(&pm->ns_lock);
+    ANNameSpace * pns = pm->head;
+    while (pns) {
+	if (pns->switch_state(pns, state) == ADFS_ERROR) {res = ADFS_ERROR; break;}
+	pns = pns->next;
+    }
+    pthread_rwlock_unlock(&pm->ns_lock);
+    return res;
+}
+
 ADFS_RESULT anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;

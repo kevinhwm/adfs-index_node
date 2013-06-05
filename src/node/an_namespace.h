@@ -51,6 +51,7 @@ typedef struct ANNameSpace
     int (*needto_split)(struct ANNameSpace * _this);
     ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
     void (*count_add)(struct ANNameSpace *_this);
+    ADFS_RESULT (*switch_state)(struct ANNameSpace *_this, ADFS_NODE_STATE state);
 }ANNameSpace;
 
 // an_namespace.c
