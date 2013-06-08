@@ -14,11 +14,13 @@ extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
 extern nxweb_handler erase_handler;
 extern nxweb_handler status_handler;
+extern nxweb_handler syn_handler;
 
 NXWEB_SET_HANDLER(upload, "/upload_file", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
 NXWEB_SET_HANDLER(erase, "/erase", &erase_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
+NXWEB_SET_HANDLER(syn, "/syn", &syn_handler, .priority=1000); 
 
 // Command-line options:
 static const char* user_name=0;

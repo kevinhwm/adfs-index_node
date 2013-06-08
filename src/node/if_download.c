@@ -23,10 +23,7 @@ static void download_request_data_finalize(
 	nxe_data data)
 {
     SHARE_DATA * d = data.ptr;
-    if(d->data_ptr) {
-	kcfree( d->data_ptr );
-	d->data_ptr = NULL;
-    }
+    if(d->data_ptr) { kcfree( d->data_ptr ); d->data_ptr = NULL; }
 }
 
 static nxweb_result download_on_request(
@@ -64,8 +61,7 @@ static nxweb_result download_on_request(
 	ptmp->data_ptr = pfile_data;
 	char *file_name = fname;
 	char *tmp = NULL;
-	while ( (tmp = strstr(file_name, "/")) )
-	    file_name = tmp + 1;
+	while ( (tmp = strstr(file_name, "/")) ) {file_name = tmp + 1;}
 
 	char resp_name[ADFS_FILENAME_LEN] = {0};
 	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-ADFS_UUID_LEN), file_name);

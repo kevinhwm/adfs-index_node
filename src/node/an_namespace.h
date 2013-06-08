@@ -14,10 +14,12 @@
 #define NODE_MAX_FILE_NUM       100000
 
 
-typedef enum ADFS_NODE_STATE
+typedef enum ADFS_NODE_STATE 
 {
-    S_READ_ONLY     = 0,
-    S_READ_WRITE    = 1,
+    S_LOST		= 0,
+    S_READ_ONLY,
+    S_READ_WRITE,
+    S_SYN
 }ADFS_NODE_STATE;
 
 typedef struct NodeDB
@@ -25,10 +27,10 @@ typedef struct NodeDB
     int             id;
     ADFS_NODE_STATE state;
     char            path[ADFS_MAX_PATH];
-    unsigned long   count;
     KCDB        *   db;
+    unsigned long   count;
 
-    struct NodeDB * pre;
+    struct NodeDB * prev;
     struct NodeDB * next;
 }NodeDB;
 
@@ -38,19 +40,21 @@ typedef struct ANNameSpace
     KCDB * index_db;
     unsigned long number;
     pthread_rwlock_t lock;
+    int sign_syn;
 
     struct NodeDB * head;
     struct NodeDB * tail;
-    struct ANNameSpace * pre;
+    struct ANNameSpace * prev;
     struct ANNameSpace * next;
 
     // functions
-    void (*release_all)(struct ANNameSpace *);
+    void (*release)(struct ANNameSpace *);
     ADFS_RESULT (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
     struct NodeDB * (*get)(struct ANNameSpace *, int);
     int (*needto_split)(struct ANNameSpace * _this);
     ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
     void (*count_add)(struct ANNameSpace *_this);
+    ADFS_RESULT (*switch_state)(struct ANNameSpace *_this, ADFS_NODE_STATE state);
 }ANNameSpace;
 
 // an_namespace.c

@@ -29,6 +29,7 @@ void anm_exit();
 ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 void anm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
 ADFS_RESULT anm_erase(const char *name_space, const char *fname);
+ADFS_RESULT anm_syn();
 
 #endif // __MANAGER_H___
 

@@ -33,13 +33,9 @@ int log_init(const char *filename)
     f_log = fopen(log_file, "a");
     if (f_log == NULL) {return -1;}
     fprintf(f_log, "\n");
-    //fprintf(f_log, "TIME\t\t\tID\tLEVEL\tMODULE\tINFORMATION\n");
     fflush(f_log);
 
-    if (pthread_mutex_init(&mutex, NULL) != 0) {
-	fclose(f_log);
-	return -1;
-    }
+    if (pthread_mutex_init(&mutex, NULL) != 0) { fclose(f_log); return -1; }
     return 0;
 }
 
