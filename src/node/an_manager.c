@@ -155,12 +155,7 @@ ADFS_RESULT anm_syn()
     ANManager * pm = &g_manager;
     ANNameSpace * pns = pm->head;
     while (pns) {
-	/*
-	 * 建线程
-	 * 执行 namespace->syn
-	 *
-	 * */
-	//if (pns->syn(pns)) {res = ADFS_ERROR};
+	pns->syn(pns);
 	pns = pns->next;
     }
     return res;

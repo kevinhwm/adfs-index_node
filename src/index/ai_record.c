@@ -54,7 +54,7 @@ static ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
     _this->num++;
     snprintf(pp->zone_node, sizeof(pp->zone_node), "%s#%s", zone, node);
 
-    pp->pre = _this->tail;
+    pp->prev = _this->tail;
     pp->next = NULL;
     if (_this->tail) {_this->tail->next = pp;}
     else {_this->head = pp;}

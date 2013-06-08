@@ -9,7 +9,7 @@
 #include "ai_zone.h"
 
 static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port);
-static void z_release_all(AIZone *_this);
+static void z_release(AIZone *_this);
 static AINode * z_rand_choose(AIZone *_this);
 
 ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
@@ -21,7 +21,7 @@ ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
         _this->num = 0;
 
         _this->create = z_create;
-        _this->release_all = z_release_all;
+        _this->release = z_release;
         _this->rand_choose = z_rand_choose;
         return ADFS_OK;
     }
@@ -48,7 +48,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
     }
     _this->num += 1;
 
-    new_node->pre = _this->tail;
+    new_node->prev = _this->tail;
     new_node->next = NULL;
     if (_this->tail) {_this->tail->next = new_node;}
     else {_this->head = new_node;}
@@ -56,11 +56,11 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
     return ADFS_OK;
 }
 
-static void z_release_all(AIZone *_this)
+static void z_release(AIZone *_this)
 {
     while (_this->tail) {
         AINode *pn = _this->tail;
-        _this->tail = _this->tail->pre;
+        _this->tail = _this->tail->prev;
 
         for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
             curl_easy_cleanup(pn->curl[i]);

@@ -20,7 +20,7 @@ typedef struct AIPosition
 {
     char zone_node[ADFS_ZONENAME_LEN + ADFS_NODENAME_LEN];
 
-    struct AIPosition *pre;
+    struct AIPosition *prev;
     struct AIPosition *next;
 }AIPosition;
 

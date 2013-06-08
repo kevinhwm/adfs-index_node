@@ -13,7 +13,7 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, const char *path, const char *
 static int ns_needto_split(ANNameSpace * _this);
 static ADFS_RESULT ns_split_db(ANNameSpace * _this, const char *path, const char *args);
 static void ns_count_add(ANNameSpace * _this);
-static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state);
+static void ns_syn(ANNameSpace * _this);
 
 // just functions
 static ADFS_RESULT node_create(ANNameSpace * _this, const char *path, const char *args, ADFS_NODE_STATE state);
@@ -31,7 +31,7 @@ ADFS_RESULT anns_init(ANNameSpace * _this, const char *name_space)
 	_this->needto_split = ns_needto_split;
 	_this->split_db = ns_split_db;
 	_this->count_add = ns_count_add;
-	_this->switch_state = ns_switch_state;
+	_this->syn = ns_syn;
 	_this->number = 0;
 	_this->sign_syn = 0;
 	pthread_rwlock_init(&_this->lock, NULL);
@@ -148,68 +148,59 @@ static ADFS_RESULT db_open(KCDB * db, char * path, ADFS_NODE_STATE state)
     return ADFS_OK;
 }
 
-static void ns_syn(ANNameSpace *_this)
+static void * thread_syn(void *param);
+static void ns_syn(ANNameSpace * _this)
 {
     // avoid reentrant problem
     pthread_rwlock_wrlock(&_this->lock);
     if (_this->sign_syn) { pthread_rwlock_unlock(&_this->lock); return; }
     _this->sign_syn = 1;
     pthread_rwlock_unlock(&_this->lock);
+    pthread_t tid;
+    pthread_create(&tid, NULL, thread_syn, NULL);
+    return ;
+}
 
-    // start...
-    NodeDB * pn = _this->head;
+static void * thread_syn(void *param)
+{
+    ANNameSpace *pns = (ANNameSpace *)param;
+    NodeDB * pn = pns->head;
     while (pn) {
-	pthread_rwlock_wrlock(&_this->lock);
+	pthread_rwlock_wrlock(&pns->lock);
 	if (pn->state == S_READ_ONLY) {
 	    kcdbclose(pn->db);
 	    pn->state = S_SYN;
-	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; pthread_rwlock_unlock(&_this->lock); return ;}
+	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; pthread_rwlock_unlock(&pns->lock); return NULL;}
 	}
-	pthread_rwlock_unlock(&_this->lock);
+	pthread_rwlock_unlock(&pns->lock);
 
 	char *kbuf;
 	size_t ksize;
 	KCCUR *cur = kcdbcursor(pn->db);
 	kccurjump(cur);
 	while ((kbuf = kccurgetkey(cur, &ksize, 0)) != NULL) {
-	    if (kcdbcheck(_this->index_db, kbuf, ksize) == -1) {kccurremove(cur);}
+	    if (kcdbcheck(pns->index_db, kbuf, ksize) == -1) {kccurremove(cur);}
 	    else {kccurstep(cur);}
 	    kcfree(kbuf);
 	}
 	kccurdel(cur);
 
-	if (pn != _this->tail) {
-	    pthread_rwlock_wrlock(&_this->lock);
+	if (pn != pns->tail) {
+	    pthread_rwlock_wrlock(&pns->lock);
 	    if (pn->state == S_READ_WRITE) {
 		kcdbclose(pn->db);
 		pn->state = S_READ_ONLY;
-		if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; pthread_rwlock_unlock(&_this->lock); return ;}
+		if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; pthread_rwlock_unlock(&pns->lock); return NULL;}
 	    }
-	    pthread_rwlock_unlock(&_this->lock);
+	    pthread_rwlock_unlock(&pns->lock);
 	}
 
 	pn = pn->next;
     }
 
-    pthread_rwlock_wrlock(&_this->lock);
-    _this->sign_syn = 0;
-    pthread_rwlock_unlock(&_this->lock);
-}
-
-static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state)
-{
-    pthread_rwlock_wrlock(&_this->lock);
-    NodeDB *pn = _this->head;
-
-    while (pn && pn != _this->tail) {
-	if (pn->state != state) {
-	    kcdbclose(pn->db);
-	    pn->state = state;
-	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; return ADFS_ERROR;}
-	}
-	pn = pn->next;
-    }
-    pthread_rwlock_unlock(&_this->lock);
-    return ADFS_OK;
+    pthread_rwlock_wrlock(&pns->lock);
+    pns->sign_syn = 0;
+    pthread_rwlock_unlock(&pns->lock);
+    return NULL;
 }
 

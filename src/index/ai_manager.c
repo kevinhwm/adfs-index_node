@@ -20,6 +20,7 @@ static ADFS_RESULT m_init_log(cJSON *json);
 static ADFS_RESULT m_init_stat(cJSON *json);
 static ADFS_RESULT m_init_ns(cJSON *json);
 static ADFS_RESULT m_init_zone(cJSON *json);
+
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
@@ -121,7 +122,6 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     }
     else if (strcmp(j_tmp->valuestring, "normal") == 0) {printf("\nwork in 'normal' node.\n");}
     else {log_out("manager", "[work_mode]->config value error", LOG_LEVEL_ERROR); goto err1;}
-
     conf_release(json);
     return ADFS_OK;
 err1:
@@ -136,7 +136,7 @@ void aim_exit()
     while (pz) {
         AIZone *tmp = pz;
         pz = pz->next;
-        tmp->release_all(tmp);
+        tmp->release(tmp);
         free(tmp);
     }
     AINameSpace *pns = pm->ns_head;
@@ -526,8 +526,7 @@ static ADFS_RESULT m_init_stat(cJSON *json)
 // private
 static AIZone * m_choose_zone(const char *record)
 {
-    if (record == NULL)
-	return NULL;
+    if (record == NULL) {return NULL;}
     AIManager *pm = &g_manager;
     AIZone *biggest_z = NULL;   // (weight/count)
     AIZone *least_z = NULL;
@@ -568,8 +567,7 @@ static AINameSpace * m_get_ns(const char *ns)
 static AINode * m_get_node_by_name(const char *node_name, size_t len)
 {
     char *p = malloc(len+1);
-    if (p == NULL)
-	return NULL;
+    if (p == NULL) {return NULL;}
     p[len] = '\0';
     strncpy(p, node_name, len);
     DBG_PRINTSN(p);
@@ -598,7 +596,7 @@ static AIZone * m_create_zone(const char *name, int weight)
     pz = (AIZone *)malloc(sizeof(AIZone));
     if (pz == NULL) {return NULL;}
     aiz_init(pz, name, weight);
-    pz->pre = pm->z_tail;
+    pz->prev = pm->z_tail;
     pz->next = NULL;
     if (pm->z_tail) {pm->z_tail->next = pz;}
     else {pm->z_head = pz;}
@@ -612,30 +610,24 @@ static ADFS_RESULT m_create_ns(const char *name)
     AIManager * pm = &g_manager;
     AINameSpace *pns = pm->ns_head;
     while (pns) {
-    	if (strcmp(pns->name, name) == 0)
-	    return ADFS_ERROR;
+    	if (strcmp(pns->name, name) == 0) {return ADFS_ERROR;}
 	pns = pns->next;
     }
     pns = malloc(sizeof(AINameSpace));
-    if (pns == NULL) 
-	return ADFS_ERROR;
+    if (pns == NULL) {return ADFS_ERROR;}
 
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_PATH] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) 
-        return ADFS_ERROR;
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {return ADFS_ERROR;}
 
-    pns->pre = pm->ns_tail;
+    pns->prev = pm->ns_tail;
     pns->next = NULL;
-    if (pm->ns_tail)
-	pm->ns_tail->next = pns;
-    else
-	pm->ns_head = pns;
+    if (pm->ns_tail) {pm->ns_tail->next = pns;}
+    else {pm->ns_head = pns;}
     pm->ns_tail = pns;
-
     return ADFS_OK;
 }
 
@@ -649,22 +641,16 @@ static char * m_get_history(const char *line, int order)
     for (pos_cur=len-1; pos_cur>=0; --pos_cur) {
 	if (line[pos_cur] == '$') {
 	    ++count;
-	    if (count == order)
-		pos_tail = pos_cur-1;
-	    if (count == order+1)
-		pos_head = pos_cur+1;
+	    if (count == order) {pos_tail = pos_cur-1;}
+	    if (count == order+1) {pos_head = pos_cur+1;}
 	}
     }
-    if (count < order)
-	return NULL;
-
+    if (count < order) {return NULL;}
     size = pos_tail - pos_head + 1;
     record = malloc(size+1);
-    if (record == NULL)
-	return NULL;
+    if (record == NULL) {return NULL;}
     memset(record, 0, size+1);
     strncpy(record, &(line[pos_head]), size);
-
     return record;
 }
 
@@ -703,8 +689,7 @@ static const char * e_parse(const char *ns, const char *fname, const char *recor
     const char *pos_dollar = NULL;
 
     while ((pos_dollar = strstr(rest, "$"))) {
-	if (e_connect(ns, fname, rest, pos_dollar - rest) == ADFS_ERROR)
-	    break;
+	if (e_connect(ns, fname, rest, pos_dollar - rest) == ADFS_ERROR) {break;}
 	rest = pos_dollar +1;
     }
     return rest;
