@@ -125,10 +125,14 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
     CURLcode res = curl_easy_perform(curl);
+    DBG_PRINTSN("c_upload perform :");
+    DBG_PRINTUN((unsigned long)res);
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
         if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
+	DBG_PRINTUN((unsigned long)res);
+	DBG_PRINTUN((unsigned long)res_code);
     }
     curl_formfree(formpost);
     DBG_PRINTSN("c_upload 20");
@@ -138,8 +142,7 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
 static ADFS_RESULT c_erase(CURL *curl, const char *url)
 {
     ADFS_RESULT adfs_res = ADFS_ERROR;
-    if (curl == NULL)
-        return ADFS_ERROR;
+    if (curl == NULL) {return ADFS_ERROR;}
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 7);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
@@ -147,8 +150,7 @@ static ADFS_RESULT c_erase(CURL *curl, const char *url)
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (res == CURLE_OK && res_code == 200)
-            adfs_res = ADFS_OK;
+        if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
     }
     return adfs_res;
 }
@@ -165,17 +167,14 @@ static ADFS_RESULT c_status(CURL *curl, const char *url)
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (res == CURLE_OK && res_code == 200)
-            adfs_res = ADFS_OK;
+        if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
     }
     return adfs_res;
 }
 
-
 static void c_reconnect(AINode *pn, int pos)
 {
-    if (pn->curl[pos])
-	curl_easy_cleanup(pn->curl[pos]);
+    if (pn->curl[pos]) {curl_easy_cleanup(pn->curl[pos]);}
     pn->curl[pos] = curl_easy_init();
 }
 
