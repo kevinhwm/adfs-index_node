@@ -138,23 +138,6 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     kcfree(id);
 }
 
-ADFS_RESULT anm_switch(int s_write)
-{
-    ADFS_RESULT res = ADFS_OK;
-    ANManager *pm = &g_manager;
-    ADFS_NODE_STATE state = S_READ_ONLY;
-    if (s_write) {state = S_READ_WRITE;}
-
-    pthread_rwlock_wrlock(&pm->ns_lock);
-    ANNameSpace * pns = pm->head;
-    while (pns) {
-	if (pns->switch_state(pns, state) == ADFS_ERROR) {res = ADFS_ERROR; break;}
-	pns = pns->next;
-    }
-    pthread_rwlock_unlock(&pm->ns_lock);
-    return res;
-}
-
 ADFS_RESULT anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;
@@ -162,16 +145,6 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
     if (pns == NULL) {return ADFS_OK;}
-<<<<<<< HEAD
-    size_t len = 0;
-    char *id = kcdbseize(pns->index_db, fname, strlen(fname), &len);
-    if (id == NULL) {return ADFS_OK;}
-    NodeDB *pn = pns->get(pns, atoi(id));
-    kcdbremove(pn->db, fname, strlen(fname));
-    kcfree(id);
-    pn->count -= 1;
-    return ADFS_OK;
-=======
     if ( kcdbremove(pns->index_db, fname, strlen(fname)) ) {return ADFS_OK;}
     else {return ADFS_ERROR;}
 }
@@ -186,7 +159,6 @@ ADFS_RESULT anm_syn()
 	pns = pns->next;
     }
     return res;
->>>>>>> master
 }
 
 ////////////////////////////////////////////////////////////////////////////////

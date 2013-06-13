@@ -13,11 +13,7 @@ static ADFS_RESULT ns_create(ANNameSpace * _this, const char *path, const char *
 static int ns_needto_split(ANNameSpace * _this);
 static ADFS_RESULT ns_split_db(ANNameSpace * _this, const char *path, const char *args);
 static void ns_count_add(ANNameSpace * _this);
-<<<<<<< HEAD
-static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state);
-=======
 static void ns_syn(ANNameSpace * _this);
->>>>>>> master
 
 // just functions
 static ADFS_RESULT node_create(ANNameSpace * _this, const char *path, const char *args, ADFS_NODE_STATE state);
@@ -35,11 +31,7 @@ ADFS_RESULT anns_init(ANNameSpace * _this, const char *name_space)
 	_this->needto_split = ns_needto_split;
 	_this->split_db = ns_split_db;
 	_this->count_add = ns_count_add;
-<<<<<<< HEAD
-	_this->switch_state = ns_switch_state;
-=======
 	_this->syn = ns_syn;
->>>>>>> master
 	_this->number = 0;
 	_this->sign_syn = 0;
 	pthread_rwlock_init(&_this->lock, NULL);
@@ -64,35 +56,6 @@ static void ns_release(ANNameSpace * _this)
     return ;
 }
 
-<<<<<<< HEAD
-// just create, no check.
-static ADFS_RESULT ns_create(ANNameSpace * _this, const char *path, const char *args, ADFS_NODE_STATE state)
-{
-    NodeDB * new_node = malloc(sizeof(NodeDB));
-    if (new_node == NULL) {return ADFS_ERROR;}
-    
-    new_node->id = _this->number;
-    new_node->state = state;
-    new_node->db = kcdbnew();
-
-    char dbpath[ADFS_MAX_PATH] = {0};
-    snprintf(dbpath, sizeof(dbpath), "%s/%s/%d.kch%s", path, _this->name, new_node->id, args);
-    if (db_create(new_node->db, dbpath, state) == ADFS_ERROR) {free(new_node); return ADFS_ERROR;}
-    strncpy(new_node->path, dbpath, sizeof(new_node->path));
-    _this->number += 1;
-    new_node->count = kcdbcount(new_node->db);
-    new_node->count = new_node->count < 0 ? 0 : new_node->count;
-
-    new_node->pre = _this->tail;
-    new_node->next = NULL;
-    if (_this->tail) {_this->tail->next = new_node;}
-    else {_this->head = new_node;}
-    _this->tail = new_node;
-    return ADFS_OK;
-}
-
-=======
->>>>>>> master
 static NodeDB * ns_get(ANNameSpace * _this, int id)
 {
     pthread_rwlock_rdlock(&_this->lock);
@@ -141,24 +104,6 @@ static void ns_count_add(ANNameSpace * _this)
     pthread_rwlock_unlock(&_this->lock);
 }
 
-static ADFS_RESULT ns_switch_state(ANNameSpace * _this, ADFS_NODE_STATE state)
-{
-    pthread_rwlock_wrlock(&_this->lock);
-    DBG_PRINTSN("lock ns_set_all_state");
-    NodeDB *pn = _this->head;
-    while (pn && pn != _this->tail) {
-	if (pn->state != state) {
-	    kcdbclose(pn->db);
-	    pn->state = state;
-	    if (db_create(pn->db, pn->path, pn->state) == ADFS_ERROR) {return ADFS_ERROR;}
-	}
-	pn = pn->next;
-    }
-    pthread_rwlock_unlock(&_this->lock);
-    DBG_PRINTSN("unlock ns_set_all_state");
-    return ADFS_OK;
-}
-
 /////////////////////////////////////////////////////////////////////////////////
 // not use read-write lock
 
@@ -194,10 +139,7 @@ static ADFS_RESULT db_open(KCDB * db, char * path, ADFS_NODE_STATE state)
             if (!kcdbopen(db, path, KCOREADER)) {return ADFS_ERROR;}
             break;
         case S_READ_WRITE:
-<<<<<<< HEAD
-=======
 	case S_SYN:
->>>>>>> master
             if (!kcdbopen(db, path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK)) {return ADFS_ERROR;}
             break;
 	default:

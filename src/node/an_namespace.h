@@ -53,13 +53,8 @@ typedef struct ANNameSpace
     struct NodeDB * (*get)(struct ANNameSpace *, int);
     int (*needto_split)(struct ANNameSpace * _this);
     ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
-<<<<<<< HEAD
-    void (*count_add)(struct ANNameSpace *_this);
-    ADFS_RESULT (*switch_state)(struct ANNameSpace *_this, ADFS_NODE_STATE state);
-=======
     void (*count_add)(struct ANNameSpace * _this);
     void (*syn)(struct ANNameSpace * _this);
->>>>>>> master
 }ANNameSpace;
 
 // an_namespace.c
