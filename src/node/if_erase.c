@@ -7,6 +7,8 @@
 #include "nxweb/nxweb.h"
 #include "an_manager.h"
 
+// just delete records in index.kch
+// monitor thread delete records which are not in index.kch 
 static nxweb_result erase_on_request(
 	nxweb_http_server_connection* conn, 
 	nxweb_http_request* req, 

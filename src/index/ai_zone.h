@@ -21,7 +21,7 @@ typedef struct AINode
     pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
     int flag[ADFS_NODE_CURL_NUM];
 
-    struct AINode *pre;
+    struct AINode *prev;
     struct AINode *next;
 }AINode;
 
@@ -34,11 +34,11 @@ typedef struct AIZone
 
     struct AINode *head;
     struct AINode *tail;
-    struct AIZone *pre;
+    struct AIZone *prev;
     struct AIZone *next;
     // function
     ADFS_RESULT (*create)(struct AIZone *, const char *, const char *);
-    void (*release_all)(struct AIZone *);
+    void (*release)(struct AIZone *);
     AINode * (*rand_choose)(struct AIZone *);
 }AIZone;
 

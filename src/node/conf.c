@@ -31,8 +31,7 @@ ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size
     FILE * f = fopen(pfile, "r");
     if (f == NULL) {return res;}
 
-    while (fgets(buf, sizeof(buf), f))
-    {
+    while (fgets(buf, sizeof(buf), f)) {
         memset(key, 0, sizeof(key));
         memset(val, 0, sizeof(val));
         if (!conf_split(buf, key, val)) {continue;}

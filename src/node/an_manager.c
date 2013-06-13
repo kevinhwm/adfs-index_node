@@ -22,7 +22,7 @@ static ADFS_RESULT m_init_log(const char *conf_file);
 static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
 
-ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);
+ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
 
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
@@ -67,15 +67,12 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
     struct dirent *ent;
     dirp = opendir(path);
     while ((ent = readdir(dirp)) != NULL) {
-	if (ent->d_type == 4 && ent->d_name[0] != '.')
-	    m_create_ns(ent->d_name);
+	if (ent->d_type == 4 && ent->d_name[0] != '.') {m_create_ns(ent->d_name);}
     }
     closedir(dirp);
 
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
-
-    // init log
     if (m_init_log(conf_file) == ADFS_ERROR) {return ADFS_ERROR;}
     return ADFS_OK;
 }
@@ -90,11 +87,10 @@ void anm_exit()
 	pns = pns->next;
 	kcdbclose(tmp->index_db);
 	kcdbdel(tmp->index_db);
-	tmp->release_all(tmp);
+	tmp->release(tmp);
 	free(tmp);
     }
     log_release();
-
     if (!g_another_running) {
 	char f_flag[1024] = {0};
 	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->path);
@@ -117,7 +113,6 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     }
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return ADFS_ERROR;}
     pns->count_add(pns);
-    //pns->tail->count += 1;
     char buf[16] = {0};
     sprintf(buf, "%d", pns->tail->id);
     if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf))) {return ADFS_ERROR;}
@@ -138,7 +133,7 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL) {return ;}
     NodeDB *pn = pns->get(pns, atoi(id));
-    if (pn == NULL) {kcfree(id); return;}
+    if (pn == NULL) {kcfree(id); return ;}
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
     kcfree(id);
 }
@@ -167,6 +162,7 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
     if (pns == NULL) {return ADFS_OK;}
+<<<<<<< HEAD
     size_t len = 0;
     char *id = kcdbseize(pns->index_db, fname, strlen(fname), &len);
     if (id == NULL) {return ADFS_OK;}
@@ -175,10 +171,39 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
     kcfree(id);
     pn->count -= 1;
     return ADFS_OK;
+=======
+    if ( kcdbremove(pns->index_db, fname, strlen(fname)) ) {return ADFS_OK;}
+    else {return ADFS_ERROR;}
+}
+
+ADFS_RESULT anm_syn()
+{
+    ADFS_RESULT res = ADFS_OK;
+    ANManager * pm = &g_manager;
+    ANNameSpace * pns = pm->head;
+    while (pns) {
+	pns->syn(pns);
+	pns = pns->next;
+    }
+    return res;
+>>>>>>> master
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //private
+// private
+static ANNameSpace * m_get_ns(const char * name_space)
+{
+    pthread_rwlock_rdlock(&g_manager.ns_lock);
+    ANNameSpace * tmp = g_manager.head;
+    while (tmp) {
+	if (strcmp(tmp->name, name_space) == 0) { pthread_rwlock_unlock(&g_manager.ns_lock); return tmp; }
+	tmp = tmp->next;
+    }
+    pthread_rwlock_unlock(&g_manager.ns_lock);
+    return NULL;
+}
+
 static ANNameSpace * m_create_ns(const char *name_space)
 {
     if (strlen(name_space) >= ADFS_NAMESPACE_LEN) {return NULL;}
@@ -187,10 +212,7 @@ static ANNameSpace * m_create_ns(const char *name_space)
     pthread_rwlock_wrlock(&pm->ns_lock);
     ANNameSpace * tmp = pm->head;
     while (tmp) {
-	if (strcmp(tmp->name, name_space) == 0) {
-	    pthread_rwlock_unlock(&pm->ns_lock);
-	    return tmp;
-	}
+	if (strcmp(tmp->name, name_space) == 0) { pthread_rwlock_unlock(&pm->ns_lock); return tmp; }
 	tmp = tmp->next;
     }
     char ns_path[ADFS_MAX_PATH] = {0};
@@ -211,16 +233,14 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     for (int i=0; i <= max_id; ++i) {
 	if (i < max_id) {
-	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) == ADFS_ERROR)
-		goto err1;
+	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) == ADFS_ERROR) {goto err1;}
 	}
 	else {
-	    if (pns->create(pns, pm->path, db_args, S_READ_WRITE) == ADFS_ERROR)
-		goto err1;
+	    if (pns->create(pns, pm->path, db_args, S_READ_WRITE) == ADFS_ERROR) {goto err1;}
 	}
     }
 
-    pns->pre = pm->tail;
+    pns->prev = pm->tail;
     pns->next = NULL;
     if (pm->tail) {pm->tail->next = pns;}
     else {pm->head = pns;}
@@ -248,8 +268,7 @@ static int m_scan_kch(const char * dir)
 	}
 	closedir( dirp );
     }
-    else 
-	mkdir(dir, 0744);
+    else {mkdir(dir, 0744);}
     return max_id;
 }
 
@@ -272,42 +291,15 @@ static int m_get_fileid(char * name)
 }
 
 // private
-static ANNameSpace * m_get_ns(const char * name_space)
-{
-    pthread_rwlock_rdlock(&g_manager.ns_lock);
-    ANNameSpace * tmp = g_manager.head;
-    while (tmp) {
-	if (strcmp(tmp->name, name_space) == 0) {
-	    pthread_rwlock_unlock(&g_manager.ns_lock);
-	    return tmp;
-	}
-	tmp = tmp->next;
-    }
-    pthread_rwlock_unlock(&g_manager.ns_lock);
-    return NULL;
-}
-
 static ADFS_RESULT m_init_log(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // log_level
-    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) {
-	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
-        return ADFS_ERROR;
-    }
+    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) { log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
     g_log_level = atoi(value);
-    if (g_log_level < 1 || g_log_level > 5) {
-	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
-    }
-    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) {
-	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
-    }
-    if (log_init(value) != 0) {
-	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
-    }
+    if (g_log_level < 1 || g_log_level > 5) { log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
+    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) { log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
+    if (log_init(value) != 0) { log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
 
     return ADFS_OK;
 }

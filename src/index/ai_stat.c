@@ -37,7 +37,7 @@ static int * s_get(AIStat *ps, time_t *t)
 
     t_cur = (unsigned long)*t;
     interval = (t_cur - ps->start + 60)/60;
-    if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
+    if (interval >= ps->scope) {memset(ps->count, 0, sizeof(int) * ps->scope);}
     pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;
@@ -52,7 +52,7 @@ static void s_inc(AIStat *ps)
 
     t_cur = (unsigned long)time(NULL);
     interval = (t_cur - ps->start + 60)/60;
-    if (interval >= ps->scope) {memset(ps->count, 0, ps->scope);}
+    if (interval >= ps->scope) {memset(ps->count, 0, sizeof(int) * ps->scope);}
     pos_cur = interval % ps->scope;
     while (pos_cur != ps->pos_last) {
 	ps->pos_last = (ps->pos_last + 1) % ps->scope;

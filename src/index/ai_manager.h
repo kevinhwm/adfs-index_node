@@ -17,7 +17,7 @@ typedef struct AINameSpace
 {
     char name[ADFS_NAMESPACE_LEN];
     KCDB * index_db;
-    struct AINameSpace *pre;
+    struct AINameSpace *prev;
     struct AINameSpace *next;
 }AINameSpace;
 
