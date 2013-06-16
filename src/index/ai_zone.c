@@ -31,8 +31,7 @@ ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
 static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port)
 {
     for (AINode *pn = _this->head; pn; pn = pn->next) {
-        if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0)
-            return ADFS_ERROR;
+        if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0) {return ADFS_ERROR;}
     }
 
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
@@ -41,10 +40,11 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
     strncpy(new_node->name, name, sizeof(new_node->name));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
-        new_node->curl[i] = curl_easy_init();
-        if (new_node->curl[i] == NULL) {return ADFS_ERROR;}
-        if ( pthread_mutex_init(new_node->curl_mutex+i, NULL) != 0) {return ADFS_ERROR;}
-	new_node->flag[i] = 0;
+        new_node->conn[i].curl = curl_easy_init();
+        if (new_node->conn[i].curl == NULL) {return ADFS_ERROR;}
+	new_node->conn[i].mutex = malloc(sizeof(pthread_mutex_t));
+        if (pthread_mutex_init(new_node->conn[i].mutex, NULL) != 0) {return ADFS_ERROR;}
+	new_node->conn[i].flag = 0;
     }
     _this->num += 1;
 
@@ -63,9 +63,10 @@ static void z_release(AIZone *_this)
         _this->tail = _this->tail->prev;
 
         for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
-            curl_easy_cleanup(pn->curl[i]);
-            pn->curl[i]= NULL;
-            pthread_mutex_destroy(pn->curl_mutex + i);
+            curl_easy_cleanup(pn->conn[i].curl);
+            pn->conn[i].curl = NULL;
+            pthread_mutex_destroy(pn->conn[i].mutex);
+	    free(pn->conn[i].mutex);
         }
         free(pn);
     }

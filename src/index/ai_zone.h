@@ -15,11 +15,14 @@
 
 typedef struct AINode
 {
+    struct {
+	CURL *curl;
+	pthread_mutex_t *mutex;
+	int flag;
+    }conn[ADFS_NODE_CURL_NUM];
     char name[ADFS_NODENAME_LEN];
     char ip_port[ADFS_NODENAME_LEN];
-    CURL *curl[ADFS_NODE_CURL_NUM];
-    pthread_mutex_t curl_mutex[ADFS_NODE_CURL_NUM];
-    int flag[ADFS_NODE_CURL_NUM];
+
 
     struct AINode *prev;
     struct AINode *next;

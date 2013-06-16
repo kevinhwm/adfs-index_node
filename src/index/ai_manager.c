@@ -196,14 +196,14 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	air.add(&air, pz->name, pn->name);
 	pz = pz->next;
     }
-    DBG_PRINTSN("aim-upload 70");
+    DBG_PRINTSN("aim-upload 30");
 
     // add record
     // (3) need to be released
     char *record = air.get_string(&air);
-    DBG_PRINTSN("aim-upload 80");
+    DBG_PRINTSN("aim-upload 40");
     if (record == NULL) {goto err1;}
-    DBG_PRINTSN("aim-upload 90");
+    DBG_PRINTSN("aim-upload 50");
     if (old_list == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
     else {
 	long len = strlen(record) + 2;
@@ -217,11 +217,13 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	if (new_list) {free(new_list);}
     }
     pm->s_upload.inc(&(pm->s_upload));
+
     if (record) {free(record);}
     air.release(&air);
 ok1:
     if (old_list) {kcfree(old_list);}
     return ADFS_OK;
+
 rollback:
     DBG_PRINTSN("roll back begin");
     pp = air.head;
@@ -243,7 +245,7 @@ err2:
 err1:
     DBG_PRINTSN("aim-upload err1");
     air.release(&air);
-    DBG_PRINTSN("aim-upload 200");
+    DBG_PRINTSN("aim-upload 100");
     if (old_list) {kcfree(old_list);}
     DBG_PRINTSN("aim-upload end");
     return ADFS_ERROR;
