@@ -139,7 +139,6 @@ static ADFS_RESULT db_open(KCDB * db, char * path, ADFS_NODE_STATE state)
             if (!kcdbopen(db, path, KCOREADER)) {return ADFS_ERROR;}
             break;
         case S_READ_WRITE:
-	case S_SYN:
             if (!kcdbopen(db, path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK)) {return ADFS_ERROR;}
             break;
 	default:
@@ -167,9 +166,9 @@ static void * thread_syn(void *param)
     NodeDB * pn = pns->head;
     while (pn) {
 	pthread_rwlock_wrlock(&pns->lock);
-	if (pn->state == S_READ_ONLY) {
+	if (pn->state != S_READ_WRITE) {
 	    kcdbclose(pn->db);
-	    pn->state = S_SYN;
+	    pn->state = S_READ_WRITE;
 	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {
 		pn->state = S_LOST; 
 		pthread_rwlock_unlock(&pns->lock); 

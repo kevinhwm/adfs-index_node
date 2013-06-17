@@ -226,7 +226,7 @@ rollback:
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
 	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	    aic_erase(pn, url);
+	    aic_connect(pn, url);
 	}
 	pp = pp->next;
     }
@@ -363,7 +363,7 @@ char * aim_status()
 	    strncat(p, "</td><td ", size);
 	    char url[1024] = {0};
 	    snprintf(url, sizeof(url), "http://%s/status", pn->ip_port);
-	    if (aic_status(pn, url) == ADFS_OK) 
+	    if (aic_connect(pn, url) == ADFS_OK) 
 		strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);
 	    else 
 		strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size);
@@ -711,7 +711,7 @@ static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *reco
 	    char url[ADFS_MAX_PATH] = {0};
 	    if (ns) { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, r, ns); }
 	    else { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r); }
-	    res = aic_erase(pn, url);		// do not care about success or failure.
+	    res = aic_connect(pn, url);		// do not care about success or failure.
 	}
     }
     free(r);
