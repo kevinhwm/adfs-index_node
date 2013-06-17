@@ -31,7 +31,13 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
 	    if (pn->conn[i].flag!=0 && pn->conn[i].flag!=FLAG_UPLOAD) {c_reconnect(pn, i);}
-	    DBG_PRINTIN(i);
+	    DBG_PRINTI(i);
+	    DBG_PRINTS(" - ");
+	    DBG_PRINTS(pn->ip_port);
+	    DBG_PRINTS(" - ");
+	    DBG_PRINTP(pn->conn[i].curl);
+	    DBG_PRINTS(" - ");
+	    DBG_PRINTPN(pn->conn[i].mutex);
             res = c_upload(pn->conn[i].curl, url, fname, fdata, fdata_len);
 	    pn->conn[i].flag = FLAG_UPLOAD;
             pthread_mutex_unlock(pn->conn[i].mutex);
@@ -110,10 +116,8 @@ static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata)
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
-    DBG_PRINTSN("c_upload 10");
     ADFS_RESULT adfs_res = ADFS_ERROR;
     if (curl == NULL) {return ADFS_ERROR;}
-    DBG_PRINTSN("c_upload 20");
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastpost = NULL;
     curl_formadd(&formpost, &lastpost,
@@ -122,27 +126,20 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
             CURLFORM_BUFFERPTR, fdata,
             CURLFORM_BUFFERLENGTH, fdata_len,
             CURLFORM_END);
-    DBG_PRINTSN("c_upload 30");
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    DBG_PRINTSN("c_upload 40");
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 7);
-    DBG_PRINTSN("c_upload 50");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
-    DBG_PRINTSN("c_upload 60");
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
     DBG_PRINTSN("c_upload 70");
+    DBG_PRINTPN(curl);
     CURLcode res = curl_easy_perform(curl);
-    DBG_PRINTSN("c_upload perform :");
-    DBG_PRINTUN((unsigned long)res);
+    DBG_PRINTSN("c_upload 80");
     if (res == CURLE_OK) {
         long res_code = 0;
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
         if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
-	DBG_PRINTUN((unsigned long)res);
-	DBG_PRINTUN((unsigned long)res_code);
     }
     curl_formfree(formpost);
-    DBG_PRINTSN("c_upload 80");
     return adfs_res;
 }
 

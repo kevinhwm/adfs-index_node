@@ -161,7 +161,6 @@ void aim_exit()
 
 ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
-    DBG_PRINTSN("aim-upload 10");
     AIManager *pm = &g_manager;
     int exist = 1;
     char *old_list = NULL;
@@ -182,7 +181,6 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
     AIRecord air;
     air_init(&air);
 
-    DBG_PRINTSN("aim-upload 20");
     AIZone *pz = pm->z_head;
     while (pz) {
 	AINode * pn = pz->rand_choose(pz);
@@ -192,18 +190,14 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	    printf("upload error: %s\n", url);
 	    goto rollback;
 	}
-	DBG_PRINTSN("aim_upload check point");
 	air.add(&air, pz->name, pn->name);
 	pz = pz->next;
     }
-    DBG_PRINTSN("aim-upload 30");
 
     // add record
     // (3) need to be released
     char *record = air.get_string(&air);
-    DBG_PRINTSN("aim-upload 40");
     if (record == NULL) {goto err1;}
-    DBG_PRINTSN("aim-upload 50");
     if (old_list == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
     else {
 	long len = strlen(record) + 2;
@@ -225,7 +219,6 @@ ok1:
     return ADFS_OK;
 
 rollback:
-    DBG_PRINTSN("roll back begin");
     pp = air.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
@@ -237,17 +230,12 @@ rollback:
 	}
 	pp = pp->next;
     }
-    DBG_PRINTSN("roll back end");
     goto err1;
 err2:
-    DBG_PRINTSN("aim-upload err2");
     if (record) {free(record);}
 err1:
-    DBG_PRINTSN("aim-upload err1");
     air.release(&air);
-    DBG_PRINTSN("aim-upload 100");
     if (old_list) {kcfree(old_list);}
-    DBG_PRINTSN("aim-upload end");
     return ADFS_ERROR;
 }
 
@@ -479,8 +467,6 @@ static ADFS_RESULT m_init_log(cJSON *json)
         return ADFS_ERROR;
     }
     g_log_level = j_tmp->valueint;
-    DBG_PRINTS("log_level: ");
-    DBG_PRINTIN(g_log_level);
     if (g_log_level < 1 || g_log_level > 5) {
 	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
 	return ADFS_ERROR;
@@ -579,7 +565,6 @@ static AINode * m_get_node_by_name(const char *node_name, size_t len)
     if (p == NULL) {return NULL;}
     p[len] = '\0';
     strncpy(p, node_name, len);
-    DBG_PRINTSN(p);
 
     AIZone *pz = g_manager.z_head;
     while (pz) {

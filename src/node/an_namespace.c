@@ -170,7 +170,11 @@ static void * thread_syn(void *param)
 	if (pn->state == S_READ_ONLY) {
 	    kcdbclose(pn->db);
 	    pn->state = S_SYN;
-	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {pn->state = S_LOST; pthread_rwlock_unlock(&pns->lock); return NULL;}
+	    if (db_open(pn->db, pn->path, pn->state) == ADFS_ERROR) {
+		pn->state = S_LOST; 
+		pthread_rwlock_unlock(&pns->lock); 
+		return NULL;
+	    }
 	}
 	pthread_rwlock_unlock(&pns->lock);
 

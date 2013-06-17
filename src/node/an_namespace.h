@@ -19,7 +19,7 @@ typedef enum ADFS_NODE_STATE
     S_LOST		= 0,
     S_READ_ONLY,
     S_READ_WRITE,
-    S_SYN
+    //S_SYN
 }ADFS_NODE_STATE;
 
 typedef struct NodeDB
