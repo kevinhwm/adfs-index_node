@@ -66,10 +66,7 @@ ADFS_RESULT aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
 
 //////////////////////////////////////////////////////////////////////////////////////
 // private
-static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-    return nmemb;
-}
+static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata) { return nmemb; }
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
@@ -84,9 +81,10 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
             CURLFORM_BUFFERLENGTH, fdata_len,
             CURLFORM_END);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 7);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
         long res_code = 0;
@@ -104,6 +102,7 @@ static ADFS_RESULT c_connect(CURL *curl, const char *url)
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
         long res_code = 0;

@@ -156,12 +156,13 @@ static void ns_syn(ANNameSpace * _this)
     _this->sign_syn = 1;
     pthread_rwlock_unlock(&_this->lock);
     pthread_t tid;
-    pthread_create(&tid, NULL, thread_syn, NULL);
+    pthread_create(&tid, NULL, thread_syn, _this);
     return ;
 }
 
 static void * thread_syn(void *param)
 {
+    if (param == NULL) {return NULL;}
     ANNameSpace *pns = (ANNameSpace *)param;
     NodeDB * pn = pns->head;
     while (pn) {

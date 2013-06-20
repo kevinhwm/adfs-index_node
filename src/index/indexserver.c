@@ -182,11 +182,8 @@ int main(int argc, char** argv)
 	return EXIT_SUCCESS;
     }
     /////////////////////////////////////////////////////////////////////////////////
-
-    if (daemon)
-        nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);
-    else 
-        nxweb_run_normal(work_dir, 0, pid_file, server_main);
+    if (daemon) { nxweb_run_daemon(work_dir, "aicore.log", pid_file, server_main);}
+    else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
     return EXIT_SUCCESS;
 }
 
