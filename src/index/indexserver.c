@@ -41,7 +41,10 @@ static void server_main()
 
     // Override default timers (if needed):
     // make sure the timeout less than 5 seconds. be sure to void receive SIGALRM to shutdown the db brute.
-    nxweb_set_timeout(NXWEB_TIMER_KEEP_ALIVE, 3000000);
+    //
+    // alarm has been changed to 60 seconds
+    // 45 seconds
+    nxweb_set_timeout(NXWEB_TIMER_KEEP_ALIVE, 45000000);
 
     // Go!
     nxweb_run();
@@ -96,38 +99,22 @@ int main(int argc, char** argv)
     {
         switch (c) 
         {
-            case 'h':
-                show_help();
-                return 0;
-            case 'v':
-                return 0;
-            case 'd':
-                daemon=1;
-                break;
-            case 's':
-                shutdown=1;
-                break;
-            case 'p':
-                pid_file=optarg;
-                break;
-            case 'w':
-                work_dir=optarg;
-                break;
-            case 'u':
-                user_name=optarg;
-                break;
-            case 'g':
-                group_name=optarg;
-                break;
+            case 'h': show_help(); return 0;
+            case 'v': return 0;
+            case 'd': daemon=1; break;
+            case 's': shutdown=1; break;
+            case 'p': pid_file=optarg; break;
+            case 'w': work_dir=optarg; break;
+            case 'u': user_name=optarg; break;
+            case 'g': group_name=optarg; break;
             case 'P':
                 port=atoi(optarg);
-                if (port<=0) { fprintf(stderr, "invalid port: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
+                if (port<=0) { 
+		    fprintf(stderr, "invalid port: %s\n\n", optarg); 
+		    return EXIT_FAILURE; 
+		}
                 break;
-            case 'c':
-                conf_file=optarg;
-                break;
+            case 'c': conf_file=optarg; break;
             case 'm':
                 mem_size = atoi(optarg);
                 if (mem_size <= 0) {

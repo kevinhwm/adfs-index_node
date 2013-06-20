@@ -31,18 +31,18 @@ static void conf_read_and_filter(const char *conf_file, char **data)
 {
     long flen;
     char buf[1024];
-    char *pb, *pd;
+    char *pline, *pd;
     FILE *f;
 
     f = fopen(conf_file, "rb");
     fseek(f, 0, SEEK_END);
     flen = ftell(f);
     fseek(f, 0, SEEK_SET);
-    *data = malloc(flen+1);
+    *data = malloc(flen+1);	// caller need to free this 
     pd = *data;
-    while ( (pb = fgets(buf, sizeof(buf), f)) ) {
-	while (*pb > 0x00 && *pb <= 0x20) {++pb;}
-	if (*pb == '#' || *pb == 0x00) {continue;}
+    while ( (pline = fgets(buf, sizeof(buf), f)) ) {
+	while (*pline > 0x00 && *pline <= 0x20) {++pline;}
+	if (*pline == '#' || *pline == 0x00) {continue;}
 	strcpy(pd, buf);
 	pd += strlen(buf);
     }

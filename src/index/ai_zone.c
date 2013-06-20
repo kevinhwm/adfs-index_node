@@ -44,7 +44,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
         if (new_node->conn[i].curl == NULL) {return ADFS_ERROR;}
 	new_node->conn[i].mutex = malloc(sizeof(pthread_mutex_t));
         if (pthread_mutex_init(new_node->conn[i].mutex, NULL) != 0) {return ADFS_ERROR;}
-	new_node->conn[i].flag = 0;
+	new_node->conn[i].flag = FLAG_INIT;
     }
     _this->num += 1;
 

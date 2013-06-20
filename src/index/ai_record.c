@@ -64,7 +64,7 @@ static ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
 
 static char * r_get_string(AIRecord *_this)
 {
-    int len = ADFS_UUID_LEN + _this->num * sizeof(_this->head->zone_node);
+    int len = ADFS_UUID_LEN + _this->num * (sizeof(_this->head->zone_node)+1);
     char *record = malloc(len);
     if (record == NULL) {return NULL;}
     memset(record, 0, len);

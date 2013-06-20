@@ -14,8 +14,7 @@ extern unsigned long g_MaxFileSize;
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
-typedef struct _upload_file_object
-{
+typedef struct _upload_file_object {
     nxd_fwbuffer              fwbuffer;
     void *                    postdata_ptr;
     size_t  	              postdata_len;
@@ -30,16 +29,9 @@ typedef struct _upload_file_object
     FILE *                    ffilemem;
     multipart_parser_settings parser_settings;
     multipart_parser *        parser;
-    char                      key[1024];
-    char                      value[1024];
-    KCDB *                    kc_db;
 }upload_file_object;
 
-static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length )
-{
-    // nothing to do
-    return 0;
-}
+static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length ) { return 0; }
 
 static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
 {
@@ -55,17 +47,13 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 	    pufo->file_ready_to_receive = 0;
 	    return 0;
 	}
-	else {
-	    return 0;
-	}
+	else { return 0; }
     }
     pfname += 10;
 
     char *pfname_end = strstr( pfname+1, "\"" );
-    if (pfname_end == NULL)
-	memset(pufo->filename, 0, sizeof(pufo->filename));
-    else
-	strncpy(pufo->filename, pfname, pfname_end - pfname);
+    if (pfname_end == NULL) {memset(pufo->filename, 0, sizeof(pufo->filename));}
+    else {strncpy(pufo->filename, pfname, pfname_end - pfname);}
     pufo->file_ready_to_receive = 1;
     return 0;
 }
@@ -80,10 +68,8 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
 	return 0;
     }
     if (pufo->file_ready_to_receive) {
-	if (pufo->ffilemem == NULL)
-	    return 0;
-	if (pufo->ffilemem)
-	    fwrite(at, 1, length, pufo->ffilemem);
+	if (pufo->ffilemem) {fwrite(at, 1, length, pufo->ffilemem);}
+	else {return 0;}
     }
     return 0;
 }
@@ -120,8 +106,7 @@ static nxweb_result upload_on_request(
     const char *namespace = nx_simple_map_get_nocase(req->parameters, "namespace");
     const char *overwrite = nx_simple_map_get_nocase(req->parameters, "overwrite");
     int ow = 0;
-    if (overwrite && (strcmp(overwrite, "1") == 0) )
-	ow = 1;
+    if (overwrite && (strcmp(overwrite, "1") == 0)) {ow = 1;}
 
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
@@ -162,16 +147,14 @@ static nxweb_result upload_on_request(
 	}
 	else {
 	    nxweb_send_http_error(resp, 403, "Forbidden\nCheck file name and name length.");
-	    res = -1;
-	}
+	    res = -1; }
 
 	if (ufo->file_ptr) {
 	    free(ufo->file_ptr);
 	    ufo->file_ptr = NULL;
 	}
     }
-    else
-	nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>");
+    else {nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>");}
 
     char msg[1024] = {0};
     if (res < 0) {
@@ -180,10 +163,8 @@ static nxweb_result upload_on_request(
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    else if (res > 0) 
-	snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr);
-    else
-	snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr);
+    else if (res > 0) { snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr); }
+    else { snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr); }
 
     log_out("upload", msg, LOG_LEVEL_INFO);
     nxweb_response_printf(resp, ""
@@ -219,18 +200,18 @@ static nxweb_result upload_on_post_data(
 	nxweb_http_response* resp) 
 {
     upload_file_object* ufo = nxb_alloc_obj(req->nxb, sizeof(upload_file_object));
-    memset( ufo, 0, sizeof( upload_file_object ) );
+    memset(ufo, 0, sizeof(upload_file_object));
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     nxweb_set_request_data(req, UPLOAD_HANDLER_KEY, (nxe_data)(void*)ufo, upload_request_data_finalize);
     sscanf(req->content_type, "%*[^=]%*1s%s", ufo->post_boundary+2);
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (strlen(req->uri) >= ADFS_MAX_PATH || req->content_length > g_MaxFileSize) {
-	ufo->fpostmem = fopen("/dev/null", "wb");
+    if (strlen(req->uri) >= ADFS_MAX_PATH || req->content_length > g_MaxFileSize) { 
+	ufo->fpostmem = fopen("/dev/null", "wb"); 
     }
-    else {
-	ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len );
+    else { 
+	ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len ); 
     }
     nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxFileSize);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
@@ -249,8 +230,10 @@ static nxweb_result upload_on_post_data_complete(
     // as any other callbacks might not be invoked under error conditions.
     upload_file_object* ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb= &ufo->fwbuffer;
-    fclose(fwb->fd);
-    fwb->fd=0;
+    if (fwb && fwb->fd) {
+	fclose(fwb->fd);
+	fwb->fd=0;
+    }
     return NXWEB_OK;
 }
 

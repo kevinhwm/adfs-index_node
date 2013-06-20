@@ -176,10 +176,8 @@ int main(int argc, char** argv)
     log_out("main", "ADFS Node running...", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Node running...\n");
     /////////////////////////////////////////////////////////////////////////////////
-    if (daemon) 
-	nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);
-    else 
-	nxweb_run_normal(work_dir, 0, pid_file, server_main);
+    if (daemon) {nxweb_run_daemon(work_dir, "/dev/null", pid_file, server_main);}
+    else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
     return EXIT_SUCCESS;
 }
 

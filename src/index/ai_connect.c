@@ -9,12 +9,6 @@
 #include "../include/adfs.h"
 #include "ai_zone.h"
 
-enum FLAG_CONNECTION
-{
-    FLAG_UPLOAD 	= 1,
-    FLAG_CONNECT
-};
-
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
 static ADFS_RESULT c_connect(CURL *curl, const char *url);
 static void c_rebuild(AINode *pn, int pos);
@@ -26,7 +20,7 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
-	    if (pn->conn[i].flag!=0 && pn->conn[i].flag!=FLAG_UPLOAD) {c_rebuild(pn, i);}
+	    if (pn->conn[i].flag!=FLAG_UPLOAD) {c_rebuild(pn, i);}
             res = c_upload(pn->conn[i].curl, url, fname, fdata, fdata_len);
 	    pn->conn[i].flag = FLAG_UPLOAD;
             pthread_mutex_unlock(pn->conn[i].mutex);
@@ -38,22 +32,22 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     pthread_mutex_t * pmutex = pn->conn[pos_last].mutex;
 
     pthread_mutex_lock(pmutex);
-    if (pn->conn[pos_last].flag != 0 && pn->conn[pos_last].flag != FLAG_UPLOAD) {c_rebuild(pn, pos_last);}
+    if (pn->conn[pos_last].flag != FLAG_UPLOAD) {c_rebuild(pn, pos_last);}
     res = c_upload(pn->conn[pos_last].curl, url, fname, fdata, fdata_len);
     pn->conn[pos_last].flag = FLAG_UPLOAD;
     pthread_mutex_unlock(pmutex);
     return res;
 }
 
-ADFS_RESULT aic_connect(AINode *pn, const char *url)
+ADFS_RESULT aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
 {
     ADFS_RESULT res = ADFS_ERROR;
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
-	    if (pn->conn[i].flag != 0 && pn->conn[i].flag != FLAG_CONNECT) {c_rebuild(pn, i);}
+	    if (pn->conn[i].flag != flag) {c_rebuild(pn, i);}
             res = c_connect(pn->conn[i].curl, url);
-	    pn->conn[i].flag = FLAG_CONNECT;
+	    pn->conn[i].flag = flag;
             pthread_mutex_unlock(pn->conn[i].mutex);
             return res;
         }
@@ -63,9 +57,9 @@ ADFS_RESULT aic_connect(AINode *pn, const char *url)
     pthread_mutex_t * pmutex = pn->conn[pos_last].mutex;
 
     pthread_mutex_lock(pmutex);
-    if (pn->conn[pos_last].flag != 0 && pn->conn[pos_last].flag != FLAG_CONNECT) {c_rebuild(pn, pos_last);}
+    if (pn->conn[pos_last].flag != flag) {c_rebuild(pn, pos_last);}
     res = c_connect(pn->conn[pos_last].curl, url);
-    pn->conn[pos_last].flag = FLAG_CONNECT;
+    pn->conn[pos_last].flag = flag;
     pthread_mutex_unlock(pmutex);
     return res;
 }

@@ -267,11 +267,19 @@ static ADFS_RESULT m_init_log(const char *conf_file)
 {
     char value[ADFS_FILENAME_LEN] = {0};
     // log_level
-    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) { log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
+    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) { 
+	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    }
     g_log_level = atoi(value);
-    if (g_log_level < 1 || g_log_level > 5) { log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
-    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) { log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
-    if (log_init(value) != 0) { log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; }
+    if (g_log_level < 1 || g_log_level > 5) { 
+	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    }
+    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) { 
+	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    }
+    if (log_init(value) != 0) { 
+	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    }
 
     return ADFS_OK;
 }
