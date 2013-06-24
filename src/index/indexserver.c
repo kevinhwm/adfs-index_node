@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
             "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:x:")) != -1) 
     {
         switch (c) 
         {
