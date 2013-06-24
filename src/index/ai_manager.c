@@ -39,7 +39,7 @@ LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_erase_mode = 0;
 int g_another_running = 0;
 
-ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_size, unsigned long max_file_size)
+ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
     srand(time(NULL));
 
@@ -76,7 +76,7 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, unsigned long mem_
     strncpy(pm->path, path, sizeof(pm->path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
-    pm->kc_bnum = 1000000;
+    pm->kc_bnum = bnum;
     pm->kc_msiz = mem_size *1024*1024;
 
     cJSON *json = conf_parse(conf_file);

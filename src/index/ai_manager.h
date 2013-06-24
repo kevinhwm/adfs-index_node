@@ -41,7 +41,7 @@ typedef struct AIManager
 
 
 // manager.c
-ADFS_RESULT aim_init(const char *file_conf, const char *path_db, unsigned long mem_size, unsigned long max_file_size);
+ADFS_RESULT aim_init(const char *file_conf, const char *path_db, long bnum, unsigned long mem_size, unsigned long max_file_size);
 void aim_exit();
 ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
 char * aim_download(const char *name_space, const char *fname, const char *history);

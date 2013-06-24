@@ -71,6 +71,7 @@ static void show_help(void)
 	    " -c file  config file			(default: indexserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
+	    " -b bnum  set the number of buckets	(default: 1048576)\n"
 	    " -x dir   set database dir		(no default, must be set.)\n"
 
 	    "\n"
@@ -88,6 +89,7 @@ int main(int argc, char** argv)
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
+    long bnum = 1048576;
 
     fprintf(stdout, 
 	    "====================================================================\n"
@@ -129,6 +131,13 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
 		break;
+            case 'b':
+                bnum = atol(optarg);
+                if (bnum <= 0) {
+                    fprintf(stderr, "invalid bnum %s\n\n", optarg);
+                    return EXIT_FAILURE;
+                }
+		break;
             case 'x':
                 db_path = optarg;
                 if (strlen(db_path) > ADFS_FILENAME_LEN) {
@@ -165,7 +174,7 @@ int main(int argc, char** argv)
 	return EXIT_FAILURE;
     }
     fprintf(stdout, "ADFS Index start...\n");
-    if (aim_init(conf_file, db_path, mem_size, max_file_size) == ADFS_ERROR) {
+    if (aim_init(conf_file, db_path, bnum, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Index exit. Init error\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");

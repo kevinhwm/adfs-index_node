@@ -93,29 +93,14 @@ int main(int argc, char** argv)
     {
 	switch (c) 
 	{
-	    case 'h':
-		show_help();
-		return 0;
-	    case 'v':
-		return 0;
-	    case 'd':
-		daemon=1;
-		break;
-	    case 's':
-		shutdown=1;
-		break;
-	    case 'p':
-		pid_file=optarg;
-		break;
-	    case 'w':
-		work_dir=optarg;
-		break;
-	    case 'u':
-		user_name=optarg;
-		break;
-	    case 'g':
-		group_name=optarg;
-		break;
+	    case 'h': show_help(); return 0;
+	    case 'v': return 0;
+	    case 'd': daemon=1; break;
+	    case 's': shutdown=1; break;
+	    case 'p': pid_file=optarg; break;
+	    case 'w': work_dir=optarg; break;
+	    case 'u': user_name=optarg; break;
+	    case 'g': group_name=optarg; break;
 	    case 'P':
 		port=atoi(optarg);
 		if (port<=0) {
@@ -123,9 +108,7 @@ int main(int argc, char** argv)
 		    return EXIT_FAILURE;
 		}
 		break;
-	    case 'c':
-		conf_file=optarg;
-		break;
+	    case 'c': conf_file=optarg; break;
 	    case 'm':
 		mem_size = atoi(optarg);
 		if (mem_size <= 0) {
