@@ -162,14 +162,6 @@ void aim_exit()
 
 ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
-#ifdef DEBUG
-    static unsigned long s_num = 0;
-    s_num++;
-    unsigned long dbg_num = s_num;
-#endif 
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t1");
-
     AIManager *pm = &g_manager;
     int exist = 1;
     char *old_list = NULL;
@@ -178,11 +170,7 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
     if (name_space == NULL) {name_space = "default";}
 
     AINameSpace *pns = NULL;
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t2");
     pns = m_get_ns(name_space);
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t3");
     if (pns == NULL) {return ADFS_ERROR;}
     // (1) need to be released
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
@@ -193,120 +181,62 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
     // (2) need to be released
     AIRecord air;
     air_init(&air);
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t4");
 
     AIZone *pz = pm->z_head;
     while (pz) {
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t4.1");
 	AINode * pn = pz->rand_choose(pz);
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t4.2");
 	char url[ADFS_MAX_PATH] = {0};
 	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
-	    DBG_PRINTU(dbg_num);
-	    DBG_PRINTSN("\t4.2.1");
 	    printf("upload error: %s\n", url);
 	    goto rollback;
 	}
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t4.3");
 	air.add(&air, pz->name, pn->name);
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t4.4");
 	pz = pz->next;
     }
 
     // add record
     // (3) need to be released
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t5");
     char *record = air.get_string(&air);
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t6");
     if (record == NULL) {goto err1;}
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t7");
     if (old_list == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
     else {
 	long len = strlen(record) + 2;
 	// (4) need to be released
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t8.1");
 	char *new_list = malloc(len);
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t8.2");
 	if (new_list == NULL)  {goto err2;}
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t8.3");
 
 	if (exist) {snprintf(new_list, len, "$%s", record);}
 	else {snprintf(new_list, len, "%s", record);}
 	kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t8.4");
 	if (new_list) {free(new_list);}
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t8.5");
     }
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t9");
     pm->s_upload.inc(&(pm->s_upload));
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t10");
 
     if (record) {free(record);}
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t11");
     air.release(&air);
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t12");
 ok1:
     if (old_list) {kcfree(old_list);}
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t13");
     return ADFS_OK;
 
 rollback:
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t14");
     pp = air.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t14.1");
 	AINode *pn = m_get_node_by_name(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
 	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	    DBG_PRINTU(dbg_num);
-	    DBG_PRINTSN("\t14.1.1");
 	    aic_connect(pn, url, FLAG_ERASE);
-	    DBG_PRINTU(dbg_num);
-	    DBG_PRINTSN("\t14.1.2");
 	}
 	pp = pp->next;
-	DBG_PRINTU(dbg_num);
-	DBG_PRINTSN("\t14.2");
     }
     goto err1;
 err2:
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t15");
     if (record) {free(record);}
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t16");
 err1:
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t17");
     air.release(&air);
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t18");
     if (old_list) {kcfree(old_list);}
-    DBG_PRINTU(dbg_num);
-    DBG_PRINTSN("\t19");
     return ADFS_ERROR;
 }
 

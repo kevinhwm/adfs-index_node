@@ -40,8 +40,7 @@ static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_
 
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
     char *pfname = strstr( buff, "filename=\"" );
-    if( pfname == NULL )
-    {
+    if( pfname == NULL ) {
 	if( strstr(buff, "name=\"upname\"") ) {
 	    pufo->filename_ready_to_receive = 1;
 	    pufo->file_ready_to_receive = 0;
@@ -147,7 +146,8 @@ static nxweb_result upload_on_request(
 	}
 	else {
 	    nxweb_send_http_error(resp, 403, "Forbidden\nCheck file name and name length.");
-	    res = -1; }
+	    res = -1; 
+	}
 
 	if (ufo->file_ptr) {
 	    free(ufo->file_ptr);
