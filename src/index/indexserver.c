@@ -61,7 +61,7 @@ static void show_help(void)
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
-	    " -w file  set work dir			(default: /usr/local/adfs/index)\n"
+	    " -w dir   set work dir			(default: /usr/local/adfs/index)\n"
 	    //" -u user  set process uid\n"
 	    //" -g group set process gid\n"
 	    " -P port  set http port\n"
