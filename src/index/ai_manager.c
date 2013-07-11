@@ -312,7 +312,7 @@ ADFS_RESULT aim_delete(const char *ns, const char *fname)
     size_t vsize;
     char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
     if (line == NULL) {return ADFS_ERROR;}
-    if (line[vsize-1] == '$') {return ADFS_OK;}
+    if (line[vsize-1] == '$') {goto ok1;}
 
     char *new_line = malloc(vsize+4);
     if (new_line == NULL) {goto err1;}
@@ -321,7 +321,8 @@ ADFS_RESULT aim_delete(const char *ns, const char *fname)
     strcat(new_line, "$");
     kcdbset(pns->index_db, fname, strlen(fname), new_line, strlen(new_line));
     pm->s_delete.inc(&(pm->s_delete));
-    if (new_line) {free(new_line);}
+    free(new_line);
+ok1:
     kcfree(line);
     return ADFS_OK;
 err1:
