@@ -15,20 +15,20 @@ static const char upload_handler_key;
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
 
 typedef struct _upload_file_object {
-    nxd_fwbuffer              fwbuffer;
-    void *                    postdata_ptr;
-    size_t  	              postdata_len;
-    char                      post_boundary[1024];
-    FILE *                    fpostmem;
-    int                       filename_ready_to_receive;
-    char                      filename[512];
-    int                       file_ready_to_receive;
-    int                       file_complete;
-    void *                    file_ptr;
-    size_t                    file_len;
-    FILE *                    ffilemem;
-    multipart_parser_settings parser_settings;
-    multipart_parser *        parser;
+    nxd_fwbuffer		fwbuffer;
+    void *			postdata_ptr;
+    size_t			postdata_len;
+    char			post_boundary[1024];
+    FILE *			fpostmem;
+    int				filename_ready_to_receive;
+    char			filename[512];
+    int				file_ready_to_receive;
+    int				file_complete;
+    void *			file_ptr;
+    size_t			file_len;
+    FILE *			ffilemem;
+    multipart_parser_settings	parser_settings;
+    multipart_parser *		parser;
 }upload_file_object;
 
 static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length ) { return 0; }
@@ -126,11 +126,9 @@ static nxweb_result upload_on_request(
 	if (strlen(ufo->filename) > 0 && ufo->file_complete) {
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    nxweb_url_decode(fname, NULL);
-	    if (get_filename_from_url(fname) != 0) {
-		nxweb_send_http_error(resp, 403, "Forbidden\nCheck file name.");
-		res = -1;
-	    }
-	    else if (strlen(fname) >= ADFS_FILENAME_LEN) {
+	    if (get_filename_from_url(fname) != 0) { strncpy(fname, ufo->filename, sizeof(fname) ); }
+
+	    if (strlen(fname) >= ADFS_FILENAME_LEN) {
 		nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long.");
 		res = -1;
 	    }

@@ -1,4 +1,4 @@
-/* conf.c
+/* ai_function.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -58,14 +58,17 @@ int get_filename_from_url(char * p)
     int len = 0;
     len = strlen(p);
     if (len == 0) {return -1;}
-    if (p[len-1] == '/') {p[len-1] = '\0';}
-    len = strlen(p);
-    if (len == 0) {return -1;}
 
-    if (p[0] == '/') {
+    while (p[len-1] == '/') {
+	p[len-1] = '\0';
+	len = strlen(p);
+	if (len == 0) {return -1;}
+    }
+
+    while (p[0] == '/') {
         for (int i=1; i<=len; ++i) {p[i-1] = p[i];}
     }
-    if (strlen(p) <= 0) {return -1;}
+    if (strlen(p) == 0) {return -1;}
 
     return 0;
 }
