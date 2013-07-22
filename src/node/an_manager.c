@@ -37,7 +37,7 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
     pthread_rwlock_init(&pm->ns_lock, NULL);
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
-    pm->kc_bnum = 1000000;
+    pm->kc_bnum = 200000;
     pm->kc_msiz = mem_size *1024*1024;
     strncpy(pm->path, path, sizeof(pm->path));
 
@@ -108,7 +108,7 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return ADFS_ERROR;}
     if (pns->needto_split(pns)) {
 	char db_args[ADFS_MAX_PATH] = {0};
-	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum*3, pm->kc_msiz);
+	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
 	if (pns->split_db(pns, pm->path, db_args) == ADFS_ERROR) {return ADFS_ERROR;}
     }
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return ADFS_ERROR;}
@@ -191,7 +191,7 @@ static ANNameSpace * m_create_ns(const char *name_space)
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
     int max_id = m_scan_kch(ns_path);
     char db_args[ADFS_MAX_PATH] = {0};
-    snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *40, pm->kc_msiz);
+    snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *200, pm->kc_msiz);
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
     if (pns == NULL) { pthread_rwlock_unlock(&pm->ns_lock); return NULL; }
