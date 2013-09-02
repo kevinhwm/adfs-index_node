@@ -73,6 +73,14 @@ static void show_help(void)
 	  );
 }
 
+void adfs_exit()
+{
+    static int flag = 0;
+    if (flag) {return;}
+    flag = 1;
+    anm_exit();
+}
+
 
 int main(int argc, char** argv) 
 {

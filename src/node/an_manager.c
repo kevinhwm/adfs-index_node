@@ -258,6 +258,7 @@ static int m_get_fileid(char * name)
 	if (name[i] < '0' || name[i] > '9') {return -1;}
     }
     char tmp[max_len];
+    memset(tmp, 0, max_len);
     strncpy(tmp, name, pos-name);
     return atoi(tmp);
 }
