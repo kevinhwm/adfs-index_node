@@ -1,14 +1,13 @@
 /* an_manager.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __MANAGER_H___
 #define __MANAGER_H___
 
 #include <pthread.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 typedef struct ANManager
 {
@@ -29,7 +28,6 @@ void anm_exit();
 ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 void anm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
 ADFS_RESULT anm_erase(const char *name_space, const char *fname);
-ADFS_RESULT anm_syn();
 
 #endif // __MANAGER_H___
 

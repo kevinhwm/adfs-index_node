@@ -1,12 +1,11 @@
 /* ai_connect.c
  * 
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 #include "ai_zone.h"
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);

@@ -1,7 +1,6 @@
 /* ai_zone.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __ZONE_H__
@@ -9,7 +8,7 @@
 
 #include <pthread.h>
 #include <curl/curl.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 #define ADFS_NODE_CURL_NUM  5
 

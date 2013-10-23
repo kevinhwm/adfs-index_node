@@ -1,7 +1,6 @@
 /* an_namespace.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __NAMESPACE_H__
@@ -9,9 +8,9 @@
 
 #include <pthread.h>
 #include <kclangc.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 
-#define NODE_MAX_FILE_NUM       100000
+#define NODE_MAX_FILE_NUM       50000
 
 
 typedef enum ADFS_NODE_STATE 
@@ -40,7 +39,6 @@ typedef struct ANNameSpace
     KCDB * index_db;
     unsigned long number;
     pthread_rwlock_t lock;
-    int sign_syn;
 
     struct NodeDB * head;
     struct NodeDB * tail;
@@ -54,7 +52,6 @@ typedef struct ANNameSpace
     int (*needto_split)(struct ANNameSpace * _this);
     ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
     void (*count_add)(struct ANNameSpace * _this);
-    void (*syn)(struct ANNameSpace * _this);
 }ANNameSpace;
 
 // an_namespace.c

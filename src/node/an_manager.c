@@ -1,7 +1,6 @@
-/* Antiy Labs. Basic Platform R & D Center.
- * an_manager.c
+/* an_manager.c
  *
- * huangtao@antiy.com
+ * kevinhwm@gmail.com
  */
 
 #include <stdlib.h>
@@ -14,15 +13,15 @@
 
 #include "an_namespace.h"
 #include "an_manager.h"
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 static ANNameSpace * m_create_ns(const char *name_space);
 static ANNameSpace * m_get_ns(const char * name_space);
-static ADFS_RESULT m_init_log(const char *conf_file);
+static ADFS_RESULT m_init_log(cJSON *json);
 static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
 
-ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
+//ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
 
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
@@ -73,8 +72,19 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
 
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
-    if (m_init_log(conf_file) == ADFS_ERROR) {return ADFS_ERROR;}
+
+    cJSON *json = conf_parse(conf_file);
+    if (json == NULL) {
+	log_out("manager", "Config file error. Make sure that it is json format except lines which start with '#'.", LOG_LEVEL_ERROR);
+	goto err1;
+    }
+    if (m_init_log(json) == ADFS_ERROR) { goto err1; }
+
+    conf_release(json);
     return ADFS_OK;
+err1:
+    conf_release(json);
+    return ADFS_ERROR;
 }
 
 void anm_exit() 
@@ -149,21 +159,6 @@ ADFS_RESULT anm_erase(const char *ns, const char *fname)
     else {return ADFS_ERROR;}
 }
 
-ADFS_RESULT anm_syn()
-{
-    ADFS_RESULT res = ADFS_OK;
-    ANManager * pm = &g_manager;
-    ANNameSpace * pns = pm->head;
-    while (pns) {
-	pns->syn(pns);
-	pns = pns->next;
-    }
-    return res;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//private
-// private
 static ANNameSpace * m_get_ns(const char * name_space)
 {
     pthread_rwlock_rdlock(&g_manager.ns_lock);
@@ -225,7 +220,6 @@ err1:
     return NULL;
 }
 
-// private
 static int m_scan_kch(const char * dir)
 {
     int max_id=0;
@@ -244,7 +238,6 @@ static int m_scan_kch(const char * dir)
     return max_id;
 }
 
-// private
 static int m_get_fileid(char * name)
 {
     const int max_len = 8;
@@ -263,25 +256,31 @@ static int m_get_fileid(char * name)
     return atoi(tmp);
 }
 
-// private
-static ADFS_RESULT m_init_log(const char *conf_file)
+static ADFS_RESULT m_init_log(cJSON *json)
 {
-    char value[ADFS_FILENAME_LEN] = {0};
     // log_level
-    if (conf_read(conf_file, "log_level", value, sizeof(value)) == ADFS_ERROR) { 
-	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    cJSON *j_tmp = NULL;
+    j_tmp = cJSON_GetObjectItem(json, "log_level");
+    if (j_tmp == NULL) {
+	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
+        return ADFS_ERROR;
     }
-    g_log_level = atoi(value);
-    if (g_log_level < 1 || g_log_level > 5) { 
-	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
-    }
-    if (conf_read(conf_file, "log_file", value, sizeof(value)) == ADFS_ERROR) { 
-	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
-    }
-    if (log_init(value) != 0) { 
-	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM); return ADFS_ERROR; 
+    g_log_level = j_tmp->valueint;
+    if (g_log_level < 1 || g_log_level > 5) {
+	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
     }
 
+    // log_file
+    j_tmp = cJSON_GetObjectItem(json, "log_file");
+    if (j_tmp == NULL) { 
+	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
+    if (log_init(j_tmp->valuestring) != 0) {
+	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
+	return ADFS_ERROR;
+    }
     return ADFS_OK;
 }
 

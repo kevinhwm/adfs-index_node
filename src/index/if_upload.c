@@ -1,12 +1,11 @@
 /* if_upload.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-#include "multipart_parser.h"
+#include "../multipart_parser.h"
 #include "ai_manager.h"
 
 extern unsigned long g_MaxFileSize;
@@ -126,7 +125,10 @@ static nxweb_result upload_on_request(
 	if (strlen(ufo->filename) > 0 && ufo->file_complete) {
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    nxweb_url_decode(fname, NULL);
-	    if (get_filename_from_url(fname) != 0) { strncpy(fname, ufo->filename, sizeof(fname) ); }
+	    char *pattern = "^(/[\\w./]{1,512})?(\\?[\\w%&=]+)?$";
+	    if (get_filename_from_url(fname, pattern) < 0) {
+		strncpy(fname, ufo->filename, sizeof(fname) ); 
+	    }
 
 	    if (strlen(fname) >= ADFS_FILENAME_LEN) {
 		nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long.");

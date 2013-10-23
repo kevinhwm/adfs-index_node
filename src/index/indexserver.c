@@ -1,7 +1,6 @@
 /* indexserver.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <nxweb/nxweb.h>
@@ -21,8 +20,6 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
-extern int g_erase_mode;
-
 static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
@@ -34,7 +31,7 @@ static void server_main()
     char host_and_port[32];
     snprintf(host_and_port, sizeof(host_and_port), ":%d", port);
     if (nxweb_listen(host_and_port, 4096)) 
-        return; // simulate normal exit so nxweb is not respawned
+	return; // simulate normal exit so nxweb is not respawned
 
     // Drop privileges:
     if (nxweb_drop_privileges(group_name, user_name)==-1) return;
@@ -49,7 +46,6 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    log_out("main", "ADFS Index exit. [normal mode]", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Index exit.\n");
     aim_exit();
 }
@@ -76,7 +72,7 @@ static void show_help(void)
 
 	    "\n"
 	    " example:  indexserver -w ./ -x ./ -c indexserver.conf -d \n"
-          );
+	   );
 }
 
 void adfs_exit()
@@ -103,71 +99,71 @@ int main(int argc, char** argv)
 	    "====================================================================\n"
 	    "                    ADFS - Index " ADFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
-            "====================================================================\n" );
+	    "====================================================================\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:x:")) != -1) 
     {
-        switch (c) 
-        {
-            case 'h': show_help(); return 0;
-            case 'v': return 0;
-            case 'd': daemon=1; break;
-            case 's': shutdown=1; break;
-            case 'p': pid_file=optarg; break;
-            case 'w': work_dir=optarg; break;
-            case 'u': user_name=optarg; break;
-            case 'g': group_name=optarg; break;
-            case 'P':
-                port=atoi(optarg);
-                if (port<=0) { 
-		    fprintf(stderr, "invalid port: %s\n\n", optarg); 
-		    return EXIT_FAILURE; 
-		}
-                break;
-            case 'c': conf_file=optarg; break;
-            case 'm':
-                mem_size = atoi(optarg);
-                if (mem_size <= 0) {
-                    fprintf(stderr, "invalid mem size: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
-		break;
-            case 'M':
-                max_file_size = atoi(optarg);
-                if (max_file_size <= 0) {
-                    fprintf(stderr, "invalid file size: %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
-		break;
-            case 'b':
-                bnum = atol(optarg);
-                if (bnum <= 0) {
-                    fprintf(stderr, "invalid bnum %s\n\n", optarg);
-                    return EXIT_FAILURE;
-                }
-		break;
-            case 'x':
-                db_path = optarg;
-                if (strlen(db_path) > ADFS_FILENAME_LEN) {
-                    fprintf(stderr, "path is too long\n");
-                    return 0;
-                }
-                break;
-            case '?':
-                fprintf(stderr, "unkown option: -%c\n\n", optopt);
-                show_help();
-                return EXIT_FAILURE;
-        }
+	switch (c) 
+	{
+	    case 'h': show_help(); return 0;
+	    case 'v': return 0;
+	    case 'd': daemon=1; break;
+	    case 's': shutdown=1; break;
+	    case 'p': pid_file=optarg; break;
+	    case 'w': work_dir=optarg; break;
+	    case 'u': user_name=optarg; break;
+	    case 'g': group_name=optarg; break;
+	    case 'P':
+		      port=atoi(optarg);
+		      if (port<=0) { 
+			  fprintf(stderr, "invalid port: %s\n\n", optarg); 
+			  return EXIT_FAILURE; 
+		      }
+		      break;
+	    case 'c': conf_file=optarg; break;
+	    case 'm':
+		      mem_size = atoi(optarg);
+		      if (mem_size <= 0) {
+			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
+			  return EXIT_FAILURE;
+		      }
+		      break;
+	    case 'M':
+		      max_file_size = atoi(optarg);
+		      if (max_file_size <= 0) {
+			  fprintf(stderr, "invalid file size: %s\n\n", optarg);
+			  return EXIT_FAILURE;
+		      }
+		      break;
+	    case 'b':
+		      bnum = atol(optarg);
+		      if (bnum <= 0) {
+			  fprintf(stderr, "invalid bnum %s\n\n", optarg);
+			  return EXIT_FAILURE;
+		      }
+		      break;
+	    case 'x':
+		      db_path = optarg;
+		      if (strlen(db_path) > ADFS_FILENAME_LEN) {
+			  fprintf(stderr, "path is too long\n");
+			  return 0;
+		      }
+		      break;
+	    case '?':
+		      fprintf(stderr, "unkown option: -%c\n\n", optopt);
+		      show_help();
+		      return EXIT_FAILURE;
+	}
     }
 
     if ((argc-optind)>0) {
-        fprintf(stderr, "too many arguments\n\n"); show_help();
-        return EXIT_FAILURE;
+	fprintf(stderr, "too many arguments\n\n"); show_help();
+	return EXIT_FAILURE;
     }
 
     if (shutdown) {
-        nxweb_shutdown_daemon(work_dir, pid_file);
-        return EXIT_SUCCESS;
+	nxweb_shutdown_daemon(work_dir, pid_file);
+	return EXIT_SUCCESS;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -187,17 +183,11 @@ int main(int argc, char** argv)
 	fprintf(stdout, "ADFS Index exit. Init error\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");
 	aim_exit();
-        return EXIT_FAILURE;
+	return EXIT_FAILURE;
     }
     log_out("main", "ADFS Index running...", LOG_LEVEL_SYSTEM);
     fprintf(stdout, "ADFS Index running... \n");
 
-    if (g_erase_mode == 1) {
-	log_out("main", "ADFS Index exit. [erase mode]", LOG_LEVEL_SYSTEM);
-	fprintf(stdout, "ADFS Index exit. [erase mode]\n");
-	aim_exit();
-	return EXIT_SUCCESS;
-    }
     /////////////////////////////////////////////////////////////////////////////////
     if (daemon) { nxweb_run_daemon(work_dir, "aicore.log", pid_file, server_main);}
     else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}

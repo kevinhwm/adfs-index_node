@@ -1,13 +1,12 @@
 /* conf.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 
 int conf_split(char *line, char *key, char *value);
@@ -60,23 +59,6 @@ int conf_split(char *line, char *key, char *value)
     trim_left_white(value);
     trim_right_white(value);
     return 1;
-}
-
-int get_filename_from_url(char * p)
-{
-    if (p == NULL) {return -1;}
-    char *pos = strstr(p, "?");
-    if (pos != NULL) {pos[0] = '\0';}
-    int len = strlen(p);
-    if (len == 0) {return -1;}
-    if (p[len-1] == '/') {p[len-1] = '\0';}
-    len = strlen(p);
-    if (len == 0) {return -1;}
-    if (p[0] == '/') {
-	for (int i=1; i<=len; ++i) {p[i-1] = p[i];}
-    }
-    if (strlen(p) <= 0) {return -1;}
-    return 0;
 }
 
 static void trim_left_white(char * p)

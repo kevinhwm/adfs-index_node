@@ -1,7 +1,6 @@
 /* ai_manager.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <string.h>
@@ -14,7 +13,7 @@
 
 #include "ai_manager.h"
 #include "ai_record.h"
-#include "../include/cJSON.h"
+#include "../cJSON.h"
 
 static ADFS_RESULT m_init_log(cJSON *json);
 static ADFS_RESULT m_init_stat(cJSON *json);
@@ -24,19 +23,13 @@ static ADFS_RESULT m_init_zone(cJSON *json);
 static AIZone * m_create_zone(const char *name, int weight);
 static ADFS_RESULT m_create_ns(const char *name);
 static AINameSpace * m_get_ns(const char *ns);
-static AINode * m_get_node_by_name(const char *node_name, size_t len);
-static AIZone * m_choose_zone(const char * record);
+static AINode * m_get_node(const char *node_name, size_t len);
 static char * m_get_history(const char *, int);
-
-static ADFS_RESULT m_erase();
-static ADFS_RESULT e_traverse(AINameSpace *pns);
-static const char * e_parse(const char *ns, const char *fname, const char *record);
-static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *record, int len);
+static AIZone * m_choose_zone(const char * record);
 
 AIManager g_manager;
 unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
-int g_erase_mode = 0;
 int g_another_running = 0;
 
 ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigned long mem_size, unsigned long max_file_size)
@@ -93,36 +86,6 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigne
     curl_global_init(CURL_GLOBAL_ALL);
     fprintf(stdout, "%s\n", curl_version());
 
-    // work mode 
-    cJSON *j_tmp = cJSON_GetObjectItem(json, "work_mode");
-    if (j_tmp == NULL) {
-	log_out("manager", "[work_mode]->config file error", LOG_LEVEL_ERROR);
-	goto err1;
-    }
-    snprintf(msg, sizeof(msg), "[%s]->work mode", j_tmp->valuestring);
-    log_out("manager", msg, LOG_LEVEL_INFO);
-    if (strcmp(j_tmp->valuestring, "erase") == 0) {
-	printf( "\nIndex will work in 'erase mode'!\n"
-		"When it is done, you should restart it manually. \n");
-	while (1) {
-	    printf("\nAre you sure ? (y/n) ");
-	    int i = getchar();
-	    if (i == 'y') {
-		g_erase_mode = 1;
-		log_out("manager", "work in 'erase' mode", LOG_LEVEL_INFO);
-		printf("\nwork in 'erase' mode.\n");
-		if (m_erase() == ADFS_OK) {log_out("manager", "erase ok.", LOG_LEVEL_INFO);}
-		else {log_out("manager", "erase failed.", LOG_LEVEL_INFO);}
-		break;
-	    }
-	    else if (i == 'n') {
-		log_out("manager", "user quit", LOG_LEVEL_INFO);
-		goto err1;
-	    }
-	}
-    }
-    else if (strcmp(j_tmp->valuestring, "normal") == 0) {printf("\nwork in 'normal' node.\n");}
-    else {log_out("manager", "[work_mode]->config value error", LOG_LEVEL_ERROR); goto err1;}
     conf_release(json);
     return ADFS_OK;
 err1:
@@ -223,7 +186,7 @@ rollback:
     pp = air.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
-	AINode *pn = m_get_node_by_name(pos_sharp + 1, strlen(pos_sharp +1));
+	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
 	    char url[ADFS_MAX_PATH] = {0};
 	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
@@ -276,12 +239,12 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     if (pos_split) {
 	char node_name[ADFS_FILENAME_LEN] = {0};
 	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
-	AINode *pn = m_get_node_by_name(node_name, strlen(node_name));
+	AINode *pn = m_get_node(node_name, strlen(node_name));
 	if (pn == NULL) {goto err3;}
 	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
     else {
-	AINode *pn = m_get_node_by_name(pos_sharp+1, strlen(pos_sharp+1));
+	AINode *pn = m_get_node(pos_sharp+1, strlen(pos_sharp+1));
 	if (pn == NULL) {goto err3;}
 	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
@@ -374,6 +337,7 @@ char * aim_status()
     	pz = pz->next;
     }
 
+    /*
     time_t t_cur = time(NULL);
     struct tm *lt = localtime(&t_cur);
     char str_time[32] = {0};
@@ -391,11 +355,11 @@ char * aim_status()
 	if ((i+1)%10 == 0) {strncat(p, "<br />", size);}
 	pcount--;
     }
+    */
 
     return p;
 }
 
-// private
 static ADFS_RESULT m_init_zone(cJSON *json)
 {
     char msg[1024];
@@ -518,37 +482,6 @@ static ADFS_RESULT m_init_stat(cJSON *json)
     return ADFS_OK;
 }
 
-// private
-static AIZone * m_choose_zone(const char *record)
-{
-    if (record == NULL) {return NULL;}
-    AIManager *pm = &g_manager;
-    AIZone *biggest_z = NULL;   // (weight/count)
-    AIZone *least_z = NULL;
-
-    AIZone *pz = pm->z_head;
-    for (; pz; pz = pz->next) {
-        if (strstr(record, pz->name) == NULL) {continue;}
-
-        if (pz->count == 0) {pz->count += 1; return pz;}
-        else if (biggest_z == NULL) {biggest_z = pz;}
-        else {
-            biggest_z = (pz->weight / pz->count) > (biggest_z->weight / biggest_z->count) ? pz : biggest_z;
-            if (least_z == NULL) {least_z = pz;}
-            else {least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;}
-        }
-    }
-    if (biggest_z) {
-	biggest_z->count += 1;
-	if (biggest_z == least_z) {
-	    pz = pm->z_head;
-	    for (; pz; pz = pz->next) {pz->count = 0;}
-	}
-    }
-    return biggest_z;
-}
-
-// private
 static AINameSpace * m_get_ns(const char *ns)
 {
     AINameSpace *pns = g_manager.ns_head;
@@ -559,7 +492,7 @@ static AINameSpace * m_get_ns(const char *ns)
     return NULL;
 }
 
-static AINode * m_get_node_by_name(const char *node_name, size_t len)
+static AINode * m_get_node(const char *node_name, size_t len)
 {
     char *p = malloc(len+1);
     if (p == NULL) {return NULL;}
@@ -579,7 +512,6 @@ static AINode * m_get_node_by_name(const char *node_name, size_t len)
     return NULL;
 }
 
-// private
 static AIZone * m_create_zone(const char *name, int weight)
 {
     AIManager * pm = &g_manager;
@@ -598,7 +530,6 @@ static AIZone * m_create_zone(const char *name, int weight)
     return pz;
 }
 
-// private
 static ADFS_RESULT m_create_ns(const char *name)
 {
     AIManager * pm = &g_manager;
@@ -648,84 +579,32 @@ static char * m_get_history(const char *line, int order)
     return record;
 }
 
-static ADFS_RESULT m_erase()
+static AIZone * m_choose_zone(const char *record)
 {
-    AINameSpace *pns = g_manager.ns_head;
-    while (pns) {
-	e_traverse(pns);
-	pns = pns->next;
+    if (record == NULL) {return NULL;}
+    AIManager *pm = &g_manager;
+    AIZone *biggest_z = NULL;   // (weight/count)
+    AIZone *least_z = NULL;
+
+    AIZone *pz = pm->z_head;
+    for (; pz; pz = pz->next) {
+        if (strstr(record, pz->name) == NULL) {continue;}
+
+        if (pz->count == 0) {pz->count += 1; return pz;}
+        else if (biggest_z == NULL) {biggest_z = pz;}
+        else {
+            biggest_z = (pz->weight / pz->count) > (biggest_z->weight / biggest_z->count) ? pz : biggest_z;
+            if (least_z == NULL) {least_z = pz;}
+            else {least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;}
+        }
     }
-    char url[1024] = {0};
-    AIZone *pz = g_manager.z_head;
-    while (pz) {
-	AINode *pn = pz->head;
-	while (pn) {
-	    snprintf(url, sizeof(url), "http://%s/syn", pn->ip_port);
-	    aic_connect(pn, url, FLAG_SYN);
-	    pn = pn->next;
-	}
-	pz = pz->next;
-    }
-    return ADFS_OK;
-}
-
-static ADFS_RESULT e_traverse(AINameSpace *pns)
-{
-    KCCUR *cur;
-    char *kbuf;
-    const char *cvbuf;
-    size_t ksiz, vsiz;
-
-    cur = kcdbcursor(pns->index_db);
-    kccurjump(cur);
-    while ((kbuf = kccurget(cur, &ksiz, &cvbuf, &vsiz, 0)) != NULL) {
-	const char *hold = e_parse(pns->name, kbuf, cvbuf);
-	if (strlen(hold) > 0) {kccursetvalue(cur, hold, strlen(hold), 1);}
-	else {kccurremove(cur);}
-	kcfree(kbuf);
-    }
-    kccurdel(cur);
-    return ADFS_OK;
-}
-
-static const char * e_parse(const char *ns, const char *fname, const char *record)
-{
-    const char *rest = record;
-    const char *pos_dollar = NULL;
-
-    while ((pos_dollar = strstr(rest, "$"))) {
-	if (e_connect(ns, fname, rest, pos_dollar - rest) == ADFS_ERROR) {break;}
-	rest = pos_dollar +1;
-    }
-    return rest;
-}
-
-static ADFS_RESULT e_connect(const char *ns, const char *fname, const char *record, int len)
-{
-    ADFS_RESULT res = ADFS_OK;
-    char *r = malloc(len+1);
-    if (r == NULL) {return ADFS_ERROR;}
-    memset(r, 0, len+1);
-    strncpy(r, record, len);
-
-    char *rest = r;
-    while (rest && res == ADFS_OK) {
-	AINode *pn = NULL;
-	char *pos_sharp = strstr(rest, "#");
-	char *pos_split = strstr(pos_sharp, "|");
-	rest = pos_split;
-
-	if (pos_split) {pn = m_get_node_by_name(pos_sharp +1, pos_split - pos_sharp -1);}
-	else {pn = m_get_node_by_name(pos_sharp +1, strlen(pos_sharp +1));}
-
-	if (pn != NULL) {
-	    char url[ADFS_MAX_PATH] = {0};
-	    if (ns) { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, r, ns); }
-	    else { snprintf(url, sizeof(url), "http://%s/erase/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, r); }
-	    res = aic_connect(pn, url, FLAG_ERASE);		// do not care about success or failure.
+    if (biggest_z) {
+	biggest_z->count += 1;
+	if (biggest_z == least_z) {
+	    pz = pm->z_head;
+	    for (; pz; pz = pz->next) {pz->count = 0;}
 	}
     }
-    free(r);
-    return res;
+    return biggest_z;
 }
 

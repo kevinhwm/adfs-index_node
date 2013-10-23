@@ -1,7 +1,6 @@
 /* ai_stat.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <stdlib.h>

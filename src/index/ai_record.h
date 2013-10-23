@@ -1,13 +1,12 @@
 /* ai_record.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __RECORD_H__
 #define __RECORD_H__
 
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 
 // format: "uuidzone#node|zone#node$uuidzone#node|zone#node..."

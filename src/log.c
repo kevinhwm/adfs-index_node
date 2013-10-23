@@ -1,7 +1,6 @@
 /* log.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <stdlib.h>
@@ -9,7 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
-#include "../include/adfs.h"
+#include "adfs.h"
 
 extern int g_log_level;
 static char log_file[256] = {0};

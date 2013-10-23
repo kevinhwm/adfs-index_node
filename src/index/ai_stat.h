@@ -1,14 +1,13 @@
 /* ai_stat.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __STAT_H__
 #define __STAT_H__
 
 #include <time.h>
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 typedef struct AIStat 
 {

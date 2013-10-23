@@ -1,7 +1,6 @@
 /* if_erase.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
@@ -24,7 +23,8 @@ static nxweb_result erase_on_request(
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, NULL);
-    if (get_filename_from_url(fname) == ADFS_ERROR) {
+    char *pattern = "^(/[\\w./]{1,512}){1}(\\?[\\w%&=]+)?$";
+    if (get_filename_from_url(fname, pattern) < 0) {
 	nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;

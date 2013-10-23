@@ -1,7 +1,6 @@
 /* if_status.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"

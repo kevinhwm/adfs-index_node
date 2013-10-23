@@ -1,14 +1,12 @@
 /* if_upload.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
-//#include "adfs.h"
 #include "an_manager.h"
-#include "multipart_parser.h"
+#include "../multipart_parser.h"
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -122,7 +120,8 @@ static nxweb_result upload_on_request(
 	if ( strlen(ufo->filename) > 0 && ufo->file_complete ) {
 	    strncpy(fname, req->path_info, sizeof(fname));
 	    nxweb_url_decode(fname, NULL);
-	    if (get_filename_from_url(fname) == ADFS_ERROR) {
+	    char *pattern = "^(/[\\w./]{1,512}){1}(\\?[\\w%&=]+)?$";
+	    if (get_filename_from_url(fname, pattern) < 0) {
 		nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 		res = -1;
 	    }

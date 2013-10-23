@@ -1,7 +1,6 @@
 /* if_download.c
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
@@ -10,7 +9,6 @@
 
 static const char download_handler_key;
 #define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)
-
 
 typedef struct SHARE_DATA{
     void * data_ptr;
@@ -23,7 +21,7 @@ static void download_request_data_finalize(
 	nxe_data data)
 {
     SHARE_DATA * d = data.ptr;
-    if(d->data_ptr) { kcfree( d->data_ptr ); d->data_ptr = NULL; }
+    if(d->data_ptr) { kcfree(d->data_ptr); d->data_ptr = NULL; }
 }
 
 static nxweb_result download_on_request(
@@ -33,14 +31,16 @@ static nxweb_result download_on_request(
 {
     if (strlen(req->path_info) >= ADFS_MAX_PATH) {
 	nxweb_send_http_error(resp, 400, "Failed. File name is too long.");
+	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    nxweb_parse_request_parameters( req, 0 );
-    const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
+    nxweb_parse_request_parameters(req, 0);
+    const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, NULL);
-    if (get_filename_from_url(fname) == ADFS_ERROR) {
+    char *pattern = "^(/[\\w./]{1,512}){1}(\\?[\\w%&=]+)?$";
+    if (get_filename_from_url(fname, pattern) < 0) {
 	nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 	return NXWEB_ERROR;
     }

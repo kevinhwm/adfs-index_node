@@ -1,7 +1,6 @@
 /* ai_manager.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __MANAGER_H__
@@ -10,7 +9,7 @@
 #include <kclangc.h>
 #include "ai_zone.h"
 #include "ai_stat.h"
-#include "../include/adfs.h"
+#include "../adfs.h"
 
 
 typedef struct AINameSpace
