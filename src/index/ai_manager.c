@@ -148,7 +148,7 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
     AIZone *pz = pm->z_head;
     while (pz) {
 	AINode * pn = pz->rand_choose(pz);
-	char url[ADFS_MAX_PATH] = {0};
+	char url[ADFS_MAX_LEN] = {0};
 	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 	if (aic_upload(pn, url, fname, fdata, fdata_len) == ADFS_ERROR) {
 	    printf("upload error: %s\n", url);
@@ -188,7 +188,7 @@ rollback:
 	char *pos_sharp = strstr(pp->zone_node, "#");
 	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
-	    char url[ADFS_MAX_PATH] = {0};
+	    char url[ADFS_MAX_LEN] = {0};
 	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
 	    aic_connect(pn, url, FLAG_ERASE);
 	}
@@ -225,9 +225,9 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     size_t vsize;
     char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
     if (line == NULL) {return NULL;}
-    char *url = (char *)malloc(ADFS_MAX_PATH);
+    char *url = (char *)malloc(ADFS_MAX_LEN);
     if (url == NULL) {goto err1;}
-    memset(url, 0, ADFS_MAX_PATH);
+    memset(url, 0, ADFS_MAX_LEN);
     char *record = m_get_history(line, order);
     if (record == NULL) {goto err2;}
 
@@ -241,15 +241,15 @@ char * aim_download(const char *ns, const char *fname, const char *history)
 	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
 	AINode *pn = m_get_node(node_name, strlen(node_name));
 	if (pn == NULL) {goto err3;}
-	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
     else {
 	AINode *pn = m_get_node(pos_sharp+1, strlen(pos_sharp+1));
 	if (pn == NULL) {goto err3;}
-	snprintf(url, ADFS_MAX_PATH, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
-    strncat(url, "?namespace=", ADFS_MAX_PATH);
-    strncat(url, pns->name, ADFS_MAX_PATH);
+    strncat(url, "?namespace=", ADFS_MAX_LEN);
+    strncat(url, pns->name, ADFS_MAX_LEN);
     pm->s_download.inc(&(pm->s_download));
 
     if (record) {free(record);}
@@ -542,7 +542,7 @@ static ADFS_RESULT m_create_ns(const char *name)
     if (pns == NULL) {return ADFS_ERROR;}
 
     strncpy(pns->name, name, sizeof(pns->name));
-    char indexdb_path[ADFS_MAX_PATH] = {0};
+    char indexdb_path[ADFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
             pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();

@@ -18,13 +18,13 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     ADFS_RESULT res = ADFS_ERROR;
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
-        if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
+	if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
 	    if (pn->conn[i].flag!=FLAG_UPLOAD) {c_rebuild(pn, i);}
-            res = c_upload(pn->conn[i].curl, url, fname, fdata, fdata_len);
+	    res = c_upload(pn->conn[i].curl, url, fname, fdata, fdata_len);
 	    pn->conn[i].flag = FLAG_UPLOAD;
-            pthread_mutex_unlock(pn->conn[i].mutex);
-            return res;
-        }
+	    pthread_mutex_unlock(pn->conn[i].mutex);
+	    return res;
+	}
     }
 
     int pos_last = ADFS_NODE_CURL_NUM -1;
@@ -43,13 +43,13 @@ ADFS_RESULT aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
     ADFS_RESULT res = ADFS_ERROR;
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
-        if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
+	if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
 	    if (pn->conn[i].flag != flag) {c_rebuild(pn, i);}
-            res = c_connect(pn->conn[i].curl, url);
+	    res = c_connect(pn->conn[i].curl, url);
 	    pn->conn[i].flag = flag;
-            pthread_mutex_unlock(pn->conn[i].mutex);
-            return res;
-        }
+	    pthread_mutex_unlock(pn->conn[i].mutex);
+	    return res;
+	}
     }
 
     int pos_last = ADFS_NODE_CURL_NUM -1;
@@ -74,11 +74,11 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastpost = NULL;
     curl_formadd(&formpost, &lastpost,
-            CURLFORM_COPYNAME, "file",
-            CURLFORM_BUFFER, fname,
-            CURLFORM_BUFFERPTR, fdata,
-            CURLFORM_BUFFERLENGTH, fdata_len,
-            CURLFORM_END);
+	    CURLFORM_COPYNAME, "file",
+	    CURLFORM_BUFFER, fname,
+	    CURLFORM_BUFFERPTR, fdata,
+	    CURLFORM_BUFFERLENGTH, fdata_len,
+	    CURLFORM_END);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
@@ -86,9 +86,9 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
-        long res_code = 0;
-        res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
+	long res_code = 0;
+	res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
+	if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
     }
     curl_formfree(formpost);
     return adfs_res;
@@ -104,9 +104,9 @@ static ADFS_RESULT c_connect(CURL *curl, const char *url)
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
-        long res_code = 0;
-        res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
+	long res_code = 0;
+	res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
+	if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
     }
     return adfs_res;
 }

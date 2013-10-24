@@ -102,7 +102,7 @@ static nxweb_result upload_on_request(
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
 
     int res = 0;
-    char fname[ADFS_MAX_PATH] = {0};
+    char fname[ADFS_MAX_LEN] = {0};
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) {

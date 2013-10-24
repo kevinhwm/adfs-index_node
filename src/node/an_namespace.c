@@ -113,7 +113,7 @@ static ADFS_RESULT node_create(ANNameSpace * pns, const char *path, const char *
     new_node->state = state;
     new_node->db = kcdbnew();
 
-    char dbpath[ADFS_MAX_PATH] = {0};
+    char dbpath[ADFS_MAX_LEN] = {0};
     snprintf(dbpath, sizeof(dbpath), "%s/%s/%d.kch%s", path, pns->name, new_node->id, args);
     strncpy(new_node->path, dbpath, sizeof(new_node->path));
     if (db_open(new_node->db, new_node->path, new_node->state) == ADFS_ERROR) {new_node->state = S_LOST; free(new_node); return ADFS_ERROR;}

@@ -12,10 +12,10 @@ static nxweb_result delete_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    char fname[ADFS_MAX_PATH] = {0};
+    char fname[ADFS_MAX_LEN] = {0};
     const char *name_space = NULL;
 
-    if (strlen(req->path_info) >= ADFS_MAX_PATH) {
+    if (strlen(req->path_info) >= ADFS_MAX_LEN) {
         nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive = 0;
         return NXWEB_ERROR;

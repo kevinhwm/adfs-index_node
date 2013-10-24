@@ -117,7 +117,7 @@ ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void 
     pns = m_get_ns(name_space);
     if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return ADFS_ERROR;}
     if (pns->needto_split(pns)) {
-	char db_args[ADFS_MAX_PATH] = {0};
+	char db_args[ADFS_MAX_LEN] = {0};
 	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
 	if (pns->split_db(pns, pm->path, db_args) == ADFS_ERROR) {return ADFS_ERROR;}
     }
@@ -182,17 +182,17 @@ static ANNameSpace * m_create_ns(const char *name_space)
 	if (strcmp(tmp->name, name_space) == 0) { pthread_rwlock_unlock(&pm->ns_lock); return tmp; }
 	tmp = tmp->next;
     }
-    char ns_path[ADFS_MAX_PATH] = {0};
+    char ns_path[ADFS_MAX_LEN] = {0};
     snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
     int max_id = m_scan_kch(ns_path);
-    char db_args[ADFS_MAX_PATH] = {0};
+    char db_args[ADFS_MAX_LEN] = {0};
     snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *200, pm->kc_msiz);
 
     ANNameSpace * pns = malloc(sizeof(ANNameSpace));
     if (pns == NULL) { pthread_rwlock_unlock(&pm->ns_lock); return NULL; }
     anns_init(pns, name_space);
 
-    char indexdb_path[ADFS_MAX_PATH] = {0};
+    char indexdb_path[ADFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s/index.kch%s", pm->path, name_space, db_args);
     pns->index_db = kcdbnew();
     int32_t res = kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK);

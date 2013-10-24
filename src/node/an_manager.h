@@ -11,7 +11,7 @@
 
 typedef struct ANManager
 {
-    char path[ADFS_MAX_PATH];
+    char path[ADFS_MAX_LEN];
     pthread_rwlock_t ns_lock;
     struct ANNameSpace * head;
     struct ANNameSpace * tail;

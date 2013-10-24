@@ -88,7 +88,7 @@ static nxweb_result upload_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp)
 { 
-    if (strlen(req->uri) >= ADFS_MAX_PATH) {
+    if (strlen(req->uri) >= ADFS_MAX_LEN) {
 	nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
@@ -110,7 +110,7 @@ static nxweb_result upload_on_request(
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
     int res = 0;
-    char fname[ADFS_MAX_PATH] = {0};
+    char fname[ADFS_MAX_LEN] = {0};
     if (fwb) {
 	ufo->parser_settings.on_header_field = on_post_header_field;
 	ufo->parser_settings.on_header_value = on_post_header_value;
@@ -207,7 +207,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (strlen(req->uri) >= ADFS_MAX_PATH || req->content_length > g_MaxFileSize) { 
+    if (strlen(req->uri) >= ADFS_MAX_LEN || req->content_length > g_MaxFileSize) { 
 	ufo->fpostmem = fopen("/dev/null", "wb"); 
     }
     else { 

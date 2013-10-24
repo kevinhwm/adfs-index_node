@@ -25,7 +25,7 @@ typedef struct NodeDB
 {
     int             id;
     ADFS_NODE_STATE state;
-    char            path[ADFS_MAX_PATH];
+    char            path[ADFS_MAX_LEN];
     KCDB        *   db;
     unsigned long   count;
 
