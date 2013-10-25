@@ -154,7 +154,13 @@ static nxweb_result upload_on_request(
 	    ufo->file_ptr = NULL;
 	}
     }
-    else {nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>");}
+    else {nxweb_response_append_str(resp, "<html><head><title>Upload</title></head>"
+	    "<body><form method='post' enctype='multipart/form-data'>\n"
+	    "File to upload: "
+	    "<input type='file' multiple name='uploadedfile' />\n"
+	    "<input type='submit' value='upload' />\n"
+	    "</form></body></html>\n");
+    }
 
     char msg[1024] = {0};
     if (res < 0) {
@@ -167,12 +173,6 @@ static nxweb_result upload_on_request(
     else { snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr); }
 
     log_out("upload", msg, LOG_LEVEL_INFO);
-    nxweb_response_printf(resp, ""
-	    "<form method='post' enctype='multipart/form-data'>\n"
-	    "File to upload: "
-	    "<input type='file' multiple name='uploadedfile' />\n"
-	    "<input type='submit' value='upload' />\n"
-	    "</form></body></html>\n");
     return NXWEB_OK;
 }
 
