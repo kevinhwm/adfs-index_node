@@ -1,3 +1,17 @@
+/*
+ * 查看版本号
+ * 不存在
+ * 	3.2.4.1
+ * 存在
+ * 	读取版本号
+ *
+ * while （不是当前版本）
+ * 	读版本号
+ * 	执行一步升级
+ *
+ */
+
+
 #include <stdio.h>
 
 enum {
@@ -6,9 +20,10 @@ enum {
     VER_03030000 = 0x03030000
 };
 
+
 static unsigned long gs_version = VER_OLD;
 
-int check_version()
+int get_version()
 {
     FILE *fver = fopen("version", "r+");
     if (fver == NULL) {
