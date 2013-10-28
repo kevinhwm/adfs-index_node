@@ -1,16 +1,3 @@
-/*
- * 查看版本号
- * 不存在
- * 	v3.0.0
- * 存在
- * 	读取版本号
- *
- * while （不是当前版本）
- * 	读版本号
- * 	执行一步升级
- *
- */
-
 
 #include <stdio.h>
 #include "../adfs.h"
@@ -23,20 +10,14 @@ int get_curr_data_version()
     FILE *fver = fopen("version", "r+");
     if (fver != NULL) {
 	int len = fread(version, 1, sizeof(version), f);
-	if (len >= sizeof(version)) { 
-	    // information is too long 
-	    fclose(fver);
-	    return -1;
-	}
 	fclose(fver);
+	if (len >= sizeof(version)) { return -1; }
     }
     else { sprintf(version, "D0300"); }
 
     if (strcmp(version, "D0300") = 0) { update_0300_to_0301(); }
     else if (strcmp(version, "D0301") = 0) { return 0; }
     else { printf("Can not recognize this data version. Maybe it is newer."); return -1;}
-
-    return 0;
 }
 
 static int update()
@@ -44,10 +25,32 @@ static int update()
     return 0;
 }
 
-static int update_03020400_to_03030000()
+static int update_0300_to_0301()
 {
-    mkdir();
-    rename();
     return 0;
 }
 
+
+static int create_log_dir(const char *path)
+{
+    int res = opendir("log");
+    if (res < 0) {
+	if (mkdir("log", 0755) < 0) { return -1; }
+    }
+    else {
+	closedir();
+    }
+    return 0;
+}
+
+static int create_data_dir(const char *path)
+{
+    int res = opendir("log");
+    if (res < 0) {
+	if (mkdir("log", 0755) < 0) { return -1; }
+    }
+    else {
+	closedir();
+    }
+    return 0;
+}
