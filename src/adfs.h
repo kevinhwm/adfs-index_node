@@ -1,13 +1,16 @@
 /* adfs.h
  *
- * huangtao@antiy.com
- * Antiy Labs. Basic Platform R & D Center.
+ * kevinhwm@gmail.com
  */
 
 #ifndef __ADFS_H__
 #define __ADFS_H__
 
 #define ADFS_VERSION		"3.3.0"
+
+#define ADFS_DATA_V0300		"D0300"
+#define ADFS_DATA_V0301		"D0301"
+
 #define ADFS_MAX_LEN		1024
 #define ADFS_FILENAME_LEN	512
 #define ADFS_ZONENAME_LEN	128

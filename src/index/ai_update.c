@@ -1,7 +1,7 @@
 /*
  * 查看版本号
  * 不存在
- * 	3.2.4.1
+ * 	v3.0.0
  * 存在
  * 	读取版本号
  *
@@ -13,28 +13,29 @@
 
 
 #include <stdio.h>
-
-enum {
-    VER_OLD      = 0x00000000,
-    VER_03020400 = 0x03020400,
-    VER_03030000 = 0x03030000
-};
+#include "../adfs.h"
 
 
-static unsigned long gs_version = VER_OLD;
-
-int get_version()
+int get_curr_data_version()
 {
+    char version[256] = {0};
+
     FILE *fver = fopen("version", "r+");
-    if (fver == NULL) {
-	gs_version = VER_03020400;
-    }
-    else {
-	char buf[1024] = {0};
-	int len = fread(buf, 1, sizeof(buf), f);
-	if (len > sizeof(buf)) { return -1; }
+    if (fver != NULL) {
+	int len = fread(version, 1, sizeof(version), f);
+	if (len >= sizeof(version)) { 
+	    // information is too long 
+	    fclose(fver);
+	    return -1;
+	}
 	fclose(fver);
     }
+    else { sprintf(version, "D0300"); }
+
+    if (strcmp(version, "D0300") = 0) { update_0300_to_0301(); }
+    else if (strcmp(version, "D0301") = 0) { return 0; }
+    else { printf("Can not recognize this data version. Maybe it is newer."); return -1;}
+
     return 0;
 }
 
