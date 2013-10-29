@@ -3,6 +3,8 @@
 #include "../adfs.h"
 
 
+static int create_dir(const char *path)
+
 int get_curr_data_version()
 {
     char version[256] = {0};
@@ -31,26 +33,26 @@ static int update_0300_to_0301()
 }
 
 
-static int create_log_dir(const char *path)
+static int create_log_dir()
 {
-    int res = opendir("log");
-    if (res < 0) {
-	if (mkdir("log", 0755) < 0) { return -1; }
-    }
-    else {
-	closedir();
-    }
+    if (create_dir("data") <0) {return -1;}
     return 0;
 }
 
-static int create_data_dir(const char *path)
+static int create_data_dir()
 {
-    int res = opendir("log");
-    if (res < 0) {
-	if (mkdir("log", 0755) < 0) { return -1; }
-    }
-    else {
-	closedir();
-    }
+    if (create_dir("log") <0) {return -1;}
     return 0;
 }
+
+static int create_dir(const char *path)
+{
+    DIR *dirp = NULL;
+    dirp = opendir(path);
+    if (dirp == NULL) {
+	if (mkdir(path, 0755) < 0) { return -1; }
+    }
+    else { closedir(path); }
+    return 0;
+}
+

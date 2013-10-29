@@ -88,7 +88,6 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char *work_dir="/usr/local/adfs/index";
-    const char *db_path=NULL;
     const char *pid_file="indexserver.pid";
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -101,7 +100,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:")) != -1) 
     {
 	switch (c) 
 	{
@@ -113,44 +112,32 @@ int main(int argc, char** argv)
 	    case 'w': work_dir=optarg; break;
 	    case 'u': user_name=optarg; break;
 	    case 'g': group_name=optarg; break;
-	    case 'P':
-		      port=atoi(optarg);
+	    case 'P': port=atoi(optarg);
 		      if (port<=0) { 
 			  fprintf(stderr, "invalid port: %s\n\n", optarg); 
 			  return EXIT_FAILURE; 
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
-	    case 'm':
-		      mem_size = atoi(optarg);
+	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
 			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case 'M':
-		      max_file_size = atoi(optarg);
+	    case 'M': max_file_size = atoi(optarg);
 		      if (max_file_size <= 0) {
 			  fprintf(stderr, "invalid file size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case 'b':
-		      bnum = atol(optarg);
+	    case 'b': bnum = atol(optarg);
 		      if (bnum <= 0) {
 			  fprintf(stderr, "invalid bnum %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case 'x':
-		      db_path = optarg;
-		      if (strlen(db_path) > ADFS_FILENAME_LEN) {
-			  fprintf(stderr, "path is too long\n");
-			  return 0;
-		      }
-		      break;
-	    case '?':
-		      fprintf(stderr, "unkown option: -%c\n\n", optopt);
+	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
@@ -173,12 +160,9 @@ int main(int argc, char** argv)
     }
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
-    if (db_path == NULL) {
-	printf("please check the \"-x\" arg.\n");
-	return EXIT_FAILURE;
-    }
+
     fprintf(stdout, "ADFS Index start...\n");
-    if (aim_init(conf_file, db_path, bnum, mem_size, max_file_size) == ADFS_ERROR) {
+    if (aim_init(conf_file, bnum, mem_size, max_file_size) == ADFS_ERROR) {
 	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Index exit. Init error\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");

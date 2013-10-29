@@ -32,7 +32,7 @@ unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_another_running = 0;
 
-ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigned long mem_size, unsigned long max_file_size)
+ADFS_RESULT aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
     srand(time(NULL));
 
@@ -40,16 +40,8 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigne
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
 
-    DIR *dirp = opendir(path);
-    if( dirp == NULL ) {
-	snprintf(msg, sizeof(msg), "[%s]->path error", path);
-	log_out("manager", msg, LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
-    }
-    closedir(dirp);
-
     char f_flag[1024] = {0};
-    snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
+    snprintf(f_flag, sizeof(f_flag), "adfs.flag");
     if (access(f_flag, F_OK) != -1) {
 	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
 	log_out("manager", msg, LOG_LEVEL_FATAL);
@@ -57,35 +49,38 @@ ADFS_RESULT aim_init(const char *conf_file, const char *path, long bnum, unsigne
 	return ADFS_ERROR;
     }
     else {
-	time_t t = time(NULL);
-	struct tm * lt = localtime(&t);
+	time_t t;
+	char stime[64] = {0};
+	time(&t);
 	FILE *f = fopen(f_flag, "wb+");
-	fprintf(f, "%s", asctime(lt));
+	if (f == NULL) {
+	    snprintf(msg, sizeof(msg), "Can not create file.");
+	    log_out("manager", msg, LOG_LEVEL_FATAL);
+	    return ADFS_ERROR;
+	}
+	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
-    snprintf(msg, sizeof(msg), "[%s]->init db path", path);
-    log_out("manager", msg, LOG_LEVEL_INFO);
 
-    strncpy(pm->path, path, sizeof(pm->path));
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = bnum;
     pm->kc_msiz = mem_size *1024*1024;
+    strncpy(pm->db_dir, "data", sizeof(pm->db_dir));
+    strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
 
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) {
-	log_out("manager", "Config file error. Make sure that it is json format except lines which start with '#'.", LOG_LEVEL_ERROR);
-	goto err1;
+	log_out("manager", "Config file error.", LOG_LEVEL_ERROR);
+	return ADFS_ERROR;
     }
     if (m_init_log(json) == ADFS_ERROR) {goto err1;}
-    if (m_init_stat(json) == ADFS_ERROR) {goto err1;}
     if (m_init_ns(json) == ADFS_ERROR) {goto err1;}
     if (m_init_zone(json) == ADFS_ERROR) {goto err1;}
+    if (m_init_stat(json) == ADFS_ERROR) {goto err1;}
 
     g_MaxFileSize = max_file_size *1024*1024;
     curl_global_init(CURL_GLOBAL_ALL);
-    fprintf(stdout, "%s\n", curl_version());
-
     conf_release(json);
     return ADFS_OK;
 err1:
@@ -118,7 +113,7 @@ void aim_exit()
     curl_global_cleanup();
     if (!g_another_running) {
 	char f_flag[1024] = {0};
-	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->path);
+	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->db_dir);
 	remove(f_flag);
     }
 }
@@ -544,7 +539,7 @@ static ADFS_RESULT m_create_ns(const char *name)
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-            pm->path, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+            pm->db_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {return ADFS_ERROR;}
 
