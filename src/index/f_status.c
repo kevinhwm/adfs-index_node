@@ -1,11 +1,11 @@
-/* if_status.c
+/* f_status.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "ai_manager.h"
+#include "manager.h"
 
 
 static nxweb_result status_on_request(

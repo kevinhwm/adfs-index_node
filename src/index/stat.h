@@ -1,4 +1,4 @@
-/* ai_stat.h
+/* stat.h
  *
  * kevinhwm@gmail.com
  */

@@ -1,10 +1,10 @@
-/* if_delete.c
+/* f_delete.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
-#include "ai_manager.h"
+#include "manager.h"
 
 
 static nxweb_result delete_on_request(

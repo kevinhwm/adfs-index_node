@@ -1,4 +1,4 @@
-/* ai_record.c
+/* record.c
  *
  * kevinhwm@gmail.com
  */
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>	// gettimeofday
-#include "ai_record.h"
+#include "record.h"
 
 static void r_release(AIRecord *_this);
 static void r_create_uuid(AIRecord *_this);

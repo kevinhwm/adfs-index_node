@@ -1,10 +1,10 @@
-/* an_namespace.c
+/* namespace.c
  *
  * kevinhwm@gmail.com
  */
 
 #include <pthread.h>
-#include "an_namespace.h"
+#include "namespace.h"
 
 // list member functions. names begin with "ns_"
 static void ns_release(ANNameSpace * _this);

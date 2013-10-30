@@ -1,11 +1,11 @@
-/* ai_zone.c
+/* zone.c
  *
  * kevinhwm@gmail.com
  */
 
 #include <stdlib.h>	// malloc
 #include <string.h>
-#include "ai_zone.h"
+#include "zone.h"
 
 static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port);
 static void z_release(AIZone *_this);

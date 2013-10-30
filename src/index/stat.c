@@ -1,4 +1,4 @@
-/* ai_stat.c
+/* stat.c
  *
  * kevinhwm@gmail.com
  */
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "ai_stat.h"
+#include "stat.h"
 
 static void s_release(AIStat *ps);
 static int * s_get(AIStat *ps, time_t *);

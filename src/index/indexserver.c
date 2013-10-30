@@ -6,7 +6,7 @@
 #include <nxweb/nxweb.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "ai_manager.h"
+#include "manager.h"
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
@@ -68,10 +68,10 @@ static void show_help(void)
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
 	    " -b bnum  set the number of buckets	(default: 1048576)\n"
-	    " -x dir   set database dir		(no default, must be set.)\n"
+	    //" -x dir   set database dir		(no default, must be set.)\n"
 
 	    "\n"
-	    " example:  indexserver -w ./ -x ./ -c indexserver.conf -d \n"
+	    " example:  indexserver -w ./ -c indexserver.conf -d \n"
 	   );
 }
 
@@ -88,6 +88,7 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char *work_dir="/usr/local/adfs/index";
+    const char *data_dir = "data";
     const char *pid_file="indexserver.pid";
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -99,8 +100,10 @@ int main(int argc, char** argv)
 	    "                    ADFS - Index " ADFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
+
+    // -x 作为隐藏参数，默认值取"data"
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:x:")) != -1) 
     {
 	switch (c) 
 	{
@@ -137,6 +140,7 @@ int main(int argc, char** argv)
 			  return EXIT_FAILURE;
 		      }
 		      break;
+	    case 'x': data_dir=optarg; break;
 	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
@@ -161,16 +165,10 @@ int main(int argc, char** argv)
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
 
-    fprintf(stdout, "ADFS Index start...\n");
-    if (aim_init(conf_file, bnum, mem_size, max_file_size) == ADFS_ERROR) {
-	log_out("main", "ADFS Index exit. Init error.", LOG_LEVEL_SYSTEM);
-	fprintf(stdout, "ADFS Index exit. Init error\n");
-	fprintf(stdout, "\n>>> If log exists, check it. Otherwise check the information on the screen.\n");
+    if (aim_init(conf_file, data_dir, bnum, mem_size, max_file_size) == ADFS_ERROR) {
 	aim_exit();
 	return EXIT_FAILURE;
     }
-    log_out("main", "ADFS Index running...", LOG_LEVEL_SYSTEM);
-    fprintf(stdout, "ADFS Index running... \n");
 
     /////////////////////////////////////////////////////////////////////////////////
     if (daemon) { nxweb_run_daemon(work_dir, "aicore.log", pid_file, server_main);}

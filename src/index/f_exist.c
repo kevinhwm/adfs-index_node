@@ -1,11 +1,11 @@
-/* if_exist.c
+/* f_exist.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "ai_manager.h"
+#include "manager.h"
 
 static nxweb_result exist_on_request(
 	nxweb_http_server_connection* conn, 

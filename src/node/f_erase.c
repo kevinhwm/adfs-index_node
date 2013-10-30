@@ -1,10 +1,10 @@
-/* if_erase.c
+/* f_erase.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
-#include "an_manager.h"
+#include "manager.h"
 
 // just delete records in index.kch
 // monitor thread delete records which are not in index.kch 

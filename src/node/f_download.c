@@ -1,11 +1,11 @@
-/* if_download.c
+/* f_download.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
 #include "kclangc.h"
-#include "an_manager.h"
+#include "manager.h"
 
 static const char download_handler_key;
 #define DOWNLOAD_HANDLER_KEY ((nxe_data)&download_handler_key)

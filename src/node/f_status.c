@@ -1,4 +1,4 @@
-/* if_status.c
+/* f_status.c
  *
  * kevinhwm@gmail.com
  */

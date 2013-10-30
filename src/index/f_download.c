@@ -1,11 +1,11 @@
-/* if_download.c
+/* f_download.c
  *
  * kevinhwm@gmail.com
  */
 
 #include "nxweb/nxweb.h"
 #include <string.h>
-#include "ai_manager.h"
+#include "manager.h"
 
 static nxweb_result download_on_request(
 	nxweb_http_server_connection* conn, 

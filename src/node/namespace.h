@@ -1,4 +1,4 @@
-/* an_namespace.h
+/* namespace.h
  *
  * kevinhwm@gmail.com
  */
@@ -54,7 +54,7 @@ typedef struct ANNameSpace
     void (*count_add)(struct ANNameSpace * _this);
 }ANNameSpace;
 
-// an_namespace.c
+// namespace.c
 ADFS_RESULT anns_init(ANNameSpace *_this, const char * name_space);
 
 #endif // __NAMESPACE_H__

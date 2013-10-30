@@ -1,4 +1,4 @@
-/* an_manager.h
+/* manager.h
  *
  * kevinhwm@gmail.com
  */
@@ -22,7 +22,7 @@ typedef struct ANManager
     unsigned long kc_msiz;
 }ANManager;
 
-// an_manager.c
+// manager.c
 ADFS_RESULT anm_init(const char * conf_file, const char * dbpath, unsigned long cache_size);
 void anm_exit();
 ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);

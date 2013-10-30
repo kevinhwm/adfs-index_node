@@ -1,4 +1,4 @@
-/* ai_connect.c
+/* connect.c
  * 
  * kevinhwm@gmail.com
  */
@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <curl/curl.h>
 #include "../adfs.h"
-#include "ai_zone.h"
+#include "zone.h"
 
 static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
 static ADFS_RESULT c_connect(CURL *curl, const char *url);

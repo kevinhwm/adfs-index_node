@@ -1,4 +1,4 @@
-/* ai_manager.c
+/* manager.c
  *
  * kevinhwm@gmail.com
  */
@@ -11,8 +11,8 @@
 #include <kclangc.h>
 #include <curl/curl.h>
 
-#include "ai_manager.h"
-#include "ai_record.h"
+#include "manager.h"
+#include "record.h"
 #include "../cJSON.h"
 
 static ADFS_RESULT m_init_log(cJSON *json);
@@ -32,7 +32,7 @@ unsigned long g_MaxFileSize;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_another_running = 0;
 
-ADFS_RESULT aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
+ADFS_RESULT aim_init(const char *conf_file, const char *data_dir, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
     srand(time(NULL));
 
@@ -62,11 +62,13 @@ ADFS_RESULT aim_init(const char *conf_file, long bnum, unsigned long mem_size, u
 	fclose(f);
     }
 
+    if (aiu_init() < 0) {return ADFS_ERROR;}
+
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = bnum;
     pm->kc_msiz = mem_size *1024*1024;
-    strncpy(pm->db_dir, "data", sizeof(pm->db_dir));
+    strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
 
     cJSON *json = conf_parse(conf_file);
@@ -113,7 +115,7 @@ void aim_exit()
     curl_global_cleanup();
     if (!g_another_running) {
 	char f_flag[1024] = {0};
-	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->db_dir);
+	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->data_dir);
 	remove(f_flag);
     }
 }
@@ -539,7 +541,7 @@ static ADFS_RESULT m_create_ns(const char *name)
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-            pm->db_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+            pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {return ADFS_ERROR;}
 

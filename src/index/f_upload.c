@@ -1,4 +1,4 @@
-/* if_upload.c
+/* f_upload.c
  *
  * kevinhwm@gmail.com
  */
@@ -6,7 +6,7 @@
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
 #include "../multipart_parser.h"
-#include "ai_manager.h"
+#include "manager.h"
 
 extern unsigned long g_MaxFileSize;
 

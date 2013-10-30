@@ -1,4 +1,4 @@
-/* ai_record.h
+/* record.h
  *
  * kevinhwm@gmail.com
  */

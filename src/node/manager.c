@@ -1,4 +1,4 @@
-/* an_manager.c
+/* manager.c
  *
  * kevinhwm@gmail.com
  */
@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 #include <kclangc.h>
 
-#include "an_namespace.h"
-#include "an_manager.h"
+#include "namespace.h"
+#include "manager.h"
 #include "../adfs.h"
 
 static ANNameSpace * m_create_ns(const char *name_space);
