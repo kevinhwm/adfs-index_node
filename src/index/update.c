@@ -27,16 +27,10 @@ int aiu_init()
 	fclose(fver);
 	if (len >= sizeof(version)) { return -1; }
     }
-    else { 
-	FILE *fnew = fopen(ver_file, "w");
-	if (fnew == NULL) {return -1;}
-	sprintf(version, ADFS_DATA_INDEX[0]); 
-	fprintf(fnew, "%s", version);
-	fclose(fnew);
-    }
+    else { sprintf(version, "%s", ADFS_DATA_INDEX[0]); }
 
-    if (identify(version) < 0) { printf("Can not recognize this data version. Maybe it is newer.\n"); return -1;}
-    if (update(version) < 0) { printf("Update error.\n"); return -1;}
+    if (identify(version) < 0) { return -1; }
+    if (update(version) < 0) { return -1; }
 
     return 0;
 }
@@ -52,6 +46,11 @@ static int identify(const char *version)
 	if (strcmp(version, ADFS_DATA_INDEX[i]) == 0) { return 0; }
     }
     return -1;
+}
+
+static int update(const char *version)
+{
+    return 0;
 }
 
 static int update_0300_to_0301()

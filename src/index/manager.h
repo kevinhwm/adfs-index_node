@@ -8,30 +8,24 @@
 
 #include <kclangc.h>
 #include "zone.h"
-#include "stat.h"
 #include "../adfs.h"
 
 
-typedef struct AINameSpace
-{
+typedef struct AINameSpace {
     char name[ADFS_NAMESPACE_LEN];
     KCDB * index_db;
     struct AINameSpace *prev;
     struct AINameSpace *next;
 }AINameSpace;
 
-typedef struct AIManager
-{
-    char data_dir[ADFS_MAX_LEN];
-    char log_dir[ADFS_MAX_LEN];
+typedef struct AIManager {
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
     unsigned long kc_msiz;
-
-    struct AIStat s_upload;
-    struct AIStat s_download;
-    struct AIStat s_delete;
+    unsigned long max_file_size;
+    char data_dir[ADFS_MAX_LEN];
+    char log_dir[ADFS_MAX_LEN];
 
     struct AINameSpace *ns_head;
     struct AINameSpace *ns_tail;
@@ -41,13 +35,13 @@ typedef struct AIManager
 
 
 // manager.c
-ADFS_RESULT aim_init(const char *file_conf, const char *data_dir, long bnum, unsigned long mem_size, unsigned long max_file_size);
-void aim_exit();
-ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
-char * aim_download(const char *name_space, const char *fname, const char *history);
-ADFS_RESULT aim_delete(const char *name_space, const char *fname);
-int aim_exist(const char *name_space, const char *fname);
-char * aim_status();
+int 	aim_init(const char *file_conf, long bnum, unsigned long mem_size, unsigned long max_file_size);
+int 	aim_exit();
+int 	aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
+char *	aim_download(const char *name_space, const char *fname, const char *history);
+int	aim_delete(const char *name_space, const char *fname);
+int	aim_exist(const char *name_space, const char *fname);
+char * 	aim_status();
 
 // connect.c
 ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);

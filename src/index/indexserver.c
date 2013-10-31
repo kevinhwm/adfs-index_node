@@ -24,7 +24,6 @@ static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
 
-// Server main():
 static void server_main() 
 {
     // Bind listening interfaces:
@@ -46,7 +45,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    fprintf(stdout, "ADFS Index exit.\n");
+    fprintf(stderr, "ADFS Index exit.\n");
     aim_exit();
 }
 
@@ -80,6 +79,7 @@ void adfs_exit()
     static int flag = 0;
     if (flag) {return;}
     flag = 1;
+    fprintf(stderr, "ADFS Index exit.\n");
     aim_exit();
 }
 
@@ -88,7 +88,6 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char *work_dir="/usr/local/adfs/index";
-    const char *data_dir = "data";
     const char *pid_file="indexserver.pid";
     const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
@@ -101,9 +100,8 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
 
-    // -x 作为隐藏参数，默认值取"data"
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:")) != -1) 
     {
 	switch (c) 
 	{
@@ -140,7 +138,6 @@ int main(int argc, char** argv)
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case 'x': data_dir=optarg; break;
 	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
@@ -165,7 +162,7 @@ int main(int argc, char** argv)
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
 
-    if (aim_init(conf_file, data_dir, bnum, mem_size, max_file_size) == ADFS_ERROR) {
+    if (aim_init(conf_file, bnum, mem_size, max_file_size) < 0) {
 	aim_exit();
 	return EXIT_FAILURE;
     }

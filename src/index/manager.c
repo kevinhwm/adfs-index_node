@@ -15,82 +15,80 @@
 #include "record.h"
 #include "../cJSON.h"
 
+
 static ADFS_RESULT m_init_log(cJSON *json);
-static ADFS_RESULT m_init_stat(cJSON *json);
 static ADFS_RESULT m_init_ns(cJSON *json);
 static ADFS_RESULT m_init_zone(cJSON *json);
 
 static AIZone * m_create_zone(const char *name, int weight);
-static ADFS_RESULT m_create_ns(const char *name);
+static AINameSpace * m_create_ns(const char *name);
+
 static AINameSpace * m_get_ns(const char *ns);
 static AINode * m_get_node(const char *node_name, size_t len);
 static char * m_get_history(const char *, int);
 static AIZone * m_choose_zone(const char * record);
 
+#define ADFS_RUNNING_FLAG	"adfs.flag"
+
 AIManager g_manager;
-unsigned long g_MaxFileSize;
-LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
+LOG_LEVEL g_log_level = LOG_LEVEL_INFO;
 int g_another_running = 0;
+//unsigned long g_MaxFileSize;
 
-ADFS_RESULT aim_init(const char *conf_file, const char *data_dir, long bnum, unsigned long mem_size, unsigned long max_file_size)
+/*
+ *  -1: another instance is running
+ *  -2: can not create flag file
+ *  -3: update failed
+ *  -4: parse config file failed
+ *  -5: init log failed
+ *  -6: init namespace failed
+ *  -7: init zone failed
+ */
+ADFS_RESULT aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
-    srand(time(NULL));
-
     char msg[1024] = {0};
     AIManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
 
-    char f_flag[1024] = {0};
-    snprintf(f_flag, sizeof(f_flag), "adfs.flag");
+    char *f_flag = ADFS_RUNNING_FLAG;	// adfs.flag
     if (access(f_flag, F_OK) != -1) {
-	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
-	log_out("manager", msg, LOG_LEVEL_FATAL);
 	g_another_running = 1;
-	return ADFS_ERROR;
+	return -1;
     }
     else {
 	time_t t;
 	char stime[64] = {0};
 	time(&t);
 	FILE *f = fopen(f_flag, "wb+");
-	if (f == NULL) {
-	    snprintf(msg, sizeof(msg), "Can not create file.");
-	    log_out("manager", msg, LOG_LEVEL_FATAL);
-	    return ADFS_ERROR;
-	}
+	if (f == NULL) { return -2; }
 	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
-
-    if (aiu_init() < 0) {return ADFS_ERROR;}
 
     pm->kc_apow = 0;
     pm->kc_fbp = 10;
     pm->kc_bnum = bnum;
     pm->kc_msiz = mem_size *1024*1024;
+    pm->max_file_size = max_file_size *1024*1024;
     strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
 
-    cJSON *json = conf_parse(conf_file);
-    if (json == NULL) {
-	log_out("manager", "Config file error.", LOG_LEVEL_ERROR);
-	return ADFS_ERROR;
-    }
-    if (m_init_log(json) == ADFS_ERROR) {goto err1;}
-    if (m_init_ns(json) == ADFS_ERROR) {goto err1;}
-    if (m_init_zone(json) == ADFS_ERROR) {goto err1;}
-    if (m_init_stat(json) == ADFS_ERROR) {goto err1;}
+    if (aiu_init() < 0) { return -3; }
 
-    g_MaxFileSize = max_file_size *1024*1024;
+    cJSON *json = conf_parse(conf_file);
+    if (json == NULL) { return -4; }
+
+    if (m_init_log(json) == ADFS_ERROR) { conf_release(json); return -5; }
+    if (m_init_ns(json) == ADFS_ERROR) { conf_release(json); return -6; }
+    if (m_init_zone(json) == ADFS_ERROR) { conf_release(json); return -7; }
+
     curl_global_init(CURL_GLOBAL_ALL);
     conf_release(json);
-    return ADFS_OK;
-err1:
-    conf_release(json);
-    return ADFS_ERROR;
+    srand(time(NULL));
+    return 0;
 }
 
-void aim_exit()
+int aim_exit()
 {
     AIManager *pm = &g_manager;
     AIZone *pz = pm->z_head;
@@ -108,16 +106,10 @@ void aim_exit()
 	kcdbdel(tmp->index_db);
         free(tmp);
     }
-    if (pm->s_upload.release) {pm->s_upload.release(&(pm->s_upload));}
-    if (pm->s_download.release) {pm->s_download.release(&(pm->s_download));}
-    if (pm->s_delete.release) {pm->s_delete.release(&(pm->s_delete));}
     log_release();
     curl_global_cleanup();
-    if (!g_another_running) {
-	char f_flag[1024] = {0};
-	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->data_dir);
-	remove(f_flag);
-    }
+    if (!g_another_running) { remove(ADFS_RUNNING_FLAG); }
+    return 0;
 }
 
 ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
@@ -171,7 +163,7 @@ ADFS_RESULT aim_upload(const char *ns, int overwrite, const char *fname, void *f
 	kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 	if (new_list) {free(new_list);}
     }
-    pm->s_upload.inc(&(pm->s_upload));
+    //pm->s_upload.inc(&(pm->s_upload));
 
     if (record) {free(record);}
     air.release(&air);
@@ -205,7 +197,7 @@ err1:
 // url :    "char *" must be freed by caller
 char * aim_download(const char *ns, const char *fname, const char *history)
 {
-    AIManager *pm = &g_manager;
+    //AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     AINameSpace *pns = m_get_ns(name_space);
@@ -247,7 +239,7 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     }
     strncat(url, "?namespace=", ADFS_MAX_LEN);
     strncat(url, pns->name, ADFS_MAX_LEN);
-    pm->s_download.inc(&(pm->s_download));
+    //pm->s_download.inc(&(pm->s_download));
 
     if (record) {free(record);}
     if (line) {kcfree(line);}
@@ -263,7 +255,7 @@ err1:
 
 ADFS_RESULT aim_delete(const char *ns, const char *fname)
 {
-    AIManager *pm = &g_manager;
+    //AIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     AINameSpace *pns = m_get_ns(name_space);
@@ -280,7 +272,7 @@ ADFS_RESULT aim_delete(const char *ns, const char *fname)
     strcpy(new_line, line);
     strcat(new_line, "$");
     kcdbset(pns->index_db, fname, strlen(fname), new_line, strlen(new_line));
-    pm->s_delete.inc(&(pm->s_delete));
+    //pm->s_delete.inc(&(pm->s_delete));
     free(new_line);
 ok1:
     kcfree(line);
@@ -401,7 +393,7 @@ static ADFS_RESULT m_init_ns(cJSON *json)
 		log_out("manager", msg, LOG_LEVEL_ERROR);
 		return ADFS_ERROR;
 	    }
-	    if (m_create_ns(j_tmp->valuestring) == ADFS_ERROR) {
+	    if (m_create_ns(j_tmp->valuestring) == NULL) {
 		snprintf(msg, sizeof(msg), "[%s]->create namespace error", j_tmp->valuestring);
 		log_out("manager", msg, LOG_LEVEL_ERROR);
 		return ADFS_ERROR;
@@ -410,7 +402,7 @@ static ADFS_RESULT m_init_ns(cJSON *json)
 	}
     }
     
-    if (m_create_ns("default") == ADFS_ERROR) {
+    if (m_create_ns("default") == NULL) {
 	snprintf(msg, sizeof(msg), "[default]->create namespace error");
 	log_out("manager", msg, LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
@@ -446,9 +438,10 @@ static ADFS_RESULT m_init_log(cJSON *json)
     return ADFS_OK;
 }
 
+/*
 static ADFS_RESULT m_init_stat(cJSON *json)
 {
-    AIManager *pm = &g_manager;
+    //AIManager *pm = &g_manager;
     // statistics
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "stat_hour");
@@ -462,8 +455,8 @@ static ADFS_RESULT m_init_stat(cJSON *json)
 	return ADFS_ERROR;
     }
 
-    unsigned long stat_start = (unsigned long)time(NULL);
-    int stat_min = stat_hour * 60;
+    //unsigned long stat_start = (unsigned long)time(NULL);
+    //int stat_min = stat_hour * 60;
     if (stat_init(&(pm->s_upload), stat_start, stat_min) == ADFS_ERROR) {
 	log_out("manager", "[malloc]->stat init error", LOG_LEVEL_ERROR);
 	return ADFS_ERROR;
@@ -478,6 +471,7 @@ static ADFS_RESULT m_init_stat(cJSON *json)
     }
     return ADFS_OK;
 }
+*/
 
 static AINameSpace * m_get_ns(const char *ns)
 {
@@ -527,36 +521,39 @@ static AIZone * m_create_zone(const char *name, int weight)
     return pz;
 }
 
-static ADFS_RESULT m_create_ns(const char *name)
+static AINameSpace * m_create_ns(const char *name)
 {
     AIManager * pm = &g_manager;
     AINameSpace *pns = pm->ns_head;
     while (pns) {
-    	if (strcmp(pns->name, name) == 0) {return ADFS_ERROR;}
+    	if (strcmp(pns->name, name) == 0) {return NULL;}
 	pns = pns->next;
     }
     pns = malloc(sizeof(AINameSpace));
-    if (pns == NULL) {return ADFS_ERROR;}
+    if (pns == NULL) {return NULL;}
 
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[ADFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-            pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+	    pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {return ADFS_ERROR;}
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
+	free(pns);
+	return NULL;
+    }
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;
     if (pm->ns_tail) {pm->ns_tail->next = pns;}
     else {pm->ns_head = pns;}
     pm->ns_tail = pns;
-    return ADFS_OK;
+    return pns;
 }
 
 static char * m_get_history(const char *line, int order)
 {
     int len = strlen(line);
-    char *record;
+    char *record = NULL;
     int count = 0, size;
     int pos_cur=len-1, pos_tail=len-1, pos_head=0;
 
