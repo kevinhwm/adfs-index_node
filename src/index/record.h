@@ -31,7 +31,7 @@ typedef struct AIRecord
     struct AIPosition *head;
     struct AIPosition *tail;
     // function
-    ADFS_RESULT (*add)(struct AIRecord *, const char *, const char *);
+    int (*add)(struct AIRecord *, const char *, const char *);
     void (*release)(struct AIRecord *);
     char * (*get_string)(struct AIRecord *);
 }AIRecord;

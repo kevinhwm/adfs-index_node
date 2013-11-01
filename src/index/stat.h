@@ -21,6 +21,6 @@ typedef struct AIStat
     void (*inc)(struct AIStat *);
 }AIStat;
 
-ADFS_RESULT stat_init(AIStat *ps, unsigned long start, int min);
+int stat_init(AIStat *ps, unsigned long start, int min);
 
 #endif // __STAT_H__

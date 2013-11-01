@@ -48,7 +48,7 @@ void log_release()
 
 void log_out(const char *module, const char *info, LOG_LEVEL level)
 {
-    if (level < 0 || level > 5) {return ;}
+    if (level < LOG_LEVEL_SYSTEM || level >= LOG_LEVEL_MAX) {return ;}
     else if (level > g_log_level) {return ;}
     if (pthread_mutex_lock(&mutex) != 0) {return ;}
 
@@ -63,12 +63,13 @@ void log_out(const char *module, const char *info, LOG_LEVEL level)
     fprintf(f_log, "%s\t", stime);
     fprintf(f_log, "%s\t", instance_id);
     switch (level) {
-	case 0: fprintf(f_log, "L0-system\t"); break;
-	case 1: fprintf(f_log, "L1--fatal\t"); break;
-	case 2: fprintf(f_log, "L2--error\t"); break;
-	case 3: fprintf(f_log, "L3---warn\t"); break;
-	case 4: fprintf(f_log, "L4---info\t"); break;
-	case 5: fprintf(f_log, "L5--debug\t"); break;
+	case LOG_LEVEL_SYSTEM: 	fprintf(f_log, "L0-system\t"); break;
+	case LOG_LEVEL_FATAL: 	fprintf(f_log, "L1--fatal\t"); break;
+	case LOG_LEVEL_ERROR: 	fprintf(f_log, "L2--error\t"); break;
+	case LOG_LEVEL_WARN: 	fprintf(f_log, "L3---warn\t"); break;
+	case LOG_LEVEL_INFO: 	fprintf(f_log, "L4---info\t"); break;
+	case LOG_LEVEL_DEBUG: 	fprintf(f_log, "L5--debug\t"); break;
+	default:		fprintf(f_log, "LE-------\t"); break;
     }
     fprintf(f_log, "M-%s\t", module);
     fprintf(f_log, "%s\t", info);

@@ -7,11 +7,11 @@
 #include <string.h>
 #include "zone.h"
 
-static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port);
+static int z_create(AIZone *_this, const char *name, const char *ip_port);
 static void z_release(AIZone *_this);
 static AINode * z_rand_choose(AIZone *_this);
 
-ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
+int aiz_init(AIZone *_this, const char *name, int weight)
 {
     if (_this) {
         memset(_this, 0, sizeof(AIZone));
@@ -22,27 +22,27 @@ ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight)
         _this->create = z_create;
         _this->release = z_release;
         _this->rand_choose = z_rand_choose;
-        return ADFS_OK;
+        return 0;
     }
-    return ADFS_ERROR;
+    return -1;
 }
 
-static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port)
+static int z_create(AIZone *_this, const char *name, const char *ip_port)
 {
     for (AINode *pn = _this->head; pn; pn = pn->next) {
-        if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0) {return ADFS_ERROR;}
+        if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0) { return -1; }
     }
 
     AINode *new_node = (AINode *)malloc(sizeof(AINode));
-    if (new_node == NULL) {return ADFS_ERROR;}
+    if (new_node == NULL) { return -1; }
     memset(new_node, 0, sizeof(AINode));
     strncpy(new_node->name, name, sizeof(new_node->name));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
         new_node->conn[i].curl = curl_easy_init();
-        if (new_node->conn[i].curl == NULL) {return ADFS_ERROR;}
+        if (new_node->conn[i].curl == NULL) { return -1; }
 	new_node->conn[i].mutex = malloc(sizeof(pthread_mutex_t));
-        if (pthread_mutex_init(new_node->conn[i].mutex, NULL) != 0) {return ADFS_ERROR;}
+        if (pthread_mutex_init(new_node->conn[i].mutex, NULL) != 0) { return -1; }
 	new_node->conn[i].flag = FLAG_INIT;
     }
     _this->num += 1;
@@ -52,7 +52,7 @@ static ADFS_RESULT z_create(AIZone *_this, const char *name, const char *ip_port
     if (_this->tail) {_this->tail->next = new_node;}
     else {_this->head = new_node;}
     _this->tail = new_node;
-    return ADFS_OK;
+    return 0;
 }
 
 static void z_release(AIZone *_this)

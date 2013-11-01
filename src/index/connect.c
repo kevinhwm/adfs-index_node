@@ -8,14 +8,14 @@
 #include "../adfs.h"
 #include "zone.h"
 
-static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
-static ADFS_RESULT c_connect(CURL *curl, const char *url);
+static int c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len);
+static int c_connect(CURL *curl, const char *url);
 static void c_rebuild(AINode *pn, int pos);
 
 
-ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len)
+int aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
-    ADFS_RESULT res = ADFS_ERROR;
+    int res = -1;
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
 	if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
@@ -38,9 +38,9 @@ ADFS_RESULT aic_upload(AINode *pn, const char *url, const char *fname, void *fda
     return res;
 }
 
-ADFS_RESULT aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
+int aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
 {
-    ADFS_RESULT res = ADFS_ERROR;
+    int res = -1;
     if (pn == NULL) {return res;}
     for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
 	if (pthread_mutex_trylock(pn->conn[i].mutex) == 0) {
@@ -67,10 +67,10 @@ ADFS_RESULT aic_connect(AINode *pn, const char *url, FLAG_CONNECTION flag)
 // private
 static size_t fun_write(char *ptr, size_t size, size_t nmemb, void *userdata) { return nmemb; }
 
-static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
+static int c_upload(CURL *curl, const char *url, const char *fname, void *fdata, size_t fdata_len)
 {
-    ADFS_RESULT adfs_res = ADFS_ERROR;
-    if (curl == NULL) {return ADFS_ERROR;}
+    int adfs_res = -1;
+    if (curl == NULL) {return -1;}
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastpost = NULL;
     curl_formadd(&formpost, &lastpost,
@@ -88,16 +88,16 @@ static ADFS_RESULT c_upload(CURL *curl, const char *url, const char *fname, void
     if (res == CURLE_OK) {
 	long res_code = 0;
 	res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-	if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
+	if (res == CURLE_OK && res_code == 200) { adfs_res = 0; }
     }
     curl_formfree(formpost);
     return adfs_res;
 }
 
-static ADFS_RESULT c_connect(CURL *curl, const char *url)
+static int c_connect(CURL *curl, const char *url)
 {
-    ADFS_RESULT adfs_res = ADFS_ERROR;
-    if (curl == NULL) {return ADFS_ERROR;}
+    int adfs_res = -1;
+    if (curl == NULL) { return -1; }
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fun_write);
@@ -106,7 +106,7 @@ static ADFS_RESULT c_connect(CURL *curl, const char *url)
     if (res == CURLE_OK) {
 	long res_code = 0;
 	res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-	if (res == CURLE_OK && res_code == 200) {adfs_res = ADFS_OK;}
+	if (res == CURLE_OK && res_code == 200) {adfs_res = 0;}
     }
     return adfs_res;
 }

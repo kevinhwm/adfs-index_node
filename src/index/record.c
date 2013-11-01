@@ -12,7 +12,7 @@
 
 static void r_release(AIRecord *_this);
 static void r_create_uuid(AIRecord *_this);
-static ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node);
+static int r_add(AIRecord *_this, const char *zone, const char *node);
 static char * r_get_string(AIRecord *_this);
 
 void air_init(AIRecord *pr)
@@ -46,10 +46,10 @@ static void r_create_uuid(AIRecord *_this)
     snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
 }
 
-static ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
+static int r_add(AIRecord *_this, const char *zone, const char *node)
 {
     AIPosition *pp = malloc(sizeof(AIPosition));
-    if (pp == NULL) {return ADFS_ERROR;}
+    if (pp == NULL) { return -1; }
     _this->num++;
     snprintf(pp->zone_node, sizeof(pp->zone_node), "%s#%s", zone, node);
 
@@ -58,7 +58,7 @@ static ADFS_RESULT r_add(AIRecord *_this, const char *zone, const char *node)
     if (_this->tail) {_this->tail->next = pp;}
     else {_this->head = pp;}
     _this->tail = pp;
-    return ADFS_OK;
+    return 0;
 }
 
 static char * r_get_string(AIRecord *_this)

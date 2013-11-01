@@ -33,7 +33,7 @@ static nxweb_result delete_on_request(
     }
 
     char msg[1024] = {0};
-    if (aim_delete(name_space, fname) == ADFS_ERROR) {
+    if (aim_delete(name_space, fname) < 0) {
         nxweb_send_http_error(resp, 500, "Internal Server Error");
 	resp->keep_alive = 0;
 	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);

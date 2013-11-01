@@ -28,13 +28,13 @@ static nxweb_result exist_on_request(
     if (get_filename_from_url(fname, pattern) < 0) {
 	nxweb_send_http_error(resp, 403, "Forbidden\nCheck file name");
 	resp->keep_alive = 0;
-	return ADFS_ERROR;
+	return -1;
     }
 
     if (strlen(fname) >= ADFS_FILENAME_LEN) {
 	nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long. It must be less than 250");
 	resp->keep_alive = 0;
-	return ADFS_ERROR;
+	return -1;
     }
 
     char msg[1024] = {0};
@@ -50,7 +50,7 @@ static nxweb_result exist_on_request(
 	resp->keep_alive = 0;
 	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);
 	log_out("exist", msg, LOG_LEVEL_INFO);
-	return ADFS_ERROR;
+	return -1;
     }
 }
 

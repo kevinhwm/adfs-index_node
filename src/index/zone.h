@@ -47,11 +47,11 @@ typedef struct AIZone
     struct AIZone *prev;
     struct AIZone *next;
     // function
-    ADFS_RESULT (*create)(struct AIZone *, const char *, const char *);
+    int (*create)(struct AIZone *, const char *, const char *);
     void (*release)(struct AIZone *);
     AINode * (*rand_choose)(struct AIZone *);
 }AIZone;
 
-ADFS_RESULT aiz_init(AIZone *_this, const char *name, int weight);
+int aiz_init(AIZone *_this, const char *name, int weight);
 
 #endif // __ZONE_H__

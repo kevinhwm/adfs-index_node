@@ -12,7 +12,7 @@ static void s_release(AIStat *ps);
 static int * s_get(AIStat *ps, time_t *);
 static void s_inc(AIStat *ps);
 
-ADFS_RESULT stat_init(AIStat *ps, unsigned long stat_start, int minutes)
+int stat_init(AIStat *ps, unsigned long stat_start, int minutes)
 {
     if (ps) {
 	memset(ps, 0, sizeof(AIStat));
@@ -22,10 +22,10 @@ ADFS_RESULT stat_init(AIStat *ps, unsigned long stat_start, int minutes)
 	ps->inc = s_inc;
 	ps->release = s_release;
 	ps->count = malloc(sizeof(int) * ps->scope);
-	if (ps->count == NULL) {return ADFS_ERROR;}
+	if (ps->count == NULL) {return -1;}
 	memset(ps->count, 0, sizeof(int) * ps->scope);
     }
-    return ADFS_OK;
+    return 0;
 }
 
 static void s_release(AIStat *ps) {if(ps && ps->count) {free(ps->count); ps->count = NULL;}}

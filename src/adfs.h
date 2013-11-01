@@ -17,12 +17,6 @@
 
 #include "cJSON.h"
 
-/*
-typedef enum {
-    ADFS_ERROR	= -1,
-    ADFS_OK	= 0,
-}ADFS_RESULT;
-*/
 
 //==============================================================================
 
@@ -38,7 +32,8 @@ typedef enum {
     LOG_LEVEL_ERROR,
     LOG_LEVEL_WARN,
     LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_MAX
 }LOG_LEVEL;
 
 int log_init(const char *filename);

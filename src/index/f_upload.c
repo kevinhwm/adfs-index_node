@@ -134,7 +134,7 @@ static nxweb_result upload_on_request(
 		nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long.");
 		res = -1;
 	    }
-	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) == ADFS_ERROR) {
+	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) < 0) {
 		nxweb_send_http_error(resp, 403, "Forbidden\nCannot save.");
 		res = -1;
 	    }
