@@ -40,10 +40,12 @@ int log_init(const char *filename)
 
 void log_release()
 {
-    fprintf(f_log, "\n");
-    pthread_mutex_destroy(&mutex);
-    fflush(f_log);
-    fclose(f_log);
+    if (f_log) {
+	fprintf(f_log, "\n");
+	pthread_mutex_destroy(&mutex);
+	fflush(f_log);
+	fclose(f_log);
+    }
 }
 
 void log_out(const char *module, const char *info, LOG_LEVEL level)

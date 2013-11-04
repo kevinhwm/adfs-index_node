@@ -28,7 +28,6 @@ static AINode * m_get_node(const char *node_name, size_t len);
 static char * m_get_history(const char *, int);
 static AIZone * m_choose_zone(const char * record);
 
-#define ADFS_RUNNING_FLAG	"adfs.flag"
 
 AIManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_INFO;
@@ -40,6 +39,7 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 
     char *f_flag = ADFS_RUNNING_FLAG;	// adfs.flag
     if (access(f_flag, F_OK) != -1) {
+	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
 	pm->another_running = 1;
 	return -1;
     }
@@ -61,6 +61,7 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     pm->max_file_size = max_file_size *1024*1024;
     strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
+    sprintf(pm->core_log, "%s/aicore.log", pm->log_dir);
 
     if (aiu_init() < 0) { return -1; }
 
@@ -79,6 +80,8 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 int aim_exit()
 {
     AIManager *pm = &g_manager;
+    if (pm->another_running) { return 0; }
+
     AIZone *pz = pm->z_head;
     while (pz) {
         AIZone *tmp = pz;
@@ -96,7 +99,7 @@ int aim_exit()
     }
     log_release();
     curl_global_cleanup();
-    if (!pm->another_running) { remove(ADFS_RUNNING_FLAG); }
+    remove(ADFS_RUNNING_FLAG); 
     return 0;
 }
 

@@ -27,41 +27,36 @@ ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_another_running = 0;
 
-int anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
+int anm_init(const char * conf_file, unsigned long mem_size) 
 {
-    char msg[1024] = {0};
-
     ANManager *pm = &g_manager;
     memset(pm, 0, sizeof(*pm));
-    pthread_rwlock_init(&pm->ns_lock, NULL);
-    pm->kc_apow = 0;
-    pm->kc_fbp = 10;
-    pm->kc_bnum = 200000;
-    pm->kc_msiz = mem_size *1024*1024;
-    strncpy(pm->path, path, sizeof(pm->path));
 
-    DIR *dp = opendir(path);
-    if( dp == NULL ) {
-	snprintf(msg, sizeof(msg), "[%s]->path error", path);
-	log_out("manager", msg, LOG_LEVEL_ERROR);
-        return -1;
-    }
-    closedir(dp);
-    char f_flag[1024] = {0};
-    snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
+    char *f_flag = ADFS_RUNNING_FLAG;
     if (access(f_flag, F_OK) != -1) {
-	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
-	log_out("manager", msg, LOG_LEVEL_SYSTEM);
-	g_another_running = 1;
+	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
+	pm->another_running = 1;
 	return -1;
     }
     else {
-	time_t t = time(NULL);
-	struct tm *lt = localtime(&t);
+	pm->another_running = 0;
+	time_t t;
+	char stime[64] = {0};
+	time(&t);
 	FILE *f = fopen(f_flag, "wb+");
-	fprintf(f, "%s", asctime(lt));
+	if (f == NULL) { return -1; }
+	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
+
+    pm->kc_apow = 0;
+    pm->kc_fbp = 10;
+    pm->kc_bnum = 100000;
+    pm->kc_msiz = mem_size *1024*1024;
+    pthread_rwlock_init(&pm->ns_lock, NULL);
+    strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
+    strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
+    sprintf(pm->core_log, "%s/ancore.log", pm->log_dir);
 
     struct dirent *dirp;
     dp = opendir(path);
@@ -73,23 +68,20 @@ int anm_init(const char * conf_file, const char *path, unsigned long mem_size)
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
 
+    // if (anu_init() < 0) { return -1; }
+    
     cJSON *json = conf_parse(conf_file);
-    if (json == NULL) {
-	log_out("manager", "Config file error. Make sure that it is json format except lines which start with '#'.", LOG_LEVEL_ERROR);
-	goto err1;
-    }
-    if (m_init_log(json) < 0) { goto err1; }
-
+    if (json == NULL) { return -1; }
+    if (m_init_log(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
     return 0;
-err1:
-    conf_release(json);
-    return -1;
 }
 
-void anm_exit() 
+int anm_exit() 
 {
     ANManager * pm = &g_manager;
+    if (pm->another_running) { return 0; }
+
     pthread_rwlock_destroy(&pm->ns_lock);
     ANNameSpace * pns = pm->head;
     while (pns) {
@@ -101,11 +93,8 @@ void anm_exit()
 	free(tmp);
     }
     log_release();
-    if (!g_another_running) {
-	char f_flag[1024] = {0};
-	snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", pm->path);
-	remove(f_flag);
-    }
+    remove(ADFS_RUNNING_FLAG);
+    return 0;
 }
 
 int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
@@ -119,7 +108,7 @@ int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata,
     if (pns->needto_split(pns)) {
 	char db_args[ADFS_MAX_LEN] = {0};
 	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-	if (pns->split_db(pns, pm->path, db_args) < 0) {return -1;}
+	if (pns->split_db(pns, pm->data_dir, db_args) < 0) {return -1;}
     }
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return -1;}
     pns->count_add(pns);
@@ -129,7 +118,7 @@ int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata,
     return 0;
 }
 
-void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
+int anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
@@ -137,15 +126,16 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL) {return ;}
+    if (pns == NULL) {return -1;}
 
     size_t len = 0;
     char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
-    if (id == NULL) {return ;}
+    if (id == NULL) {return -1;}
     NodeDB *pn = pns->get(pns, atoi(id));
-    if (pn == NULL) {kcfree(id); return ;}
+    if (pn == NULL) {kcfree(id); return -1;}
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
     kcfree(id);
+    return 0;
 }
 
 int anm_erase(const char *ns, const char *fname)
@@ -183,7 +173,7 @@ static ANNameSpace * m_create_ns(const char *name_space)
 	tmp = tmp->next;
     }
     char ns_path[ADFS_MAX_LEN] = {0};
-    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->path, name_space);
+    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->data_dir, name_space);
     int max_id = m_scan_kch(ns_path);
     char db_args[ADFS_MAX_LEN] = {0};
     snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *200, pm->kc_msiz);
@@ -193,17 +183,17 @@ static ANNameSpace * m_create_ns(const char *name_space)
     anns_init(pns, name_space);
 
     char indexdb_path[ADFS_MAX_LEN] = {0};
-    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s/index.kch%s", pm->path, name_space, db_args);
+    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s/index.kch%s", pm->data_dir, name_space, db_args);
     pns->index_db = kcdbnew();
     int32_t res = kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK);
     if (!res) {goto err1;}
 
     for (int i=0; i <= max_id; ++i) {
 	if (i < max_id) {
-	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) < 0) {goto err1;}
+	    if (pns->create(pns, pm->data_dir, db_args, S_READ_ONLY) < 0) {goto err1;}
 	}
 	else {
-	    if (pns->create(pns, pm->path, db_args, S_READ_WRITE) < 0) {goto err1;}
+	    if (pns->create(pns, pm->data_dir, db_args, S_READ_WRITE) < 0) {goto err1;}
 	}
     }
 

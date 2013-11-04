@@ -15,6 +15,8 @@
 #define ADFS_NODENAME_LEN	128
 #define ADFS_UUID_LEN		24		// exactly 24 bytes
 
+#define ADFS_RUNNING_FLAG	"adfs.flag"
+
 #include "cJSON.h"
 
 

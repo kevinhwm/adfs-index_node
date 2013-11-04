@@ -46,7 +46,6 @@ static int identify(const char *version)
     int num = all_len/len;
 
     for (int i=0; i<num; ++i) {
-	printf("%s\n", ADFS_DATA_INDEX[i]);
 	if (strcmp(version, ADFS_DATA_INDEX[i]) == 0) { return 0; }
     }
     return -1;

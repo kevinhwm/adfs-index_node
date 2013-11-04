@@ -19,6 +19,7 @@ NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000);
 NXWEB_SET_HANDLER(erase, "/erase", &erase_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 
+extern ANManager g_manager;
 // Command-line options:
 static const char* user_name=0;
 static const char* group_name=0;
@@ -44,8 +45,7 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    log_out("main", "ADFS Index exit.", LOG_LEVEL_SYSTEM);
-    printf("ADFS Node exit.\n");
+    fprintf(stderr, "ADFS Node exit.\n");
     anm_exit();
 }
 
@@ -75,6 +75,7 @@ void adfs_exit()
     static int flag = 0;
     if (flag) {return;}
     flag = 1;
+    fprintf(stderr, "ADFS Node exit.\n");
     anm_exit();
 }
 
@@ -84,7 +85,6 @@ int main(int argc, char** argv)
     int daemon=0;
     int shutdown=0;
     const char* work_dir="/usr/local/adfs/node";
-    const char* db_path=NULL;
     const char* pid_file="nodeserver.pid";
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:x:")) != -1) 
+    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:")) != -1) 
     {
 	switch (c) 
 	{
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 	    case 'P':
 		port=atoi(optarg);
 		if (port<=0) {
-		    fprintf(stderr, "invalid port: %s\n\n", optarg);
+		    fprintf(stdout, "invalid port: %s\n\n", optarg);
 		    return EXIT_FAILURE;
 		}
 		break;
@@ -117,25 +117,18 @@ int main(int argc, char** argv)
 	    case 'm':
 		mem_size = atoi(optarg);
 		if (mem_size <= 0) {
-		    fprintf(stderr, "invalid mem size: %s\n\n", optarg);
+		    fprintf(stdout, "invalid mem size: %s\n\n", optarg);
 		    return EXIT_FAILURE;
 		}
 		break;
-	    case 'x':
-		db_path=optarg;
-		if (strlen(db_path) > ADFS_FILENAME_LEN) {
-		    printf("path is too long\n");
-		    return 0;
-		}
-		break;
 	    case '?':
-		fprintf(stderr, "unkown option: -%c\n\n", optopt);
+		fprintf(stdout, "unkown option: -%c\n\n", optopt);
 		show_help();
 		return EXIT_FAILURE;
 	}
     }
     if ((argc-optind)>0) {
-	fprintf(stderr, "too many arguments\n\n"); show_help();
+	fprintf(stdout, "too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
     if (shutdown) {
@@ -149,22 +142,15 @@ int main(int argc, char** argv)
     }
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
-    if (db_path == NULL) {
-	printf("please check the \"-x\" arg.\n");
-	return EXIT_FAILURE;
-    }
-    fprintf(stdout, "ADFS Node start...\n");
-    if (anm_init(conf_file, db_path, mem_size) < 0) {
-	log_out("main", "ADFS Node exit. Init error.", LOG_LEVEL_SYSTEM);
-	fprintf(stdout, "ADFS Node exit. Init error.\n");
-	fprintf(stdout, "\n>>> If log exists, check it. Otherwise the information on the screen.\n");
+
+    if (anm_init(conf_file, mem_size) < 0) {
 	anm_exit();  
 	return EXIT_FAILURE;
     }
-    log_out("main", "ADFS Node running...", LOG_LEVEL_SYSTEM);
-    fprintf(stdout, "ADFS Node running...\n");
+
     /////////////////////////////////////////////////////////////////////////////////
-    if (daemon) {nxweb_run_daemon(work_dir, "ancore.log", pid_file, server_main);}
+    ANManager *pm = &g_manager;
+    if (daemon) {nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
     else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
     return EXIT_SUCCESS;
 }

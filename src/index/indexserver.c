@@ -20,6 +20,8 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
+extern AIManager g_manager;
+
 static const char* user_name=0;
 static const char* group_name=0;
 static int port=8341;
@@ -115,37 +117,37 @@ int main(int argc, char** argv)
 	    case 'g': group_name=optarg; break;
 	    case 'P': port=atoi(optarg);
 		      if (port<=0) { 
-			  fprintf(stderr, "invalid port: %s\n\n", optarg); 
+			  fprintf(stdout, "invalid port: %s\n\n", optarg); 
 			  return EXIT_FAILURE; 
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
 	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
-			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
+			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'M': max_file_size = atoi(optarg);
 		      if (max_file_size <= 0) {
-			  fprintf(stderr, "invalid file size: %s\n\n", optarg);
+			  fprintf(stdout, "invalid file size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'b': bnum = atol(optarg);
 		      if (bnum <= 0) {
-			  fprintf(stderr, "invalid bnum %s\n\n", optarg);
+			  fprintf(stdout, "invalid bnum %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
+	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
     }
 
     if ((argc-optind)>0) {
-	fprintf(stderr, "too many arguments\n\n"); show_help();
+	fprintf(stdout, "too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
 
@@ -168,7 +170,8 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    if (daemon) { nxweb_run_daemon(work_dir, "aicore.log", pid_file, server_main);}
+    AIManager *pm = &g_manager;
+    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
     else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
     return EXIT_SUCCESS;
 }
