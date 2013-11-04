@@ -154,7 +154,7 @@ int main(int argc, char** argv)
 	return EXIT_FAILURE;
     }
     fprintf(stdout, "ADFS Node start...\n");
-    if (anm_init(conf_file, db_path, mem_size) == ADFS_ERROR) {
+    if (anm_init(conf_file, db_path, mem_size) < 0) {
 	log_out("main", "ADFS Node exit. Init error.", LOG_LEVEL_SYSTEM);
 	fprintf(stdout, "ADFS Node exit. Init error.\n");
 	fprintf(stdout, "\n>>> If log exists, check it. Otherwise the information on the screen.\n");

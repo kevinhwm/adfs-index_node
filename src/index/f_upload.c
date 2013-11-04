@@ -8,7 +8,8 @@
 #include "../multipart_parser.h"
 #include "manager.h"
 
-extern unsigned long g_MaxFileSize;
+extern AIManager g_manager;
+AIManager *pm = &g_manager;
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -93,7 +94,7 @@ static nxweb_result upload_on_request(
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
-    if (req->content_length >= g_MaxFileSize) {
+    if (req->content_length >= pm->max_file_size) {
 	nxweb_send_http_error(resp, 413, "Request Entity Too Large");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
@@ -207,13 +208,13 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (strlen(req->uri) >= ADFS_MAX_LEN || req->content_length > g_MaxFileSize) { 
+    if (strlen(req->uri) >= ADFS_MAX_LEN || req->content_length > pm->max_file_size) { 
 	ufo->fpostmem = fopen("/dev/null", "wb"); 
     }
     else { 
 	ufo->fpostmem = open_memstream( (char **)&ufo->postdata_ptr, &ufo->postdata_len ); 
     }
-    nxd_fwbuffer_init(fwb, ufo->fpostmem, g_MaxFileSize);
+    nxd_fwbuffer_init(fwb, ufo->fpostmem, pm->max_file_size);
     conn->hsp.cls->connect_request_body_out(&conn->hsp, &fwb->data_in);
     conn->hsp.cls->start_receiving_request_body(&conn->hsp);
     return NXWEB_OK;

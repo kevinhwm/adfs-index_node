@@ -5,9 +5,9 @@
 
 #include <string.h>
 #include <time.h>
-#include <dirent.h>     // opendir
+//#include <dirent.h>     // opendir
 #include <unistd.h>
-#include <sys/stat.h>   // chmod
+//#include <sys/stat.h>   // chmod
 #include <kclangc.h>
 #include <curl/curl.h>
 
@@ -32,18 +32,7 @@ static AIZone * m_choose_zone(const char * record);
 
 AIManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_INFO;
-int g_another_running = 0;
-//unsigned long g_MaxFileSize;
 
-/*
- *  -1: another instance is running
- *  -2: can not create flag file
- *  -3: update failed
- *  -4: parse config file failed
- *  -5: init log failed
- *  -6: init namespace failed
- *  -7: init zone failed
- */
 int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
     AIManager *pm = &g_manager;
@@ -51,10 +40,11 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 
     char *f_flag = ADFS_RUNNING_FLAG;	// adfs.flag
     if (access(f_flag, F_OK) != -1) {
-	g_another_running = 1;
+	pm->another_running = 1;
 	return -1;
     }
     else {
+	pm->another_running = 0;
 	time_t t;
 	char stime[64] = {0};
 	time(&t);
@@ -72,14 +62,14 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
 
+    if (aiu_init() < 0) { return -1; }
+
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { return -1; }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
     if (m_init_ns(json) < 0) { conf_release(json); return -1; }
     if (m_init_zone(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
-
-    if (aiu_init() < 0) { return -1; }
 
     curl_global_init(CURL_GLOBAL_ALL);
     srand(time(NULL));
@@ -106,7 +96,7 @@ int aim_exit()
     }
     log_release();
     curl_global_cleanup();
-    if (!g_another_running) { remove(ADFS_RUNNING_FLAG); }
+    if (!pm->another_running) { remove(ADFS_RUNNING_FLAG); }
     return 0;
 }
 

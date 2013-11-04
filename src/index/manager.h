@@ -27,6 +27,8 @@ typedef struct AIManager {
     char data_dir[ADFS_MAX_LEN];
     char log_dir[ADFS_MAX_LEN];
 
+    int another_running;
+
     struct AINameSpace *ns_head;
     struct AINameSpace *ns_tail;
     struct AIZone *z_head;

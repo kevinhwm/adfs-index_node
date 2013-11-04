@@ -21,12 +21,12 @@ static void trim_right_white(char * p);
  * printf("[%d]%s\n", strlen(buf), buf);
  */
 
-ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len)
+int conf_read(const char * pfile, const char * target, char *value, size_t len)
 {
     char buf[ADFS_FILENAME_LEN] = {0};
     char key[ADFS_FILENAME_LEN] = {0};
     char val[ADFS_FILENAME_LEN] = {0};
-    int res = ADFS_ERROR;
+    int res = -1;
     FILE * f = fopen(pfile, "r");
     if (f == NULL) {return res;}
 
@@ -38,7 +38,7 @@ ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size
 
 	int val_len = strlen(val);
         if (val_len == 0 || val_len >= len) { break; }
-        else { strncpy(value, val, len); res = ADFS_OK; break; }
+        else { strncpy(value, val, len); res = 0; break; }
     }
     fclose(f);
     return res;

@@ -47,7 +47,6 @@ int get_filename_from_url(char * p, char *pattern)
 	len = strlen(p);
 	if (len == 0) {return -1;}
     }
-
     return 0;
 }
 

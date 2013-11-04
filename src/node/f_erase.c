@@ -31,7 +31,7 @@ static nxweb_result erase_on_request(
     }
 
     char msg[1024] = {0};
-    if (anm_erase(name_space, fname) == ADFS_ERROR) {
+    if (anm_erase(name_space, fname) < 0) {
 	nxweb_send_http_error(resp, 400, "Failed.");
 	resp->keep_alive = 0;
 	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);

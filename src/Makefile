@@ -53,24 +53,25 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o log.o log.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o multipart_parser.o multipart_parser.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_upload.o index/if_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_download.o index/if_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_delete.o index/if_delete.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_exist.o index/if_exist.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o index/if_status.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_record.o index/ai_record.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_zone.o index/ai_zone.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_connect.o index/ai_connect.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_stat.o index/ai_stat.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_manager.o index/ai_manager.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_upload.o index/f_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_download.o index/f_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_delete.o index/f_delete.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_exist.o index/f_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o index/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_record.o index/record.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_zone.o index/zone.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_stat.o index/stat.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(idx_OBJS) $(LIBS)
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_upload.o node/if_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_download.o node/if_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_erase.o node/if_erase.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o node/if_status.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o an_manager.o node/an_manager.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o an_namespace.o node/an_namespace.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_upload.o node/f_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_download.o node/f_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_erase.o node/f_erase.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_status.o node/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_manager.o node/manager.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_namespace.o node/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin

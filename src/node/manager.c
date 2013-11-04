@@ -17,17 +17,17 @@
 
 static ANNameSpace * m_create_ns(const char *name_space);
 static ANNameSpace * m_get_ns(const char * name_space);
-static ADFS_RESULT m_init_log(cJSON *json);
+static int m_init_log(cJSON *json);
 static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
 
-//ADFS_RESULT conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
+//int conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
 
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 int g_another_running = 0;
 
-ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
+int anm_init(const char * conf_file, const char *path, unsigned long mem_size) 
 {
     char msg[1024] = {0};
 
@@ -40,20 +40,20 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
     pm->kc_msiz = mem_size *1024*1024;
     strncpy(pm->path, path, sizeof(pm->path));
 
-    DIR *dirp = opendir(path);
-    if( dirp == NULL ) {
+    DIR *dp = opendir(path);
+    if( dp == NULL ) {
 	snprintf(msg, sizeof(msg), "[%s]->path error", path);
 	log_out("manager", msg, LOG_LEVEL_ERROR);
-        return ADFS_ERROR;
+        return -1;
     }
-    closedir(dirp);
+    closedir(dp);
     char f_flag[1024] = {0};
     snprintf(f_flag, sizeof(f_flag), "%s/adfs.flag", path);
     if (access(f_flag, F_OK) != -1) {
 	snprintf(msg, sizeof(msg), "[%s]->Another instance is running.", f_flag);
 	log_out("manager", msg, LOG_LEVEL_SYSTEM);
 	g_another_running = 1;
-	return ADFS_ERROR;
+	return -1;
     }
     else {
 	time_t t = time(NULL);
@@ -63,12 +63,12 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
 	fclose(f);
     }
 
-    struct dirent *ent;
-    dirp = opendir(path);
-    while ((ent = readdir(dirp)) != NULL) {
-	if (ent->d_type == 4 && ent->d_name[0] != '.') {m_create_ns(ent->d_name);}
+    struct dirent *dirp;
+    dp = opendir(path);
+    while ((dirp = readdir(dp)) != NULL) {
+	if (dirp->d_type == DT_DIR && dirp->d_name[0] != '.') {m_create_ns(dirp->d_name);}
     }
-    closedir(dirp);
+    closedir(dp);
 
     snprintf(msg, sizeof(msg), "[%s]->init db path", path);
     log_out("manager", msg, LOG_LEVEL_INFO);
@@ -78,13 +78,13 @@ ADFS_RESULT anm_init(const char * conf_file, const char *path, unsigned long mem
 	log_out("manager", "Config file error. Make sure that it is json format except lines which start with '#'.", LOG_LEVEL_ERROR);
 	goto err1;
     }
-    if (m_init_log(json) == ADFS_ERROR) { goto err1; }
+    if (m_init_log(json) < 0) { goto err1; }
 
     conf_release(json);
-    return ADFS_OK;
+    return 0;
 err1:
     conf_release(json);
-    return ADFS_ERROR;
+    return -1;
 }
 
 void anm_exit() 
@@ -108,25 +108,25 @@ void anm_exit()
     }
 }
 
-ADFS_RESULT anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
+int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
 {
     ANManager *pm = &g_manager;
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return ADFS_ERROR;}
+    if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return -1;}
     if (pns->needto_split(pns)) {
 	char db_args[ADFS_MAX_LEN] = {0};
 	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-	if (pns->split_db(pns, pm->path, db_args) == ADFS_ERROR) {return ADFS_ERROR;}
+	if (pns->split_db(pns, pm->path, db_args) < 0) {return -1;}
     }
-    if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return ADFS_ERROR;}
+    if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return -1;}
     pns->count_add(pns);
     char buf[16] = {0};
     sprintf(buf, "%d", pns->tail->id);
-    if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf))) {return ADFS_ERROR;}
-    return ADFS_OK;
+    if (!kcdbset(pns->index_db, fname, fname_len, buf, strlen(buf))) {return -1;}
+    return 0;
 }
 
 void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
@@ -148,15 +148,15 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     kcfree(id);
 }
 
-ADFS_RESULT anm_erase(const char *ns, const char *fname)
+int anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
-    if (pns == NULL) {return ADFS_OK;}
-    if ( kcdbremove(pns->index_db, fname, strlen(fname)) ) {return ADFS_OK;}
-    else {return ADFS_ERROR;}
+    if (pns == NULL) {return 0;}
+    if ( kcdbremove(pns->index_db, fname, strlen(fname)) ) {return 0;}
+    else {return -1;}
 }
 
 static ANNameSpace * m_get_ns(const char * name_space)
@@ -200,10 +200,10 @@ static ANNameSpace * m_create_ns(const char *name_space)
 
     for (int i=0; i <= max_id; ++i) {
 	if (i < max_id) {
-	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) == ADFS_ERROR) {goto err1;}
+	    if (pns->create(pns, pm->path, db_args, S_READ_ONLY) < 0) {goto err1;}
 	}
 	else {
-	    if (pns->create(pns, pm->path, db_args, S_READ_WRITE) == ADFS_ERROR) {goto err1;}
+	    if (pns->create(pns, pm->path, db_args, S_READ_WRITE) < 0) {goto err1;}
 	}
     }
 
@@ -223,16 +223,16 @@ err1:
 static int m_scan_kch(const char * dir)
 {
     int max_id=0;
-    DIR* dirp;
-    struct dirent* direntp;
+    DIR* dp;
+    struct dirent* dirp;
 
-    dirp = opendir( dir );
-    if( dirp != NULL ) {
-	while ((direntp = readdir(dirp)) != NULL) {
-	    int id = m_get_fileid(direntp->d_name);
+    dp = opendir( dir );
+    if( dp != NULL ) {
+	while ((dirp = readdir(dp)) != NULL) {
+	    int id = m_get_fileid(dirp->d_name);
 	    max_id = id > max_id ? id : max_id;
 	}
-	closedir( dirp );
+	closedir( dp );
     }
     else {mkdir(dir, 0744);}
     return max_id;
@@ -256,31 +256,31 @@ static int m_get_fileid(char * name)
     return atoi(tmp);
 }
 
-static ADFS_RESULT m_init_log(cJSON *json)
+static int m_init_log(cJSON *json)
 {
     // log_level
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
 	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
-        return ADFS_ERROR;
+        return -1;
     }
     g_log_level = j_tmp->valueint;
     if (g_log_level < 1 || g_log_level > 5) {
 	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
+	return -1;
     }
 
     // log_file
     j_tmp = cJSON_GetObjectItem(json, "log_file");
     if (j_tmp == NULL) { 
 	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
+	return -1;
     }
     if (log_init(j_tmp->valuestring) != 0) {
 	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
-	return ADFS_ERROR;
+	return -1;
     }
-    return ADFS_OK;
+    return 0;
 }
 

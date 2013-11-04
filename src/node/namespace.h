@@ -47,15 +47,15 @@ typedef struct ANNameSpace
 
     // functions
     void (*release)(struct ANNameSpace *);
-    ADFS_RESULT (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
+    int (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
     struct NodeDB * (*get)(struct ANNameSpace *, int);
     int (*needto_split)(struct ANNameSpace * _this);
-    ADFS_RESULT (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
+    int (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
     void (*count_add)(struct ANNameSpace * _this);
 }ANNameSpace;
 
 // namespace.c
-ADFS_RESULT anns_init(ANNameSpace *_this, const char * name_space);
+int anns_init(ANNameSpace *_this, const char * name_space);
 
 #endif // __NAMESPACE_H__
 
