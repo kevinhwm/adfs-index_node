@@ -14,7 +14,7 @@ idx_OBJS = function.o cJSON.o log.o multipart_parser.o \
 
 nd_OBJS = function.o cJSON.o log.o multipart_parser.o \
 	  nf_upload.o nf_download.o nf_erase.o nf_status.o \
-	  n_namespace.o n_manager.o \
+	  n_namespace.o n_update.o n_manager.o \
 	  nodeserver.o
 
 release:
@@ -41,6 +41,7 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nf_status.o node/f_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_manager.o node/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_namespace.o node/namespace.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_update.o node/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
@@ -72,6 +73,7 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_status.o node/f_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_manager.o node/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_namespace.o node/namespace.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_update.o node/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin

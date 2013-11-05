@@ -81,8 +81,10 @@ static int update_I0300()
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	}
     }
-
     closedir(dp);
+    FILE *f = fopen("version", "w");
+    fprintf(f, "I0301");
+    fclose(f);
     return 0;
 }
 

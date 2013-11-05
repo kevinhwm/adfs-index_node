@@ -326,7 +326,7 @@ static int m_init_zone(cJSON *json)
 	    cJSON *j_weight = cJSON_GetObjectItem(j_tmp, "weight");
 	    AIZone *pz = m_create_zone(j_name->valuestring, j_weight->valueint);
 	    if (pz == NULL) {
-		fprintf(stderr, "[%s]->create zone error", j_name->valuestring);
+		fprintf(stderr, "[%s]->create zone error\n", j_name->valuestring);
 		return -1;
 	    }
 
@@ -334,7 +334,7 @@ static int m_init_zone(cJSON *json)
 	    cJSON *node = node_list->child;
 	    while (node) {
 		if (pz->create(pz, node->string, node->valuestring) < 0) {
-		    fprintf(stderr, "[%s]->create node error", node->string);
+		    fprintf(stderr, "[%s]->create node error\n", node->string);
 		    return -1;
 		}
 		node = node->next;
@@ -351,18 +351,18 @@ static int m_init_ns(cJSON *json)
     if (j_tmp && (j_tmp = j_tmp->child)) {
 	while (j_tmp) {
 	    if (strlen(j_tmp->valuestring) == 0) {
-		fprintf(stderr, "[namespace]->create file error");
+		fprintf(stderr, "[namespace]->create file error\n");
 		return -1;
 	    }
 	    if (m_create_ns(j_tmp->valuestring) == NULL) {
-		fprintf(stderr, "[%s]->create namespace error", j_tmp->valuestring);
+		fprintf(stderr, "[%s]->create namespace error\n", j_tmp->valuestring);
 		return -1;
 	    }
 	    j_tmp = j_tmp->next;
 	}
     }
     if (m_create_ns("default") == NULL) {
-	fprintf(stderr, "[default]->create namespace error");
+	fprintf(stderr, "[default]->create namespace error\n");
 	return -1;
     }
     return 0;
@@ -372,12 +372,12 @@ static int m_init_log(cJSON *json)
 {
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]->config file error");
+	fprintf(stderr, "[log_level]->config file error\n");
         return -1;
     }
     g_log_level = j_tmp->valueint;
     if (g_log_level <= LOG_LEVEL_SYSTEM || g_log_level >= LOG_LEVEL_MAX) {
-	fprintf(stderr, "[log_level]->config value error");
+	fprintf(stderr, "[log_level]->config value error\n");
 	return -1;
     }
     return 0;

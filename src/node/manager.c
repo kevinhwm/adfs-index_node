@@ -21,11 +21,8 @@ static int m_init_log(cJSON *json);
 static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
 
-//int conf_read(const char * pfile, const char * target, char *value, size_t len);	// in conf.c
-
 ANManager g_manager;
 LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
-int g_another_running = 0;
 
 int anm_init(const char * conf_file, unsigned long mem_size) 
 {
@@ -58,22 +55,21 @@ int anm_init(const char * conf_file, unsigned long mem_size)
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
     sprintf(pm->core_log, "%s/ancore.log", pm->log_dir);
 
-    struct dirent *dirp;
-    dp = opendir(path);
-    while ((dirp = readdir(dp)) != NULL) {
-	if (dirp->d_type == DT_DIR && dirp->d_name[0] != '.') {m_create_ns(dirp->d_name);}
-    }
-    closedir(dp);
-
-    snprintf(msg, sizeof(msg), "[%s]->init db path", path);
-    log_out("manager", msg, LOG_LEVEL_INFO);
-
-    // if (anu_init() < 0) { return -1; }
+    if (anu_init() < 0) { return -1; }
     
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { return -1; }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
+
+    DIR *dp = NULL;
+    struct dirent *dirp;
+    dp = opendir(pm->data_dir);
+    while ((dirp = readdir(dp)) != NULL) {
+	if ((dirp->d_type == DT_DIR) && (dirp->d_name[0] != '.')) {m_create_ns(dirp->d_name);}
+    }
+    closedir(dp);
+
     return 0;
 }
 
@@ -252,23 +248,12 @@ static int m_init_log(cJSON *json)
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	log_out("manager", "[log_level]->config file error", LOG_LEVEL_SYSTEM);
+	fprintf(stderr, "[log_level]->config file error");
         return -1;
     }
     g_log_level = j_tmp->valueint;
     if (g_log_level < 1 || g_log_level > 5) {
-	log_out("manager", "[log_level]->config value error", LOG_LEVEL_SYSTEM);
-	return -1;
-    }
-
-    // log_file
-    j_tmp = cJSON_GetObjectItem(json, "log_file");
-    if (j_tmp == NULL) { 
-	log_out("manager", "[log_file]->config file error", LOG_LEVEL_SYSTEM);
-	return -1;
-    }
-    if (log_init(j_tmp->valuestring) != 0) {
-	log_out("manager", "[log_file]->config value error", LOG_LEVEL_SYSTEM);
+	fprintf(stderr, "[log_level]->config value error");
 	return -1;
     }
     return 0;

@@ -66,14 +66,14 @@ static void show_help(void)
 	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(no default, must be set.)\n"
 	    "\n"
-	    " example:  nodeserver -w ./ -x ./ -c nodeserver.conf -d -P 10010 \n"
+	    " example:  nodeserver -w ./ -c nodeserver.conf -d -P 10010 \n"
 	  );
 }
 
 void adfs_exit()
 {
     static int flag = 0;
-    if (flag) {return;}
+    if (flag) { return; }
     flag = 1;
     fprintf(stderr, "ADFS Node exit.\n");
     anm_exit();
@@ -106,25 +106,22 @@ int main(int argc, char** argv)
 	    case 'w': work_dir=optarg; break;
 	    case 'u': user_name=optarg; break;
 	    case 'g': group_name=optarg; break;
-	    case 'P':
-		port=atoi(optarg);
-		if (port<=0) {
-		    fprintf(stdout, "invalid port: %s\n\n", optarg);
-		    return EXIT_FAILURE;
-		}
-		break;
+	    case 'P': port=atoi(optarg);
+		      if (port<=0) {
+			  fprintf(stdout, "invalid port: %s\n\n", optarg);
+			  return EXIT_FAILURE;
+		      }
+		      break;
 	    case 'c': conf_file=optarg; break;
-	    case 'm':
-		mem_size = atoi(optarg);
-		if (mem_size <= 0) {
-		    fprintf(stdout, "invalid mem size: %s\n\n", optarg);
-		    return EXIT_FAILURE;
-		}
-		break;
-	    case '?':
-		fprintf(stdout, "unkown option: -%c\n\n", optopt);
-		show_help();
-		return EXIT_FAILURE;
+	    case 'm': mem_size = atoi(optarg);
+		      if (mem_size <= 0) {
+			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
+			  return EXIT_FAILURE;
+		      }
+		      break;
+	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
+		      show_help();
+		      return EXIT_FAILURE;
 	}
     }
     if ((argc-optind)>0) {
@@ -150,8 +147,8 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     ANManager *pm = &g_manager;
-    if (daemon) {nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
-    else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
+    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main); }
+    else { nxweb_run_normal(work_dir, 0, pid_file, server_main); }
     return EXIT_SUCCESS;
 }
 

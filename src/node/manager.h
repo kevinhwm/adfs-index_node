@@ -32,5 +32,8 @@ int anm_save(const char * name_space, const char *fname, size_t fname_len, void 
 int anm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
 int anm_erase(const char *name_space, const char *fname);
 
+// update.c
+int anu_init();
+
 #endif // __MANAGER_H___
 
