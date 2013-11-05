@@ -18,7 +18,7 @@
 #define ADFS_RUNNING_FLAG	"adfs.flag"
 
 #include "cJSON.h"
-
+#include "log.h"
 
 //==============================================================================
 
@@ -26,22 +26,6 @@
 cJSON * conf_parse(const char *conf_file);
 void conf_release(cJSON *json);
 int get_filename_from_url(char * p, char *pattern);
-
-// log.c
-typedef enum {
-    LOG_LEVEL_SYSTEM = 0,
-    LOG_LEVEL_FATAL,
-    LOG_LEVEL_ERROR,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG,
-    LOG_LEVEL_MAX
-}LOG_LEVEL;
-
-int log_init(const char *filename);
-void log_release();
-void log_out(const char *module, const char *info, LOG_LEVEL level);
-
 
 //==============================================================================
 

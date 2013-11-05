@@ -22,7 +22,6 @@ static int m_scan_kch(const char * dir);
 static int m_get_fileid(char * name);
 
 ANManager g_manager;
-LOG_LEVEL g_log_level = LOG_LEVEL_DEBUG;
 
 int anm_init(const char * conf_file, unsigned long mem_size) 
 {
@@ -251,8 +250,8 @@ static int m_init_log(cJSON *json)
 	fprintf(stderr, "[log_level]->config file error");
         return -1;
     }
-    g_log_level = j_tmp->valueint;
-    if (g_log_level < 1 || g_log_level > 5) {
+    LOG_LEVEL log_level = j_tmp->valueint;
+    if (log_init(log_level) < 0) {
 	fprintf(stderr, "[log_level]->config value error");
 	return -1;
     }

@@ -30,7 +30,6 @@ static AIZone * m_choose_zone(const char * record);
 
 
 AIManager g_manager;
-LOG_LEVEL g_log_level = LOG_LEVEL_INFO;
 
 int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
@@ -375,8 +374,8 @@ static int m_init_log(cJSON *json)
 	fprintf(stderr, "[log_level]->config file error\n");
         return -1;
     }
-    g_log_level = j_tmp->valueint;
-    if (g_log_level <= LOG_LEVEL_SYSTEM || g_log_level >= LOG_LEVEL_MAX) {
+    LOG_LEVEL log_level = j_tmp->valueint;
+    if (log_init(log_level) < 0) {
 	fprintf(stderr, "[log_level]->config value error\n");
 	return -1;
     }

@@ -4,80 +4,123 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 #include <time.h>
-#include "adfs.h"
-
-extern int g_log_level;
-static char log_file[256] = {0};
-static FILE *f_log = NULL;
-static pthread_mutex_t mutex;
-static char instance_id[64] = {0};
+#include <dirent.h>
+#include <sys/stat.h>
+#include "log.h"
 
 
-int log_init(const char *filename)
+static struct LogFile *hlog = NULL;
+
+int log_init(LOG_LEVEL level)
 {
-    if (strlen(filename) > 256) {return -1;}
-
-    time_t t = time(NULL);
-    struct tm *lt = NULL;
-    lt = localtime(&t);
+    time_t t;
+    struct tm lt;
     char buf[64] = {0};
-    strftime(buf, sizeof(buf), "%y%m%d", lt);
-    snprintf(instance_id, sizeof(instance_id), "ID%s%04d", buf, rand()%10000);
+    DIR *dirp = NULL;
 
-    strncpy(log_file, filename, sizeof(log_file));
-    f_log = fopen(log_file, "a");
-    if (f_log == NULL) {return -1;}
-    fprintf(f_log, "\n");
-    fflush(f_log);
+    hlog = malloc(sizeof(struct LogFile));
+    if (hlog == NULL) { return -1; }
+    memset(hlog, 0, sizeof(struct LogFile));
 
-    if (pthread_mutex_init(&mutex, NULL) != 0) { fclose(f_log); return -1; }
+    // level
+    if (level < LOG_LEVEL_SYSTEM || level >= LOG_LEVEL_ALL) { goto err1; }
+    hlog->level = level;
+
+    // lock
+    hlog->lock = malloc(sizeof(pthread_mutex_t));
+    if (hlog->lock == NULL) { goto err1; }
+    if (pthread_mutex_init(hlog->lock, NULL) != 0) { goto err2; }
+
+    // instance_id
+    time(&t);
+    localtime_r(&t, &lt);
+    strftime(buf, sizeof(buf), "%y%m%d", &lt);
+    snprintf(hlog->instance_id, sizeof(hlog->instance_id), "ID%s%04d", buf, rand()%10000);
+
+    // log_dir
+    strncpy(hlog->log_dir, "log", sizeof(hlog->log_dir));
+    dirp = opendir(hlog->log_dir);
+    if (dirp == NULL) {
+	if (mkdir(hlog->log_dir, 0755) != 0) { goto err2; }
+    }
+    else { closedir(dirp); }
+
     return 0;
+err2:
+    free(hlog->lock);
+    hlog->lock = NULL;
+err1:
+    free(hlog);
+    hlog = NULL;
+    return -1;
 }
 
 void log_release()
 {
-    if (f_log) {
-	fprintf(f_log, "\n");
-	pthread_mutex_destroy(&mutex);
-	fflush(f_log);
-	fclose(f_log);
+    if (hlog == NULL) { return ; }
+    if (pthread_mutex_lock(hlog->lock) != 0) {return ;}
+    if (hlog->flog) { 
+	fclose(hlog->flog); 
+	hlog->flog = NULL;
     }
+    pthread_mutex_unlock(hlog->lock);
+
+    pthread_mutex_destroy(hlog->lock); 
+    free(hlog->lock);
+    hlog->lock = NULL;
+
+    free(hlog);
+    hlog = NULL;
+    return ;
 }
 
 void log_out(const char *module, const char *info, LOG_LEVEL level)
 {
-    if (level < LOG_LEVEL_SYSTEM || level >= LOG_LEVEL_MAX) {return ;}
-    else if (level > g_log_level) {return ;}
-    if (pthread_mutex_lock(&mutex) != 0) {return ;}
+    time_t t;
+    struct tm lt;
+    char stime[64] = {0};
+    char fname[64] = {0};
 
-    time_t t = time(NULL);
-    struct tm *lt;
-    char stime[32] = {0};
+    if (level < LOG_LEVEL_SYSTEM || level >= LOG_LEVEL_ALL) { return ; }
+    else if (level > hlog->level) { return ; }
+    if (hlog == NULL) { return ; }
 
-    lt = localtime(&t);
-    strftime(stime, sizeof(stime), "%Y-%m-%d %H:%M:%S", lt);
-    if (f_log == NULL) {f_log = stdout;}
+    if (pthread_mutex_lock(hlog->lock) != 0) {return ;}
+    time(&t);
+    localtime_r(&t, &lt);
+    strftime(fname, sizeof(fname), "log/%Y%m%d%H.log", &lt);
+    strftime(stime, sizeof(stime), "%Y-%m-%d %H:%M:%S", &lt);
 
-    fprintf(f_log, "%s\t", stime);
-    fprintf(f_log, "%s\t", instance_id);
-    switch (level) {
-	case LOG_LEVEL_SYSTEM: 	fprintf(f_log, "L0-system\t"); break;
-	case LOG_LEVEL_FATAL: 	fprintf(f_log, "L1--fatal\t"); break;
-	case LOG_LEVEL_ERROR: 	fprintf(f_log, "L2--error\t"); break;
-	case LOG_LEVEL_WARN: 	fprintf(f_log, "L3---warn\t"); break;
-	case LOG_LEVEL_INFO: 	fprintf(f_log, "L4---info\t"); break;
-	case LOG_LEVEL_DEBUG: 	fprintf(f_log, "L5--debug\t"); break;
-	default:		fprintf(f_log, "LE-------\t"); break;
+    if (hlog->flog == NULL) { 
+	hlog->flog = fopen(fname, "a");
+	if (hlog->flog == NULL) { return ; }
+	strncpy(hlog->fname, fname, sizeof(hlog->fname));
+	fprintf(hlog->flog, "\n");
     }
-    fprintf(f_log, "M-%s\t", module);
-    fprintf(f_log, "%s\t", info);
-    fprintf(f_log, "\n");
-    fflush(f_log);
+    else if (strcmp(fname, hlog->fname) != 0) {
+	fclose(hlog->flog);
+	hlog->flog = fopen(fname, "a");
+	if (hlog->flog == NULL) { return ; }
+	strncpy(hlog->fname, fname, sizeof(hlog->fname));
+	fprintf(hlog->flog, "\n");
+    }
 
-    pthread_mutex_unlock(&mutex);
+    fprintf(hlog->flog, "%s\t", stime);
+    fprintf(hlog->flog, "%s\t", hlog->instance_id);
+    switch (level) {
+	case 0:  fprintf(hlog->flog, "L0-system\t"); break;
+	case 1:  fprintf(hlog->flog, "L1--fatal\t"); break;
+	case 2:  fprintf(hlog->flog, "L2--error\t"); break;
+	case 3:  fprintf(hlog->flog, "L3---warn\t"); break;
+	case 4:  fprintf(hlog->flog, "L4---info\t"); break;
+	case 5:  fprintf(hlog->flog, "L5--debug\t"); break;
+	default: fprintf(hlog->flog, "LA----all\t"); break;
+    }
+    fprintf(hlog->flog, "M-%s\t", module);
+    fprintf(hlog->flog, "%s\n", info);
+    fflush(hlog->flog);
+    pthread_mutex_unlock(hlog->lock);
 }
 
