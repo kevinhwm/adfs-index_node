@@ -1,4 +1,4 @@
-/* ai_function.c
+/* function.c
  *
  * kevinhwm@gmail.com
  */
@@ -82,29 +82,10 @@ static int match(char *src, char *pattern)
     int rc;
 
     re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
-
-    if (re == NULL) {
-	//printf("PCRE compilation failed at offset %d: %s/n", erroffset, error);
-	return -1;
-    }
+    if (re == NULL) { return -1; }
 
     rc = pcre_exec(re, NULL, src, strlen(src), 0, 0, ovector, OVECCOUNT);
-
-    if (rc < 0) {
-	//if (rc == PCRE_ERROR_NOMATCH) printf("Sorry, no match ...\n");
-	//else printf("Matching error %d\n", rc);
-	pcre_free(re);
-	return -1;
-    }
-
-    /*
-       printf("\nOK, has matched ...\n\n");
-       for (i = 0; i < rc; i++) {
-       char *substring_start = src + ovector[2*i];
-       int substring_length = ovector[2*i+1] - ovector[2*i];
-       printf("$%2d: %.*s\n", i, substring_length, substring_start);
-       }
-       */
+    if (rc < 0) { pcre_free(re); return -1; }
 
     pcre_free(re);
     return 0;

@@ -1,5 +1,7 @@
-// log.c
-// kevinhwm@gmail.com
+/* log.c
+ *
+ * kevinhwm@gmail.com
+ */
 
 #ifndef __LOG_H__
 #define __LOG_H__

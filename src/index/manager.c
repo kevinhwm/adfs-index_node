@@ -318,6 +318,7 @@ char * aim_status()
 
 static int m_init_zone(cJSON *json)
 {
+    char msg[1024];
     cJSON *j_tmp = cJSON_GetObjectItem(json, "zone");
     if (j_tmp && (j_tmp = j_tmp->child)) {
 	while (j_tmp) {
@@ -329,10 +330,15 @@ static int m_init_zone(cJSON *json)
 		return -1;
 	    }
 
+
 	    cJSON *node_list = cJSON_GetObjectItem(j_tmp, "node");
 	    cJSON *node = node_list->child;
 	    while (node) {
-		if (pz->create(pz, node->string, node->valuestring) < 0) {
+		cJSON *one_attr = node->child;
+		char *name = one_attr->valuestring;
+		char *state = one_attr->next->valuestring;
+		char *ip_port = one_attr->next->next->valuestring;
+		if (!name || !state || !ip_port || pz->create(pz, name, state, ip_port) < 0) {
 		    fprintf(stderr, "[%s]->create node error\n", node->string);
 		    return -1;
 		}

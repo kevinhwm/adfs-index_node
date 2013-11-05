@@ -6,7 +6,7 @@
 #ifndef __ADFS_H__
 #define __ADFS_H__
 
-#define ADFS_VERSION		"3.3.1"
+#define ADFS_VERSION		"3.3.2"
 
 #define ADFS_MAX_LEN		1024
 #define ADFS_FILENAME_LEN	512

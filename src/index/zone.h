@@ -18,7 +18,6 @@ typedef enum
     FLAG_UPLOAD		= 1,
     FLAG_ERASE,
     FLAG_STATUS,
-    FLAG_SYN,
 } FLAG_CONNECTION;
 
 typedef struct AINode
@@ -30,6 +29,8 @@ typedef struct AINode
     } conn[ADFS_NODE_CURL_NUM];
     char name[ADFS_NODENAME_LEN];
     char ip_port[ADFS_NODENAME_LEN];
+    ADFS_NODE_STATE state;
+    pthread_mutex_t *lock;
 
     struct AINode *prev;
     struct AINode *next;
@@ -47,7 +48,7 @@ typedef struct AIZone
     struct AIZone *prev;
     struct AIZone *next;
     // function
-    int (*create)(struct AIZone *, const char *, const char *);
+    int (*create)(struct AIZone *, const char *, const char *, const char *);
     void (*release)(struct AIZone *);
     AINode * (*rand_choose)(struct AIZone *);
 }AIZone;

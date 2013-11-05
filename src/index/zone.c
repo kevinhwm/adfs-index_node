@@ -7,7 +7,7 @@
 #include <string.h>
 #include "zone.h"
 
-static int z_create(AIZone *_this, const char *name, const char *ip_port);
+static int z_create(AIZone *_this, const char *name, const char *state, const char *ip_port);
 static void z_release(AIZone *_this);
 static AINode * z_rand_choose(AIZone *_this);
 
@@ -27,7 +27,7 @@ int aiz_init(AIZone *_this, const char *name, int weight)
     return -1;
 }
 
-static int z_create(AIZone *_this, const char *name, const char *ip_port)
+static int z_create(AIZone *_this, const char *name, const char *state, const char *ip_port)
 {
     for (AINode *pn = _this->head; pn; pn = pn->next) {
         if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0) { return -1; }
@@ -45,13 +45,19 @@ static int z_create(AIZone *_this, const char *name, const char *ip_port)
         if (pthread_mutex_init(new_node->conn[i].mutex, NULL) != 0) { return -1; }
 	new_node->conn[i].flag = FLAG_INIT;
     }
-    _this->num += 1;
+    if (strcmp(state, "rw") == 0) {new_node->state = S_READ_WRITE;}
+    else if (strcmp(state, "ro") == 0) {new_node->state = S_READ_ONLY;}
+    else {new_node->state = S_NA;}
+    new_node->lock = malloc(sizeof(pthread_mutex_t));
+    if (pthread_mutex_init(new_node->lock, NULL) != 0) {return -1;}
 
     new_node->prev = _this->tail;
     new_node->next = NULL;
     if (_this->tail) {_this->tail->next = new_node;}
     else {_this->head = new_node;}
     _this->tail = new_node;
+
+    _this->num += 1;
     return 0;
 }
 
