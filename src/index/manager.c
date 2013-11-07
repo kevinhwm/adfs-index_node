@@ -16,17 +16,16 @@
 #include "../cJSON.h"
 
 
-static int m_init_log(cJSON *json);
-static int m_init_ns(cJSON *json);
-static int m_init_zone(cJSON *json);
+static int m_init_log(cJSON *json);				// initialize
+static int m_init_ns(cJSON *json);				// initialize
+static int m_init_zone(cJSON *json);				// initialize
+static AIZone * m_create_zone(const char *name, int weight);	// initialize
+static int m_create_ns(const char *name);			// initialize
 
-static AIZone * m_create_zone(const char *name, int weight);
-static AINameSpace * m_create_ns(const char *name);
-
-static AINameSpace * m_get_ns(const char *ns);
-static AINode * m_get_node(const char *node_name, size_t len);
-static char * m_get_history(const char *, int);
-static AIZone * m_choose_zone(const char * record);
+static AINameSpace * m_get_ns(const char *ns);			// dynamic - upload download delete exist
+static AINode * m_get_node(const char *node_name, size_t len);	// dynamic - upload download
+static char * m_get_history(const char *, int);			// dynamic - download
+static AIZone * m_choose_zone(const char * record);		// dynamic - download
 
 
 AIManager g_manager;
@@ -83,18 +82,18 @@ int aim_exit()
 
     AIZone *pz = pm->z_head;
     while (pz) {
-        AIZone *tmp = pz;
-        pz = pz->next;
-        tmp->release(tmp);
-        free(tmp);
+	AIZone *tmp = pz;
+	pz = pz->next;
+	tmp->release(tmp);
+	free(tmp);
     }
     AINameSpace *pns = pm->ns_head;
     while (pns) {
-        AINameSpace *tmp = pns;
-        pns = pns->next;
+	AINameSpace *tmp = pns;
+	pns = pns->next;
 	kcdbclose(tmp->index_db);
 	kcdbdel(tmp->index_db);
-        free(tmp);
+	free(tmp);
     }
     log_release();
     curl_global_cleanup();
@@ -310,10 +309,49 @@ char * aim_status()
 	    pn = pn->next;
 	}
 	strncat(p, "</table>", size);
-    	pz = pz->next;
+	pz = pz->next;
     }
 
     return p;
+}
+
+static int m_init_log(cJSON *json)
+{
+    cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
+    if (j_tmp == NULL) {
+	fprintf(stderr, "[log_level]->config file error\n");
+	return -1;
+    }
+    LOG_LEVEL log_level = j_tmp->valueint;
+    if (log_init(log_level) < 0) {
+	fprintf(stderr, "[log_level]->config value error\n");
+	return -1;
+    }
+    return 0;
+}
+
+static int m_init_ns(cJSON *json)
+{
+    cJSON *j_tmp = cJSON_GetObjectItem(json, "namespace");
+    if (j_tmp && (j_tmp = j_tmp->child)) {
+	while (j_tmp) {
+	    size_t len = strlen(j_tmp->valuestring);
+	    if (len == 0 || len >= ADFS_NAMESPACE_LEN) {
+		fprintf(stderr, "[namespace]->create file error\n");
+		return -1;
+	    }
+	    if (m_create_ns(j_tmp->valuestring) < 0) {
+		fprintf(stderr, "[%s]->create namespace error\n", j_tmp->valuestring);
+		return -1;
+	    }
+	    j_tmp = j_tmp->next;
+	}
+    }
+    if (m_create_ns("default") < 0) {
+	fprintf(stderr, "[default]->create namespace error\n");
+	return -1;
+    }
+    return 0;
 }
 
 static int m_init_zone(cJSON *json)
@@ -329,7 +367,6 @@ static int m_init_zone(cJSON *json)
 		fprintf(stderr, "[%s]->create zone error\n", j_name->valuestring);
 		return -1;
 	    }
-
 
 	    cJSON *node_list = cJSON_GetObjectItem(j_tmp, "node");
 	    cJSON *node = node_list->child;
@@ -350,41 +387,52 @@ static int m_init_zone(cJSON *json)
     return 0;
 }
 
-static int m_init_ns(cJSON *json)
+static AIZone * m_create_zone(const char *name, int weight)
 {
-    cJSON *j_tmp = cJSON_GetObjectItem(json, "namespace");
-    if (j_tmp && (j_tmp = j_tmp->child)) {
-	while (j_tmp) {
-	    if (strlen(j_tmp->valuestring) == 0) {
-		fprintf(stderr, "[namespace]->create file error\n");
-		return -1;
-	    }
-	    if (m_create_ns(j_tmp->valuestring) == NULL) {
-		fprintf(stderr, "[%s]->create namespace error\n", j_tmp->valuestring);
-		return -1;
-	    }
-	    j_tmp = j_tmp->next;
-	}
+    AIManager * pm = &g_manager;
+    AIZone *pz = pm->z_head;
+    for (; pz; pz=pz->next) {
+	if (strcmp(pz->name, name) == 0 ) {return NULL;} 
     }
-    if (m_create_ns("default") == NULL) {
-	fprintf(stderr, "[default]->create namespace error\n");
-	return -1;
-    }
-    return 0;
+    pz = (AIZone *)malloc(sizeof(AIZone));
+    if (pz == NULL) {return NULL;}
+    aiz_init(pz, name, weight);
+    pz->prev = pm->z_tail;
+    pz->next = NULL;
+    if (pm->z_tail) {pm->z_tail->next = pz;}
+    else {pm->z_head = pz;}
+    pm->z_tail = pz;
+    return pz;
 }
 
-static int m_init_log(cJSON *json)
+static int m_create_ns(const char *name)
 {
-    cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
-    if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]->config file error\n");
-        return -1;
+    AIManager * pm = &g_manager;
+    AINameSpace *pns = pm->ns_head;
+    while (pns) {
+	if (strcmp(pns->name, name) == 0) { return -1; }
+	pns = pns->next;
     }
-    LOG_LEVEL log_level = j_tmp->valueint;
-    if (log_init(log_level) < 0) {
-	fprintf(stderr, "[log_level]->config value error\n");
+    pns = malloc(sizeof(AINameSpace));
+    if (pns == NULL) { return -1; }
+    memset(pns, 0, sizeof(AINameSpace));
+
+    strncpy(pns->name, name, sizeof(pns->name));
+    char indexdb_path[ADFS_MAX_LEN] = {0};
+    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+	    pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+    pns->index_db = kcdbnew();
+    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
+	free(pns);
 	return -1;
     }
+
+    pns->prev = pm->ns_tail;
+    pns->next = NULL;
+    if (pm->ns_tail) {pm->ns_tail->next = pns;}
+    else {pm->ns_head = pns;}
+    pm->ns_tail = pns;
+
     return 0;
 }
 
@@ -392,7 +440,7 @@ static AINameSpace * m_get_ns(const char *ns)
 {
     AINameSpace *pns = g_manager.ns_head;
     while (pns) {
-	if (strcmp(pns->name, ns) == 0) {return pns;}
+	if (strcmp(pns->name, ns) == 0) { return pns; }
 	pns = pns->next;
     }
     return NULL;
@@ -416,53 +464,6 @@ static AINode * m_get_node(const char *node_name, size_t len)
     }
     free(p);
     return NULL;
-}
-
-static AIZone * m_create_zone(const char *name, int weight)
-{
-    AIManager * pm = &g_manager;
-    AIZone *pz = pm->z_head;
-    for (; pz; pz=pz->next) {
-	if (strcmp(pz->name, name) == 0 ) {return NULL;} 
-    }
-    pz = (AIZone *)malloc(sizeof(AIZone));
-    if (pz == NULL) {return NULL;}
-    aiz_init(pz, name, weight);
-    pz->prev = pm->z_tail;
-    pz->next = NULL;
-    if (pm->z_tail) {pm->z_tail->next = pz;}
-    else {pm->z_head = pz;}
-    pm->z_tail = pz;
-    return pz;
-}
-
-static AINameSpace * m_create_ns(const char *name)
-{
-    AIManager * pm = &g_manager;
-    AINameSpace *pns = pm->ns_head;
-    while (pns) {
-    	if (strcmp(pns->name, name) == 0) {return NULL;}
-	pns = pns->next;
-    }
-    pns = malloc(sizeof(AINameSpace));
-    if (pns == NULL) {return NULL;}
-
-    strncpy(pns->name, name, sizeof(pns->name));
-    char indexdb_path[ADFS_MAX_LEN] = {0};
-    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-	    pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-    pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
-	free(pns);
-	return NULL;
-    }
-
-    pns->prev = pm->ns_tail;
-    pns->next = NULL;
-    if (pm->ns_tail) {pm->ns_tail->next = pns;}
-    else {pm->ns_head = pns;}
-    pm->ns_tail = pns;
-    return pns;
 }
 
 static char * m_get_history(const char *line, int order)
@@ -497,15 +498,15 @@ static AIZone * m_choose_zone(const char *record)
 
     AIZone *pz = pm->z_head;
     for (; pz; pz = pz->next) {
-        if (strstr(record, pz->name) == NULL) {continue;}
+	if (strstr(record, pz->name) == NULL) {continue;}
 
-        if (pz->count == 0) {pz->count += 1; return pz;}
-        else if (biggest_z == NULL) {biggest_z = pz;}
-        else {
-            biggest_z = (pz->weight / pz->count) > (biggest_z->weight / biggest_z->count) ? pz : biggest_z;
-            if (least_z == NULL) {least_z = pz;}
-            else {least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;}
-        }
+	if (pz->count == 0) {pz->count += 1; return pz;}
+	else if (biggest_z == NULL) {biggest_z = pz;}
+	else {
+	    biggest_z = (pz->weight / pz->count) > (biggest_z->weight / biggest_z->count) ? pz : biggest_z;
+	    if (least_z == NULL) {least_z = pz;}
+	    else {least_z = (pz->weight / pz->count) < (least_z->weight / least_z->count) ? pz : least_z;}
+	}
     }
     if (biggest_z) {
 	biggest_z->count += 1;

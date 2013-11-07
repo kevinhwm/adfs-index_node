@@ -24,6 +24,7 @@ typedef struct AIManager {
     unsigned long kc_bnum;
     unsigned long kc_msiz;
     unsigned long max_file_size;
+
     char data_dir[32];
     char log_dir[32];
     char core_log[32];
