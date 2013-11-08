@@ -88,7 +88,7 @@ static int ns_split_db(ANNameSpace * _this, const char *path, const char *args)
     NodeDB *pn = _this->tail;
     kcdbclose(pn->db);
     pn->state = S_READ_ONLY;
-    if (db_open(pn->db, pn->path, pn->state) < 0) { pn->state = S_LOST; pthread_rwlock_unlock(&_this->lock); return -1; }
+    if (db_open(pn->db, pn->path, pn->state) < 0) { pn->state = S_NA; pthread_rwlock_unlock(&_this->lock); return -1; }
     node_create(_this, path, args, S_READ_WRITE);
     pthread_rwlock_unlock(&_this->lock);
     return 0;
@@ -116,7 +116,7 @@ static int node_create(ANNameSpace * pns, const char *path, const char *args, AD
     char dbpath[ADFS_MAX_LEN] = {0};
     snprintf(dbpath, sizeof(dbpath), "%s/%s/%d.kch%s", path, pns->name, new_node->id, args);
     strncpy(new_node->path, dbpath, sizeof(new_node->path));
-    if (db_open(new_node->db, new_node->path, new_node->state) < 0) {new_node->state = S_LOST; free(new_node); return -1;}
+    if (db_open(new_node->db, new_node->path, new_node->state) < 0) {new_node->state = S_NA; free(new_node); return -1;}
     pns->number += 1;
     new_node->count = kcdbcount(new_node->db);
 

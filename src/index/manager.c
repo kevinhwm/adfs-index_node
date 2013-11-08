@@ -22,8 +22,9 @@ static int m_init_zone(cJSON *json);				// initialize
 static AIZone * m_create_zone(const char *name, int weight);	// initialize
 static int m_create_ns(const char *name);			// initialize
 
-static AINameSpace * m_get_ns(const char *ns);			// dynamic - upload download delete exist
-static AINode * m_get_node(const char *node_name, size_t len);	// dynamic - upload download
+static AINameSpace * m_get_ns(const char *ns);			// dynamic no write - upload download delete exist
+static AINode * m_get_node(const char *node_name, size_t len);	// dynamic no write - upload download
+
 static char * m_get_history(const char *, int);			// dynamic - download
 static AIZone * m_choose_zone(const char * record);		// dynamic - download
 
@@ -187,29 +188,30 @@ char * aim_download(const char *ns, const char *fname, const char *history)
 {
     //AIManager *pm = &g_manager;
     const char *name_space = ns;
-    if (name_space == NULL) {name_space = "default";}
+    if (name_space == NULL) { name_space = "default"; }
     AINameSpace *pns = m_get_ns(name_space);
-    if (pns == NULL) {return NULL;}
+    if (pns == NULL) { return NULL; }
 
     int order = 0;
     if (history != NULL) {
 	for (int i=0; i<strlen(history); ++i) {
 	    if (history[i] < '0' || history[i] > '9') { return NULL; }
 	}
-	if ((order = atoi(history)) < 0) {return NULL;}
+	if ((order = atoi(history)) < 0) { return NULL; }
     }
 
     size_t vsize;
     char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
     if (line == NULL) {return NULL;}
     char *url = (char *)malloc(ADFS_MAX_LEN);
-    if (url == NULL) {goto err1;}
+    if (url == NULL) { goto err1; }
     memset(url, 0, ADFS_MAX_LEN);
+
     char *record = m_get_history(line, order);
-    if (record == NULL) {goto err2;}
+    if (record == NULL) { goto err2; }
 
     AIZone *pz = m_choose_zone(record + ADFS_UUID_LEN);
-    if (pz == NULL) {goto err3;}
+    if (pz == NULL) { goto err3; }
     char *pos_zone = strstr(record, pz->name);
     char *pos_sharp = strstr(pos_zone, "#");
     char *pos_split = strstr(pos_sharp, "|");
@@ -217,26 +219,26 @@ char * aim_download(const char *ns, const char *fname, const char *history)
 	char node_name[ADFS_FILENAME_LEN] = {0};
 	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
 	AINode *pn = m_get_node(node_name, strlen(node_name));
-	if (pn == NULL) {goto err3;}
+	if (pn == NULL) { goto err3; }
 	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
     else {
 	AINode *pn = m_get_node(pos_sharp+1, strlen(pos_sharp+1));
-	if (pn == NULL) {goto err3;}
+	if (pn == NULL) { goto err3; }
 	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
     }
     strncat(url, "?namespace=", ADFS_MAX_LEN);
     strncat(url, pns->name, ADFS_MAX_LEN);
 
-    if (record) {free(record);}
-    if (line) {kcfree(line);}
+    if (record) { free(record); }
+    if (line) { kcfree(line); }
     return url;
 err3:
-    if (record) {free(record);}
+    if (record) { free(record); }
 err2:
-    if (url) {free(url);}
+    if (url) { free(url); }
 err1:
-    if (line) {kcfree(line);}
+    if (line) { kcfree(line); }
     return NULL;
 }
 
@@ -356,7 +358,6 @@ static int m_init_ns(cJSON *json)
 
 static int m_init_zone(cJSON *json)
 {
-    char msg[1024];
     cJSON *j_tmp = cJSON_GetObjectItem(json, "zone");
     if (j_tmp && (j_tmp = j_tmp->child)) {
 	while (j_tmp) {
@@ -449,8 +450,8 @@ static AINameSpace * m_get_ns(const char *ns)
 static AINode * m_get_node(const char *node_name, size_t len)
 {
     char *p = malloc(len+1);
-    if (p == NULL) {return NULL;}
-    p[len] = '\0';
+    if (p == NULL) { return NULL; }
+    memset(p, 0, len+1);
     strncpy(p, node_name, len);
 
     AIZone *pz = g_manager.z_head;

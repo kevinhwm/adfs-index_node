@@ -7,18 +7,19 @@ CFLAGS = -std=c99 -Wall -D_GNU_SOURCE
 INCLUDE = -I/usr/local/include/ 
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
-idx_OBJS = function.o cJSON.o log.o multipart_parser.o \
+idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
 	   if_upload.o if_download.o if_delete.o if_exist.o if_status.o \
 	   i_record.o i_zone.o i_connect.o i_stat.o i_update.o i_manager.o \
 	   indexserver.o
 
-nd_OBJS = function.o cJSON.o log.o multipart_parser.o \
+nd_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
 	  nf_upload.o nf_download.o nf_erase.o nf_status.o \
 	  n_namespace.o n_update.o n_manager.o \
 	  nodeserver.o
 
 release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o function.o function.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o conf.o conf.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o log.o log.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
@@ -51,6 +52,7 @@ release:
 debug:
 	mkdir -p bin
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o function.o function.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o conf.o conf.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o log.o log.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o multipart_parser.o multipart_parser.c

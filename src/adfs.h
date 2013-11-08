@@ -20,12 +20,21 @@
 #include "cJSON.h"
 #include "log.h"
 
+
+typedef enum ADFS_NODE_STATE {
+    S_NA		=0,
+    S_READ_ONLY,
+    S_READ_WRITE
+}ADFS_NODE_STATE;
+
 //==============================================================================
 
 // function.c
+int get_filename_from_url(char * p, char *pattern);
+
+// conf.c
 cJSON * conf_parse(const char *conf_file);
 void conf_release(cJSON *json);
-int get_filename_from_url(char * p, char *pattern);
 
 //==============================================================================
 

@@ -56,3 +56,4 @@ typedef struct AIZone
 int aiz_init(AIZone *_this, const char *name, int weight);
 
 #endif // __ZONE_H__
+
