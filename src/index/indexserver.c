@@ -20,7 +20,7 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
-extern AIManager g_manager;
+extern CIManager g_manager;
 
 static const char* user_name=0;
 static const char* group_name=0;
@@ -47,8 +47,8 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    fprintf(stderr, "ADFS Index exit.\n");
-    aim_exit();
+    fprintf(stderr, "Index exit.\n");
+    GIm_exit();
 }
 
 static void show_help(void) 
@@ -65,24 +65,24 @@ static void show_help(void)
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file			(default: indexserver.conf)\n"
+	    " -c file  config file			(default: indexserver.json)\n"
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
 	    " -b bnum  set the number of buckets	(default: 1048576)\n"
 	    //" -x dir   set database dir		(no default, must be set.)\n"
 
 	    "\n"
-	    " example:  indexserver -w ./ -c indexserver.conf -d \n"
+	    " example:  indexserver -w ./ -c indexserver.json -d \n"
 	   );
 }
 
-void adfs_exit()
+void _dfs_exit()
 {
     static int flag = 0;
     if (flag) {return;}
     flag = 1;
-    fprintf(stderr, "ADFS Index exit.\n");
-    aim_exit();
+    fprintf(stderr, "Index exit.\n");
+    GIm_exit();
 }
 
 int main(int argc, char** argv) 
@@ -91,14 +91,14 @@ int main(int argc, char** argv)
     int shutdown=0;
     const char *work_dir="/usr/local/adfs/index";
     const char *pid_file="indexserver.pid";
-    const char *conf_file="indexserver.conf";
+    const char *conf_file="indexserver.json";
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
     long bnum = 1048576;
 
     fprintf(stdout, 
 	    "====================================================================\n"
-	    "                    ADFS - Index " ADFS_VERSION "\n"
+	    "                    Index " _DFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
 
@@ -164,13 +164,13 @@ int main(int argc, char** argv)
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
 
-    if (aim_init(conf_file, bnum, mem_size, max_file_size) < 0) {
-	aim_exit();
+    if (GIm_init(conf_file, bnum, mem_size, max_file_size) < 0) {
+	GIm_exit();
 	return EXIT_FAILURE;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    AIManager *pm = &g_manager;
+    CIManager *pm = &g_manager;
     if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
     else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
     return EXIT_SUCCESS;

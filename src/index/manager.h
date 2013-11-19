@@ -8,17 +8,17 @@
 
 #include <kclangc.h>
 #include "zone.h"
-#include "../adfs.h"
+#include "../def.h"
 
 
-typedef struct AINameSpace {
-    char name[ADFS_NAMESPACE_LEN];
+typedef struct CINameSpace {
+    char name[_DFS_NAMESPACE_LEN];
     KCDB * index_db;
-    struct AINameSpace *prev;
-    struct AINameSpace *next;
-}AINameSpace;
+    struct CINameSpace *prev;
+    struct CINameSpace *next;
+}CINameSpace;
 
-typedef struct AIManager {
+typedef struct CIManager {
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
@@ -31,28 +31,28 @@ typedef struct AIManager {
 
     int another_running;
 
-    struct AINameSpace *ns_head;
-    struct AINameSpace *ns_tail;
-    struct AIZone *z_head;
-    struct AIZone *z_tail;
-}AIManager;
+    struct CINameSpace *ns_head;
+    struct CINameSpace *ns_tail;
+    struct CIZone *z_head;
+    struct CIZone *z_tail;
+}CIManager;
 
 
 // manager.c
-int 	aim_init(const char *file_conf, long bnum, unsigned long mem_size, unsigned long max_file_size);
-int 	aim_exit();
-int 	aim_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
-char *	aim_download(const char *name_space, const char *fname, const char *history);
-int	aim_delete(const char *name_space, const char *fname);
-int	aim_exist(const char *name_space, const char *fname);
-char * 	aim_status();
+int 	GIm_init(const char *file_conf, long bnum, unsigned long mem_size, unsigned long max_file_size);
+int 	GIm_exit();
+int 	GIm_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
+char *	GIm_download(const char *name_space, const char *fname, const char *history);
+int	GIm_delete(const char *name_space, const char *fname);
+int	GIm_exist(const char *name_space, const char *fname);
+char * 	GIm_status();
 
 // connect.c
-int aic_upload(AINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
-int aic_connect(AINode *pn, const char *url, FLAG_CONNECTION);
+int GIc_upload(CINode *pn, const char *url, const char *fname, void *fdata, size_t fdata_len);
+int GIc_connect(CINode *pn, const char *url, FLAG_CONNECTION);
 
 // update.c
-int aiu_init();
+int GIu_run();
 
 #endif // __MANAGER_H__
 

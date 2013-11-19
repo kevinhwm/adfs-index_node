@@ -5,9 +5,7 @@
 
 #include <string.h>
 #include <time.h>
-//#include <dirent.h>     // opendir
 #include <unistd.h>
-//#include <sys/stat.h>   // chmod
 #include <kclangc.h>
 #include <curl/curl.h>
 
@@ -19,24 +17,24 @@
 static int m_init_log(cJSON *json);				// initialize
 static int m_init_ns(cJSON *json);				// initialize
 static int m_init_zone(cJSON *json);				// initialize
-static AIZone * m_create_zone(const char *name, int weight);	// initialize
+static CIZone * m_create_zone(const char *name, int weight);	// initialize
 static int m_create_ns(const char *name);			// initialize
 
-static AINameSpace * m_get_ns(const char *ns);			// dynamic no write - upload download delete exist
-static AINode * m_get_node(const char *node_name, size_t len);	// dynamic no write - upload download
+static CINameSpace * m_get_ns(const char *ns);			// dynamic no write - upload download delete exist
+static CINode * m_get_node(const char *node_name, size_t len);	// dynamic no write - upload download
 
 static char * m_get_history(const char *, int);			// dynamic - download
-static AIZone * m_choose_zone(const char * record);		// dynamic - download
+static CIZone * m_choose_zone(const char * record);		// dynamic - download
 
 
-AIManager g_manager;
+CIManager g_manager;
 
-int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
+int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
-    AIManager *pm = &g_manager;
-    memset(pm, 0, sizeof(*pm));
+    CIManager *pm = &g_manager;
+    memset(pm, 0, sizeof(CIManager));
 
-    char *f_flag = ADFS_RUNNING_FLAG;	// adfs.flag
+    char *f_flag = _DFS_RUNNING_FLAG;	// running.flag
     if (access(f_flag, F_OK) != -1) {
 	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
 	pm->another_running = 1;
@@ -62,7 +60,7 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
     sprintf(pm->core_log, "%s/aicore.log", pm->log_dir);
 
-    if (aiu_init() < 0) { return -1; }
+    if (GIu_run() < 0) { return -1; }
 
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { return -1; }
@@ -76,21 +74,21 @@ int aim_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     return 0;
 }
 
-int aim_exit()
+int GIm_exit()
 {
-    AIManager *pm = &g_manager;
+    CIManager *pm = &g_manager;
     if (pm->another_running) { return 0; }
 
-    AIZone *pz = pm->z_head;
+    CIZone *pz = pm->z_head;
     while (pz) {
-	AIZone *tmp = pz;
+	CIZone *tmp = pz;
 	pz = pz->next;
 	tmp->release(tmp);
 	free(tmp);
     }
-    AINameSpace *pns = pm->ns_head;
+    CINameSpace *pns = pm->ns_head;
     while (pns) {
-	AINameSpace *tmp = pns;
+	CINameSpace *tmp = pns;
 	pns = pns->next;
 	kcdbclose(tmp->index_db);
 	kcdbdel(tmp->index_db);
@@ -98,20 +96,20 @@ int aim_exit()
     }
     log_release();
     curl_global_cleanup();
-    remove(ADFS_RUNNING_FLAG); 
+    remove(_DFS_RUNNING_FLAG); 
     return 0;
 }
 
-int aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
+int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, size_t fdata_len)
 {
-    AIManager *pm = &g_manager;
+    CIManager *pm = &g_manager;
     int exist = 1;
     char *old_list = NULL;
     size_t old_list_len;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
 
-    AINameSpace *pns = NULL;
+    CINameSpace *pns = NULL;
     pns = m_get_ns(name_space);
     if (pns == NULL) { return -1; }
     // (1) need to be released
@@ -119,17 +117,17 @@ int aim_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     if (old_list == NULL || old_list[old_list_len-1] == '$') {exist = 0;}
     if (exist && !overwrite) {goto ok1;} // exist and not overwrite
 
-    AIPosition *pp;	// may be used in "rollback" tag
+    CIPosition *pp;	// may be used in "rollback" tag
     // (2) need to be released
-    AIRecord air;
+    CIRecord air;
     air_init(&air);
 
-    AIZone *pz = pm->z_head;
+    CIZone *pz = pm->z_head;
     while (pz) {
-	AINode * pn = pz->rand_choose(pz);
-	char url[ADFS_MAX_LEN] = {0};
-	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	if (aic_upload(pn, url, fname, fdata, fdata_len) < 0) {
+	CINode * pn = pz->rand_choose(pz);
+	char url[_DFS_MAX_LEN] = {0};
+	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, air.uuid, name_space);
+	if (GIc_upload(pn, url, fname, fdata, fdata_len) < 0) {
 	    printf("upload error: %s\n", url);
 	    goto rollback;
 	}
@@ -164,11 +162,11 @@ rollback:
     pp = air.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
-	AINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
+	CINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
-	    char url[ADFS_MAX_LEN] = {0};
-	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, ADFS_UUID_LEN, air.uuid, name_space);
-	    aic_connect(pn, url, FLAG_ERASE);
+	    char url[_DFS_MAX_LEN] = {0};
+	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, air.uuid, name_space);
+	    GIc_connect(pn, url, FLAG_ERASE);
 	}
 	pp = pp->next;
     }
@@ -184,12 +182,12 @@ err1:
 // return value:
 // NULL:    file not found
 // url :    "char *" must be freed by caller
-char * aim_download(const char *ns, const char *fname, const char *history)
+char * GIm_download(const char *ns, const char *fname, const char *history)
 {
-    //AIManager *pm = &g_manager;
+    //CIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL) { name_space = "default"; }
-    AINameSpace *pns = m_get_ns(name_space);
+    CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) { return NULL; }
 
     int order = 0;
@@ -203,32 +201,32 @@ char * aim_download(const char *ns, const char *fname, const char *history)
     size_t vsize;
     char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
     if (line == NULL) {return NULL;}
-    char *url = (char *)malloc(ADFS_MAX_LEN);
+    char *url = (char *)malloc(_DFS_MAX_LEN);
     if (url == NULL) { goto err1; }
-    memset(url, 0, ADFS_MAX_LEN);
+    memset(url, 0, _DFS_MAX_LEN);
 
     char *record = m_get_history(line, order);
     if (record == NULL) { goto err2; }
 
-    AIZone *pz = m_choose_zone(record + ADFS_UUID_LEN);
+    CIZone *pz = m_choose_zone(record + _DFS_UUID_LEN);
     if (pz == NULL) { goto err3; }
     char *pos_zone = strstr(record, pz->name);
     char *pos_sharp = strstr(pos_zone, "#");
     char *pos_split = strstr(pos_sharp, "|");
     if (pos_split) {
-	char node_name[ADFS_FILENAME_LEN] = {0};
+	char node_name[_DFS_FILENAME_LEN] = {0};
 	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
-	AINode *pn = m_get_node(node_name, strlen(node_name));
+	CINode *pn = m_get_node(node_name, strlen(node_name));
 	if (pn == NULL) { goto err3; }
-	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+	snprintf(url, _DFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, _DFS_UUID_LEN, record);
     }
     else {
-	AINode *pn = m_get_node(pos_sharp+1, strlen(pos_sharp+1));
+	CINode *pn = m_get_node(pos_sharp+1, strlen(pos_sharp+1));
 	if (pn == NULL) { goto err3; }
-	snprintf(url, ADFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+	snprintf(url, _DFS_MAX_LEN, "http://%s/download/%s%.*s", pn->ip_port, fname, _DFS_UUID_LEN, record);
     }
-    strncat(url, "?namespace=", ADFS_MAX_LEN);
-    strncat(url, pns->name, ADFS_MAX_LEN);
+    strncat(url, "?namespace=", _DFS_MAX_LEN);
+    strncat(url, pns->name, _DFS_MAX_LEN);
 
     if (record) { free(record); }
     if (line) { kcfree(line); }
@@ -242,12 +240,12 @@ err1:
     return NULL;
 }
 
-int aim_delete(const char *ns, const char *fname)
+int GIm_delete(const char *ns, const char *fname)
 {
-    //AIManager *pm = &g_manager;
+    //CIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
-    AINameSpace *pns = m_get_ns(name_space);
+    CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) { return -1; }
 
     size_t vsize;
@@ -270,10 +268,10 @@ err1:
     return -1;
 }
 
-int aim_exist(const char *name_space, const char *fname)
+int GIm_exist(const char *name_space, const char *fname)
 {
     if (name_space == NULL) {name_space = "default";}
-    AINameSpace *pns = m_get_ns(name_space);
+    CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) {return 0;}
 
     size_t vsize;
@@ -284,28 +282,28 @@ int aim_exist(const char *name_space, const char *fname)
 }
 
 
-char * aim_status()
+char * GIm_status()
 {
     int size = 1024 * 32;
     char *p = malloc(size);
     if (p == NULL) {return NULL;}
     memset(p, 0, size);
 
-    AIManager *pm = &g_manager;
-    AIZone *pz = pm->z_head;
+    CIManager *pm = &g_manager;
+    CIZone *pz = pm->z_head;
     while (pz) {
 	strncat(p, "<li><font color=\"blue\">Zone: ", size);
 	strncat(p, pz->name, size);
 	strncat(p, "</font></li><table border=\"1\">\n", size);
 	strncat(p, "<tr><th>node</th><th>status</th></tr>\n", size);
-	AINode *pn = pz->head;
+	CINode *pn = pz->head;
 	while (pn) {
 	    strncat(p, "<tr><td>", size);
 	    strncat(p, pn->ip_port, size);
 	    strncat(p, "</td><td ", size);
 	    char url[1024] = {0};
 	    snprintf(url, sizeof(url), "http://%s/status", pn->ip_port);
-	    if (aic_connect(pn, url, FLAG_STATUS) >= 0) {strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);}
+	    if (GIc_connect(pn, url, FLAG_STATUS) >= 0) {strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);}
 	    else {strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size);}
 	    strncat(p, "</td></tr>", size);
 	    pn = pn->next;
@@ -338,7 +336,7 @@ static int m_init_ns(cJSON *json)
     if (j_tmp && (j_tmp = j_tmp->child)) {
 	while (j_tmp) {
 	    size_t len = strlen(j_tmp->valuestring);
-	    if (len == 0 || len >= ADFS_NAMESPACE_LEN) {
+	    if (len == 0 || len >= _DFS_NAMESPACE_LEN) {
 		fprintf(stderr, "[namespace]->create file error\n");
 		return -1;
 	    }
@@ -363,7 +361,7 @@ static int m_init_zone(cJSON *json)
 	while (j_tmp) {
 	    cJSON *j_name = cJSON_GetObjectItem(j_tmp, "name");
 	    cJSON *j_weight = cJSON_GetObjectItem(j_tmp, "weight");
-	    AIZone *pz = m_create_zone(j_name->valuestring, j_weight->valueint);
+	    CIZone *pz = m_create_zone(j_name->valuestring, j_weight->valueint);
 	    if (pz == NULL) {
 		fprintf(stderr, "[%s]->create zone error\n", j_name->valuestring);
 		return -1;
@@ -388,16 +386,16 @@ static int m_init_zone(cJSON *json)
     return 0;
 }
 
-static AIZone * m_create_zone(const char *name, int weight)
+static CIZone * m_create_zone(const char *name, int weight)
 {
-    AIManager * pm = &g_manager;
-    AIZone *pz = pm->z_head;
+    CIManager * pm = &g_manager;
+    CIZone *pz = pm->z_head;
     for (; pz; pz=pz->next) {
 	if (strcmp(pz->name, name) == 0 ) {return NULL;} 
     }
-    pz = (AIZone *)malloc(sizeof(AIZone));
+    pz = (CIZone *)malloc(sizeof(CIZone));
     if (pz == NULL) {return NULL;}
-    aiz_init(pz, name, weight);
+    GIZ_init(pz, name, weight);
     pz->prev = pm->z_tail;
     pz->next = NULL;
     if (pm->z_tail) {pm->z_tail->next = pz;}
@@ -408,18 +406,18 @@ static AIZone * m_create_zone(const char *name, int weight)
 
 static int m_create_ns(const char *name)
 {
-    AIManager * pm = &g_manager;
-    AINameSpace *pns = pm->ns_head;
+    CIManager * pm = &g_manager;
+    CINameSpace *pns = pm->ns_head;
     while (pns) {
 	if (strcmp(pns->name, name) == 0) { return -1; }
 	pns = pns->next;
     }
-    pns = malloc(sizeof(AINameSpace));
+    pns = malloc(sizeof(CINameSpace));
     if (pns == NULL) { return -1; }
-    memset(pns, 0, sizeof(AINameSpace));
+    memset(pns, 0, sizeof(CINameSpace));
 
     strncpy(pns->name, name, sizeof(pns->name));
-    char indexdb_path[ADFS_MAX_LEN] = {0};
+    char indexdb_path[_DFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
 	    pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
@@ -437,9 +435,9 @@ static int m_create_ns(const char *name)
     return 0;
 }
 
-static AINameSpace * m_get_ns(const char *ns)
+static CINameSpace * m_get_ns(const char *ns)
 {
-    AINameSpace *pns = g_manager.ns_head;
+    CINameSpace *pns = g_manager.ns_head;
     while (pns) {
 	if (strcmp(pns->name, ns) == 0) { return pns; }
 	pns = pns->next;
@@ -447,16 +445,16 @@ static AINameSpace * m_get_ns(const char *ns)
     return NULL;
 }
 
-static AINode * m_get_node(const char *node_name, size_t len)
+static CINode * m_get_node(const char *node_name, size_t len)
 {
     char *p = malloc(len+1);
     if (p == NULL) { return NULL; }
     memset(p, 0, len+1);
     strncpy(p, node_name, len);
 
-    AIZone *pz = g_manager.z_head;
+    CIZone *pz = g_manager.z_head;
     while (pz) {
-	AINode *pn = pz->head;
+	CINode *pn = pz->head;
 	while (pn) {
 	    if (strcmp(pn->name, p) == 0) {free(p); return pn;}
 	    pn = pn->next;
@@ -490,14 +488,14 @@ static char * m_get_history(const char *line, int order)
     return record;
 }
 
-static AIZone * m_choose_zone(const char *record)
+static CIZone * m_choose_zone(const char *record)
 {
     if (record == NULL) {return NULL;}
-    AIManager *pm = &g_manager;
-    AIZone *biggest_z = NULL;   // (weight/count)
-    AIZone *least_z = NULL;
+    CIManager *pm = &g_manager;
+    CIZone *biggest_z = NULL;   // (weight/count)
+    CIZone *least_z = NULL;
 
-    AIZone *pz = pm->z_head;
+    CIZone *pz = pm->z_head;
     for (; pz; pz = pz->next) {
 	if (strstr(record, pz->name) == NULL) {continue;}
 

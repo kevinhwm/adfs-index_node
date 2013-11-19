@@ -10,15 +10,15 @@
 #include <sys/time.h>	// gettimeofday
 #include "record.h"
 
-static void r_release(AIRecord *_this);
-static void r_create_uuid(AIRecord *_this);
-static int r_add(AIRecord *_this, const char *zone, const char *node);
-static char * r_get_string(AIRecord *_this);
+static void r_release(CIRecord *_this);
+static void r_create_uuid(CIRecord *_this);
+static int r_add(CIRecord *_this, const char *zone, const char *node);
+static char * r_get_string(CIRecord *_this);
 
-void air_init(AIRecord *pr)
+void air_init(CIRecord *pr)
 {
     if (pr) {
-	memset(pr, 0, sizeof(AIRecord));
+	memset(pr, 0, sizeof(CIRecord));
 	pr->add = r_add;
 	pr->release = r_release;
 	pr->get_string = r_get_string;
@@ -26,13 +26,13 @@ void air_init(AIRecord *pr)
     }
 }
 
-static void r_release(AIRecord *_this)
+static void r_release(CIRecord *_this)
 {
-    AIPosition *pp=_this->head, *tmp;
+    CIPosition *pp=_this->head, *tmp;
     while (pp) {tmp=pp; pp=pp->next; free(tmp);}
 }
 
-static void r_create_uuid(AIRecord *_this)
+static void r_create_uuid(CIRecord *_this)
 {
     time_t t;
     struct tm *lt;
@@ -46,9 +46,9 @@ static void r_create_uuid(AIRecord *_this)
     snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
 }
 
-static int r_add(AIRecord *_this, const char *zone, const char *node)
+static int r_add(CIRecord *_this, const char *zone, const char *node)
 {
-    AIPosition *pp = malloc(sizeof(AIPosition));
+    CIPosition *pp = malloc(sizeof(CIPosition));
     if (pp == NULL) { return -1; }
     _this->num++;
     snprintf(pp->zone_node, sizeof(pp->zone_node), "%s#%s", zone, node);
@@ -61,15 +61,15 @@ static int r_add(AIRecord *_this, const char *zone, const char *node)
     return 0;
 }
 
-static char * r_get_string(AIRecord *_this)
+static char * r_get_string(CIRecord *_this)
 {
-    int len = ADFS_UUID_LEN + _this->num * (sizeof(_this->head->zone_node)+1);
+    int len = _DFS_UUID_LEN + _this->num * (sizeof(_this->head->zone_node)+1);
     char *record = malloc(len);
     if (record == NULL) {return NULL;}
     memset(record, 0, len);
     strcpy(record, _this->uuid);
 
-    AIPosition *pp = _this->head;
+    CIPosition *pp = _this->head;
     while (pp) {
 	strcat(record, pp->zone_node);
 	strcat(record, "|");

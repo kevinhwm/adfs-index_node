@@ -8,8 +8,8 @@
 #include "../multipart_parser.h"
 #include "manager.h"
 
-extern AIManager g_manager;
-AIManager *pm = &g_manager;
+extern CIManager g_manager;
+CIManager *pm = &g_manager;
 
 static const char upload_handler_key; 
 #define UPLOAD_HANDLER_KEY ((nxe_data)&upload_handler_key)
@@ -31,9 +31,9 @@ typedef struct _upload_file_object {
     multipart_parser *		parser;
 }upload_file_object;
 
-static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length ) { return 0; }
+static int on_post_header_field(multipart_parser *mp_obj, const char *at, size_t length) { return 0; }
 
-static int on_post_header_value( multipart_parser *mp_obj, const char *at, size_t length )
+static int on_post_header_value(multipart_parser *mp_obj, const char *at, size_t length)
 {
     char buff[1024] = {0};
     strncpy( buff, at, length );
@@ -76,7 +76,7 @@ static int on_post_body( multipart_parser *mp_obj, const char *at, size_t length
 int on_post_finished (multipart_parser * mp_obj)
 {
     upload_file_object *pufo = multipart_parser_get_data( mp_obj );
-    if ( pufo->ffilemem ) {
+    if (pufo->ffilemem) {
 	fclose( pufo->ffilemem );
 	pufo->file_complete = 1;
 	pufo->ffilemem=NULL;
@@ -89,7 +89,7 @@ static nxweb_result upload_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp)
 { 
-    if (strlen(req->uri) >= ADFS_MAX_LEN) {
+    if (strlen(req->uri) >= _DFS_MAX_LEN) {
 	nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
@@ -111,7 +111,7 @@ static nxweb_result upload_on_request(
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
 
     int res = 0;
-    char fname[ADFS_MAX_LEN] = {0};
+    char fname[_DFS_MAX_LEN] = {0};
     if (fwb) {
 	ufo->parser_settings.on_header_field = on_post_header_field;
 	ufo->parser_settings.on_header_value = on_post_header_value;
@@ -131,11 +131,11 @@ static nxweb_result upload_on_request(
 		strncpy(fname, ufo->filename, sizeof(fname) ); 
 	    }
 
-	    if (strlen(fname) >= ADFS_FILENAME_LEN) {
+	    if (strlen(fname) >= _DFS_FILENAME_LEN) {
 		nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long.");
 		res = -1;
 	    }
-	    else if (aim_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) < 0) {
+	    else if (GIm_upload(namespace, ow, fname, ufo->file_ptr, ufo->file_len) < 0) {
 		nxweb_send_http_error(resp, 403, "Forbidden\nCannot save.");
 		res = -1;
 	    }
@@ -208,7 +208,7 @@ static nxweb_result upload_on_post_data(
     ufo->post_boundary[0] = '-';
     ufo->post_boundary[1] = '-';
 
-    if (strlen(req->uri) >= ADFS_MAX_LEN || req->content_length > pm->max_file_size) { 
+    if (strlen(req->uri) >= _DFS_MAX_LEN || req->content_length > pm->max_file_size) { 
 	ufo->fpostmem = fopen("/dev/null", "wb"); 
     }
     else { 

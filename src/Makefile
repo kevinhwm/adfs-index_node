@@ -9,7 +9,7 @@ LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
 idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
 	   if_upload.o if_download.o if_delete.o if_exist.o if_status.o \
-	   i_record.o i_zone.o i_connect.o i_stat.o i_update.o i_manager.o \
+	   i_record.o i_zone.o i_connect.o i_update.o i_manager.o \
 	   indexserver.o
 
 nd_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
@@ -31,7 +31,6 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_record.o index/record.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_zone.o index/zone.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_connect.o index/connect.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_stat.o index/stat.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
@@ -46,8 +45,8 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.conf bin
-	cp nodeserver node/nodeserver.conf bin
+	cp indexserver index/indexserver.json bin
+	cp nodeserver node/nodeserver.json bin
 
 debug:
 	mkdir -p bin
@@ -64,7 +63,6 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_record.o index/record.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_zone.o index/zone.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_stat.o index/stat.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
@@ -79,24 +77,24 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.conf bin
-	cp nodeserver node/nodeserver.conf bin
+	cp indexserver index/indexserver.json bin
+	cp nodeserver node/nodeserver.json bin
 
 .PHONY:install
 install:
 	mkdir -p /usr/local/adfs/index
-	cp bin/indexserver.conf /usr/local/adfs/index
+	cp bin/indexserver.json /usr/local/adfs/index
 	cp bin/indexserver /usr/local/bin
 	mkdir -p /usr/local/adfs/node
-	cp bin/nodeserver.conf /usr/local/adfs/node
+	cp bin/nodeserver.json /usr/local/adfs/node
 	cp bin/nodeserver /usr/local/bin
 
 .PHONY:uninstall
 uninstall:
 	-rm -f /usr/local/bin/indexserver
 	-rm -f /usr/local/bin/nodeserver
-	-rm /usr/local/bin/adfs/index/indexserver.conf
-	-rm /usr/local/bin/adfs/node/nodeserver.conf
+	-rm /usr/local/bin/adfs/index/indexserver.json
+	-rm /usr/local/bin/adfs/node/nodeserver.json
 	-rmdir /usr/local/bin/adfs/index
 	-rmdir /usr/local/bin/adfs/node
 	-rmdir /usr/local/bin/adfs

@@ -7,14 +7,14 @@
 #include <string.h>
 #include "zone.h"
 
-static int z_create(AIZone *_this, const char *name, const char *state, const char *ip_port);
-static void z_release(AIZone *_this);
-static AINode * z_rand_choose(AIZone *_this);
+static int z_create(CIZone *_this, const char *name, const char *state, const char *ip_port);
+static void z_release(CIZone *_this);
+static CINode * z_rand_choose(CIZone *_this);
 
-int aiz_init(AIZone *_this, const char *name, int weight)
+int GIZ_init(CIZone *_this, const char *name, int weight)
 {
     if (_this) {
-        memset(_this, 0, sizeof(AIZone));
+        memset(_this, 0, sizeof(CIZone));
         strncpy(_this->name, name, sizeof(_this->name));
         _this->weight = weight;
         _this->num = 0;
@@ -27,18 +27,18 @@ int aiz_init(AIZone *_this, const char *name, int weight)
     return -1;
 }
 
-static int z_create(AIZone *_this, const char *name, const char *state, const char *ip_port)
+static int z_create(CIZone *_this, const char *name, const char *state, const char *ip_port)
 {
-    for (AINode *pn = _this->head; pn; pn = pn->next) {
+    for (CINode *pn = _this->head; pn; pn = pn->next) {
         if (strcmp(pn->ip_port, ip_port) == 0 || strcmp(pn->name, name) == 0) { return -1; }
     }
 
-    AINode *new_node = (AINode *)malloc(sizeof(AINode));
+    CINode *new_node = (CINode *)malloc(sizeof(CINode));
     if (new_node == NULL) { return -1; }
-    memset(new_node, 0, sizeof(AINode));
+    memset(new_node, 0, sizeof(CINode));
     strncpy(new_node->name, name, sizeof(new_node->name));
     strncpy(new_node->ip_port, ip_port, sizeof(new_node->ip_port));
-    for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
+    for (int i=0; i<_DFS_NODE_CURL_NUM; ++i) {
         new_node->conn[i].curl = curl_easy_init();
         if (new_node->conn[i].curl == NULL) { return -1; }
 	new_node->conn[i].mutex = malloc(sizeof(pthread_mutex_t));
@@ -61,13 +61,13 @@ static int z_create(AIZone *_this, const char *name, const char *state, const ch
     return 0;
 }
 
-static void z_release(AIZone *_this)
+static void z_release(CIZone *_this)
 {
     while (_this->tail) {
-        AINode *pn = _this->tail;
+        CINode *pn = _this->tail;
         _this->tail = _this->tail->prev;
 
-        for (int i=0; i<ADFS_NODE_CURL_NUM; ++i) {
+        for (int i=0; i<_DFS_NODE_CURL_NUM; ++i) {
             curl_easy_cleanup(pn->conn[i].curl);
             pn->conn[i].curl = NULL;
             pthread_mutex_destroy(pn->conn[i].mutex);
@@ -77,10 +77,10 @@ static void z_release(AIZone *_this)
     }
 }
 
-static AINode * z_rand_choose(AIZone *_this)
+static CINode * z_rand_choose(CIZone *_this)
 {
     int n = rand()%(_this->num);
-    AINode *pn = _this->head;
+    CINode *pn = _this->head;
     for (int i=0; i<n; ++i) {pn = pn->next;}
     return pn;
 }

@@ -6,7 +6,7 @@
 #ifndef __RECORD_H__
 #define __RECORD_H__
 
-#include "../adfs.h"
+#include "../def.h"
 
 
 // format: "uuidzone#node|zone#node$uuidzone#node|zone#node..."
@@ -15,28 +15,28 @@
 // uuidzone#node|zone#node				-> a record. length of uuid is exactly 24 bytes
 // uuidzone#node|zone#node$uuidzone#node|zone#node	-> that real records look like
 
-typedef struct AIPosition
+typedef struct CIPosition
 {
-    char zone_node[ADFS_ZONENAME_LEN + ADFS_NODENAME_LEN];
+    char zone_node[_DFS_ZONENAME_LEN + _DFS_NODENAME_LEN];
 
-    struct AIPosition *prev;
-    struct AIPosition *next;
-}AIPosition;
+    struct CIPosition *prev;
+    struct CIPosition *next;
+}CIPosition;
 
 // record: uuid$zone#node|zone#node
-typedef struct AIRecord
+typedef struct CIRecord
 {
-    char uuid[ADFS_UUID_LEN + 8];
+    char uuid[_DFS_UUID_LEN + 8];
     int num;
-    struct AIPosition *head;
-    struct AIPosition *tail;
+    struct CIPosition *head;
+    struct CIPosition *tail;
     // function
-    int (*add)(struct AIRecord *, const char *, const char *);
-    void (*release)(struct AIRecord *);
-    char * (*get_string)(struct AIRecord *);
-}AIRecord;
+    int (*add)(struct CIRecord *, const char *, const char *);
+    void (*release)(struct CIRecord *);
+    char * (*get_string)(struct CIRecord *);
+}CIRecord;
 
-void air_init(AIRecord *);
+void air_init(CIRecord *);
 
 #endif // __RECORD_H__
 

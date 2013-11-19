@@ -29,14 +29,14 @@ static nxweb_result download_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    if (strlen(req->path_info) >= ADFS_MAX_LEN) {
+    if (strlen(req->path_info) >= _DFS_MAX_LEN) {
 	nxweb_send_http_error(resp, 400, "Failed. File name is too long.");
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
-    char fname[ADFS_MAX_LEN] = {0};
+    char fname[_DFS_MAX_LEN] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, NULL);
     char *pattern = "^(/[\\w./]{1,512}){1}(\\?[\\w%&=]+)?$";
@@ -48,7 +48,7 @@ static nxweb_result download_on_request(
     char msg[1024] = {0};
     void *pfile_data = NULL;
     size_t file_size = 0;
-    anm_get(name_space, fname, &pfile_data, &file_size);    // query db
+    GNm_get(name_space, fname, &pfile_data, &file_size);    // query db
     if (pfile_data == NULL) {
 	nxweb_send_http_error(resp, 404, "Failed. No file.");
 	snprintf(msg, sizeof(msg), "[%s:%s]->error.[%s]", name_space, fname, conn->remote_addr);
@@ -63,8 +63,8 @@ static nxweb_result download_on_request(
 	char *tmp = NULL;
 	while ( (tmp = strstr(file_name, "/")) ) {file_name = tmp + 1;}
 
-	char resp_name[ADFS_FILENAME_LEN] = {0};
-	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-ADFS_UUID_LEN), file_name);
+	char resp_name[_DFS_FILENAME_LEN] = {0};
+	snprintf( resp_name, sizeof(resp_name), "attachment; filename=%.*s", (int)(strlen(file_name)-_DFS_UUID_LEN), file_name);
 	nxweb_add_response_header(resp, "Content-disposition", resp_name );
 	nxweb_send_data( resp, pfile_data, file_size, "application/octet-stream" );
 	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);

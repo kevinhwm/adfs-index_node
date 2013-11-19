@@ -12,10 +12,10 @@ static nxweb_result delete_on_request(
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
-    char fname[ADFS_MAX_LEN] = {0};
+    char fname[_DFS_MAX_LEN] = {0};
     const char *name_space = NULL;
 
-    if (strlen(req->path_info) >= ADFS_MAX_LEN) {
+    if (strlen(req->path_info) >= _DFS_MAX_LEN) {
         nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive = 0;
         return NXWEB_ERROR;
@@ -33,7 +33,7 @@ static nxweb_result delete_on_request(
     }
 
     char msg[1024] = {0};
-    if (aim_delete(name_space, fname) < 0) {
+    if (GIm_delete(name_space, fname) < 0) {
         nxweb_send_http_error(resp, 500, "Internal Server Error");
 	resp->keep_alive = 0;
 	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);

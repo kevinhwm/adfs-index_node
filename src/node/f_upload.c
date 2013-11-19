@@ -102,7 +102,7 @@ static nxweb_result upload_on_request(
     const char *name_space = nx_simple_map_get_nocase(req->parameters, "namespace");
 
     int res = 0;
-    char fname[ADFS_MAX_LEN] = {0};
+    char fname[_DFS_MAX_LEN] = {0};
     upload_file_object *ufo = nxweb_get_request_data(req, UPLOAD_HANDLER_KEY).ptr;
     nxd_fwbuffer* fwb = &ufo->fwbuffer;
     if (fwb) {
@@ -125,7 +125,7 @@ static nxweb_result upload_on_request(
 		nxweb_send_http_error(resp, 400, "Failed. Check file name.");
 		res = -1;
 	    }
-	    else if (anm_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) < 0) {
+	    else if (GNm_save(name_space, fname, strlen(fname), ufo->file_ptr, ufo->file_len) < 0) {
 		nxweb_send_http_error(resp, 400, "Failed. Can not save.");
 		res = -1;
 	    }

@@ -13,22 +13,21 @@
 
 #include "namespace.h"
 #include "manager.h"
-#include "../adfs.h"
 
-static ANNameSpace * m_create_ns(const char *name_space);
-static ANNameSpace * m_get_ns(const char * name_space);
-static int m_init_log(cJSON *json);
-static int m_scan_kch(const char * dir);
-static int m_get_fileid(char * name);
+static int m_init_log(cJSON *json);				// initialize
+static int m_init_ns();						// initialize
 
-ANManager g_manager;
+static CNNameSpace * m_create_ns(const char *name_space);
+static CNNameSpace * m_get_ns(const char * name_space);
 
-int anm_init(const char * conf_file, unsigned long mem_size) 
+CNManager g_manager;
+
+int GNm_init(const char *conf_file, unsigned long mem_size) 
 {
-    ANManager *pm = &g_manager;
-    memset(pm, 0, sizeof(*pm));
+    CNManager *pm = &g_manager;
+    memset(pm, 0, sizeof(CNManager));
 
-    char *f_flag = ADFS_RUNNING_FLAG;
+    char *f_flag = _DFS_RUNNING_FLAG;
     if (access(f_flag, F_OK) != -1) {
 	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
 	pm->another_running = 1;
@@ -54,54 +53,47 @@ int anm_init(const char * conf_file, unsigned long mem_size)
     strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
     sprintf(pm->core_log, "%s/ancore.log", pm->log_dir);
 
-    if (anu_init() < 0) { return -1; }
+    if (GNu_run() < 0) { return -1; }
     
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { return -1; }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
 
-    DIR *dp = NULL;
-    struct dirent *dirp;
-    dp = opendir(pm->data_dir);
-    while ((dirp = readdir(dp)) != NULL) {
-	if ((dirp->d_type == DT_DIR) && (dirp->d_name[0] != '.')) {m_create_ns(dirp->d_name);}
-    }
-    closedir(dp);
-
+    if (m_init_ns() < 0) { return -1; }
     return 0;
 }
 
-int anm_exit() 
+int GNm_exit() 
 {
-    ANManager * pm = &g_manager;
+    CNManager * pm = &g_manager;
     if (pm->another_running) { return 0; }
 
-    pthread_rwlock_destroy(&pm->ns_lock);
-    ANNameSpace * pns = pm->head;
+    pthread_rwlock_wrlock(&pm->ns_lock);
+    CNNameSpace * pns = pm->head;
     while (pns) {
-	ANNameSpace *tmp = pns;
+	CNNameSpace *tmp = pns;
 	pns = pns->next;
-	kcdbclose(tmp->index_db);
-	kcdbdel(tmp->index_db);
 	tmp->release(tmp);
 	free(tmp);
     }
     log_release();
-    remove(ADFS_RUNNING_FLAG);
+    remove(_DFS_RUNNING_FLAG);
+    pthread_rwlock_unlock(&pm->ns_lock);
+    pthread_rwlock_destroy(&pm->ns_lock);
     return 0;
 }
 
-int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
+int GNm_save(const char * ns, const char *fname, size_t fname_len, void * fdata, size_t fdata_len)
 {
-    ANManager *pm = &g_manager;
-    ANNameSpace * pns = NULL;
+    CNManager *pm = &g_manager;
+    CNNameSpace * pns = NULL;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
     if (pns == NULL && (pns = m_create_ns(name_space)) == NULL) {return -1;}
     if (pns->needto_split(pns)) {
-	char db_args[ADFS_MAX_LEN] = {0};
+	char db_args[_DFS_MAX_LEN] = {0};
 	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
 	if (pns->split_db(pns, pm->data_dir, db_args) < 0) {return -1;}
     }
@@ -113,11 +105,11 @@ int anm_save(const char * ns, const char *fname, size_t fname_len, void * fdata,
     return 0;
 }
 
-int anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
+int GNm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
-    ANNameSpace * pns = NULL;
+    CNNameSpace * pns = NULL;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
@@ -133,9 +125,9 @@ int anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfil
     return 0;
 }
 
-int anm_erase(const char *ns, const char *fname)
+int GNm_erase(const char *ns, const char *fname)
 {
-    ANNameSpace * pns = NULL;
+    CNNameSpace * pns = NULL;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
@@ -144,106 +136,60 @@ int anm_erase(const char *ns, const char *fname)
     else {return -1;}
 }
 
-static ANNameSpace * m_get_ns(const char * name_space)
+static CNNameSpace * m_get_ns(const char * name_space)
 {
-    pthread_rwlock_rdlock(&g_manager.ns_lock);
-    ANNameSpace * tmp = g_manager.head;
-    while (tmp) {
-	if (strcmp(tmp->name, name_space) == 0) { pthread_rwlock_unlock(&g_manager.ns_lock); return tmp; }
-	tmp = tmp->next;
+    CNManager *pm = &g_manager;
+    pthread_rwlock_rdlock(&pm->ns_lock);
+    CNNameSpace * tmp = g_manager.head;
+    for (; tmp; tmp=tmp->next) {
+	if (strcmp(tmp->name, name_space) == 0) { 
+	    pthread_rwlock_unlock(&pm->ns_lock); 
+	    return tmp; 
+	}
     }
-    pthread_rwlock_unlock(&g_manager.ns_lock);
+    pthread_rwlock_unlock(&pm->ns_lock);
     return NULL;
 }
 
-static ANNameSpace * m_create_ns(const char *name_space)
+static CNNameSpace * m_create_ns(const char *name_space)
 {
-    if (strlen(name_space) >= ADFS_NAMESPACE_LEN) {return NULL;}
-    ANManager *pm = &g_manager;
+    if (strlen(name_space) >= _DFS_NAMESPACE_LEN) { return NULL; }
+    CNManager *pm = &g_manager;
 
     pthread_rwlock_wrlock(&pm->ns_lock);
-    ANNameSpace * tmp = pm->head;
-    while (tmp) {
-	if (strcmp(tmp->name, name_space) == 0) { pthread_rwlock_unlock(&pm->ns_lock); return tmp; }
-	tmp = tmp->next;
-    }
-    char ns_path[ADFS_MAX_LEN] = {0};
-    snprintf(ns_path, sizeof(ns_path), "%s/%s", pm->data_dir, name_space);
-    int max_id = m_scan_kch(ns_path);
-    char db_args[ADFS_MAX_LEN] = {0};
-    snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum *200, pm->kc_msiz);
-
-    ANNameSpace * pns = malloc(sizeof(ANNameSpace));
-    if (pns == NULL) { pthread_rwlock_unlock(&pm->ns_lock); return NULL; }
-    anns_init(pns, name_space);
-
-    char indexdb_path[ADFS_MAX_LEN] = {0};
-    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s/index.kch%s", pm->data_dir, name_space, db_args);
-    pns->index_db = kcdbnew();
-    int32_t res = kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK);
-    if (!res) {goto err1;}
-
-    for (int i=0; i <= max_id; ++i) {
-	if (i < max_id) {
-	    if (pns->create(pns, pm->data_dir, db_args, S_READ_ONLY) < 0) {goto err1;}
-	}
-	else {
-	    if (pns->create(pns, pm->data_dir, db_args, S_READ_WRITE) < 0) {goto err1;}
+    CNNameSpace * tmp = pm->head;
+    for (; tmp; tmp=tmp->next) {
+	if (strcmp(tmp->name, name_space) == 0) { 
+	    pthread_rwlock_unlock(&pm->ns_lock); 
+	    return tmp; 
 	}
     }
+
+    char db_args[_DFS_MAX_LEN] = {0};
+    snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum*400, pm->kc_msiz);
+
+    CNNameSpace * pns = malloc(sizeof(CNNameSpace));
+    if (pns == NULL) { goto err1; }
+    if (GNns_init(pns, name_space, pm->data_dir, db_args) < 0) { goto err2; }
 
     pns->prev = pm->tail;
     pns->next = NULL;
-    if (pm->tail) {pm->tail->next = pns;}
+    if (pm->tail) { pm->tail->next = pns; }
     else {pm->head = pns;}
     pm->tail = pns;
     pthread_rwlock_unlock(&pm->ns_lock);
+
     return pns;
-err1:
+err2:
+    pns->release(pns);
     free(pns);
+err1:
     pthread_rwlock_unlock(&pm->ns_lock);
     return NULL;
-}
-
-static int m_scan_kch(const char * dir)
-{
-    int max_id=0;
-    DIR* dp;
-    struct dirent* dirp;
-
-    dp = opendir( dir );
-    if( dp != NULL ) {
-	while ((dirp = readdir(dp)) != NULL) {
-	    int id = m_get_fileid(dirp->d_name);
-	    max_id = id > max_id ? id : max_id;
-	}
-	closedir( dp );
-    }
-    else {mkdir(dir, 0744);}
-    return max_id;
-}
-
-static int m_get_fileid(char * name)
-{
-    const int max_len = 8;
-    if (name == NULL) {return -1;}
-    if (strlen(name) > max_len) {return -1;}
-    char *pos = strstr(name, ".kch");
-    if (pos == NULL) {return -1;}
-    if (strcmp(pos, ".kch") != 0) {return -1;}
-
-    for (int i=0; i<pos-name; ++i) {
-	if (name[i] < '0' || name[i] > '9') {return -1;}
-    }
-    char tmp[max_len];
-    memset(tmp, 0, max_len);
-    strncpy(tmp, name, pos-name);
-    return atoi(tmp);
 }
 
 static int m_init_log(cJSON *json)
 {
-    // log_level
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
@@ -255,6 +201,24 @@ static int m_init_log(cJSON *json)
 	fprintf(stderr, "[log_level]->config value error");
 	return -1;
     }
+    return 0;
+}
+
+static int m_init_ns()
+{
+    CNManager *pm = &g_manager;
+    DIR *dp = NULL;
+    struct dirent *dirp;
+    dp = opendir(pm->data_dir);
+    while ((dirp = readdir(dp)) != NULL) {
+	if ((dirp->d_type == DT_DIR) && (dirp->d_name[0] != '.')) {
+	    if (m_create_ns(dirp->d_name) == NULL) { 
+		closedir(dp); 
+		return -1;
+	    }
+	}
+    }
+    closedir(dp);
     return 0;
 }
 

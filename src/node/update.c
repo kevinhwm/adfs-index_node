@@ -8,18 +8,18 @@
 #include <sys/stat.h>	// mkdir
 #include <unistd.h>
 #include <dirent.h>
-#include "../adfs.h"
+#include "../def.h"
 #include "manager.h"
 
+static int update(int order);
 static int identify(const char *version);
-static int update(const char *version);
 static int update_N0300();
 static int create_dir(const char *path);
 
-extern ANManager g_manager;
-static char ADFS_DATA_NODE[][16] = {"N0300", "N0301"};
+extern CNManager g_manager;
+static char _DFS_DATA_NODE[][16] = {"N0300", "N0301"};
 
-int anu_init()
+int GNu_run()
 {
     const char *ver_file = "version";
     char version[256] = {0};
@@ -30,35 +30,43 @@ int anu_init()
 	fclose(fver);
 	if (len >= sizeof(version)) { return -1; }
     }
-    else { sprintf(version, "%s", ADFS_DATA_NODE[0]); }
+    else { sprintf(version, "%s", _DFS_DATA_NODE[0]); }
 
-    if (identify(version) < 0) { return -1; }
-    if (update(version) < 0) { return -1; }
+    int order = identify(version);
+    if (order < 0) { return -1; }
+    if (update(order) < 0) { return -1; }
 
+    return 0;
+}
+
+static int update(int order)
+{
+    switch (order) {
+	case 0:
+	    if (update_N0300() < 0) { return -1; }
+	case 1:
+	    break;
+	default:
+	    return -1;
+    }
     return 0;
 }
 
 static int identify(const char *version)
 {
-    size_t all_len = sizeof(ADFS_DATA_NODE);
-    size_t len = sizeof(ADFS_DATA_NODE[0]);
+    size_t all_len = sizeof(_DFS_DATA_NODE);
+    size_t len = sizeof(_DFS_DATA_NODE[0]);
     int num = all_len/len;
 
     for (int i=0; i<num; ++i) {
-	if (strcmp(version, ADFS_DATA_NODE[i]) == 0) { return 0; }
+	if (strcmp(version, _DFS_DATA_NODE[i]) == 0) { return i; }
     }
     return -1;
 }
 
-static int update(const char *version)
-{
-    if (update_N0300() < 0) { return -1; }
-    return 0;
-}
-
 static int update_N0300()
 {
-    ANManager *pm = &g_manager;
+    CNManager *pm = &g_manager;
     if (create_dir(pm->data_dir) < 0) { return -1; }
     if (create_dir(pm->log_dir) < 0) { return -1; }
 

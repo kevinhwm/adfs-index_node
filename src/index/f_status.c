@@ -14,10 +14,10 @@ static nxweb_result status_on_request(
         nxweb_http_response* resp) 
 {
     nxweb_set_response_content_type(resp, "text/html");
-    nxweb_response_append_str(resp, "<html><head><title>ADFS - status</title></head><body>");
-    nxweb_response_append_str(resp, "<h3>ADFS status table</h3>");
+    nxweb_response_append_str(resp, "<html><head><title>status</title></head><body>");
+    nxweb_response_append_str(resp, "<h3>status table</h3>");
 
-    char *p = aim_status();
+    char *p = GIm_status();
     nxweb_response_append_str(resp, p);
     nxweb_response_append_str(resp, "</body></html>");
     free(p);

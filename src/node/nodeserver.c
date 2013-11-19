@@ -6,7 +6,7 @@
 #include <nxweb/nxweb.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../adfs.h"
+#include "../def.h"
 #include "manager.h"
 
 extern nxweb_handler upload_file_handler;
@@ -19,14 +19,12 @@ NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000);
 NXWEB_SET_HANDLER(erase, "/erase", &erase_handler, .priority=1000); 
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000); 
 
-extern ANManager g_manager;
-// Command-line options:
+extern CNManager g_manager;
+
 static const char* user_name=0;
 static const char* group_name=0;
 static int port=9527;
-//static int ssl_port=8056;
 
-// Server main():
 static void server_main() 
 {
     // Bind listening interfaces:
@@ -45,8 +43,8 @@ static void server_main()
     // Go!
     nxweb_run();
 
-    fprintf(stderr, "ADFS Node exit.\n");
-    anm_exit();
+    fprintf(stderr, "Node exit.\n");
+    GNm_exit();
 }
 
 static void show_help(void) 
@@ -62,21 +60,21 @@ static void show_help(void)
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file			(default: nodeserver.conf)\n"
+	    " -c file  config file			(default: nodeserver.json)\n"
 	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(no default, must be set.)\n"
 	    "\n"
-	    " example:  nodeserver -w ./ -c nodeserver.conf -d -P 10010 \n"
+	    " example:  nodeserver -w ./ -c nodeserver.json -d -P 10010 \n"
 	  );
 }
 
-void adfs_exit()
+void _dfs_exit()
 {
     static int flag = 0;
     if (flag) { return; }
     flag = 1;
-    fprintf(stderr, "ADFS Node exit.\n");
-    anm_exit();
+    fprintf(stderr, "Node exit.\n");
+    GNm_exit();
 }
 
 
@@ -86,11 +84,11 @@ int main(int argc, char** argv)
     int shutdown=0;
     const char* work_dir="/usr/local/adfs/node";
     const char* pid_file="nodeserver.pid";
-    const char* conf_file="nodeserver.conf";
+    const char* conf_file="nodeserver.json";
     unsigned long mem_size = 512;
 
     printf( "====================================================================\n"
-	    "                    ADFS - Node " ADFS_VERSION "\n"
+	    "                    Node " _DFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
     int c;
@@ -140,13 +138,13 @@ int main(int argc, char** argv)
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
 
-    if (anm_init(conf_file, mem_size) < 0) {
-	anm_exit();  
+    if (GNm_init(conf_file, mem_size) < 0) {
+	GNm_exit();  
 	return EXIT_FAILURE;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    ANManager *pm = &g_manager;
+    CNManager *pm = &g_manager;
     if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main); }
     else { nxweb_run_normal(work_dir, 0, pid_file, server_main); }
     return EXIT_SUCCESS;

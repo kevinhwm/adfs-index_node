@@ -8,46 +8,46 @@
 
 #include <pthread.h>
 #include <kclangc.h>
-#include "../adfs.h"
+#include "../def.h"
 
 #define NODE_MAX_FILE_NUM       50000
 
 
 typedef struct NodeDB
 {
-    int             id;
-    ADFS_NODE_STATE state;
-    char            path[ADFS_MAX_LEN];
-    KCDB        *   db;
-    unsigned long   count;
+    int             	id;
+    _DFS_NODE_STATE 	state;
+    char            	path[_DFS_MAX_LEN];
+    KCDB              * db;
+    unsigned long   	count;
 
-    struct NodeDB * prev;
-    struct NodeDB * next;
+    struct NodeDB     *	prev;
+    struct NodeDB     *	next;
 }NodeDB;
 
-typedef struct ANNameSpace
+typedef struct CNNameSpace
 {
-    char name[ADFS_NAMESPACE_LEN];
-    KCDB * index_db;
-    unsigned long number;
-    pthread_rwlock_t lock;
+    pthread_rwlock_t 	lock;
+    char 		name[_DFS_NAMESPACE_LEN];
+    unsigned long 	number;
+    KCDB 	      *	index_db;
 
     struct NodeDB * head;
     struct NodeDB * tail;
-    struct ANNameSpace * prev;
-    struct ANNameSpace * next;
+    struct CNNameSpace * prev;
+    struct CNNameSpace * next;
 
     // functions
-    void (*release)(struct ANNameSpace *);
-    int (*create)(struct ANNameSpace *, const char *path, const char *args, ADFS_NODE_STATE);
-    struct NodeDB * (*get)(struct ANNameSpace *, int);
-    int (*needto_split)(struct ANNameSpace * _this);
-    int (*split_db)(struct ANNameSpace * _this, const char *path, const char *args);
-    void (*count_add)(struct ANNameSpace * _this);
-}ANNameSpace;
+    void 		(*release)(struct CNNameSpace *);
+    int 		(*create)(struct CNNameSpace *, const char *path, const char *args, _DFS_NODE_STATE);
+    struct NodeDB * 	(*get)(struct CNNameSpace *, int);
+    int 		(*needto_split)(struct CNNameSpace * _this);
+    int 		(*split_db)(struct CNNameSpace * _this, const char *path, const char *args);
+    void 		(*count_add)(struct CNNameSpace * _this);
+}CNNameSpace;
 
 // namespace.c
-int anns_init(ANNameSpace *_this, const char * name_space);
+int GNns_init(CNNameSpace *_this, const char *name_space, const char *data_dir, const char *db_args);
 
 #endif // __NAMESPACE_H__
 

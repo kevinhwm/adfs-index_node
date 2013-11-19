@@ -90,7 +90,7 @@ void log_out(const char *module, const char *info, LOG_LEVEL level)
     if (pthread_mutex_lock(hlog->lock) != 0) {return ;}
     time(&t);
     localtime_r(&t, &lt);
-    strftime(fname, sizeof(fname), "log/%Y%m%d%H.log", &lt);
+    strftime(fname, sizeof(fname), "log/%Y%m%d.log", &lt);
     strftime(stime, sizeof(stime), "%Y-%m-%d %H:%M:%S", &lt);
 
     if (hlog->flog == NULL) { 

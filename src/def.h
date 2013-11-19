@@ -1,31 +1,32 @@
-/* adfs.h
+/* def.h
  *
  * kevinhwm@gmail.com
  */
 
-#ifndef __ADFS_H__
-#define __ADFS_H__
+#ifndef __DEF_H__
+#define __DEF_H__
 
-#define ADFS_VERSION		"3.3.2"
+#define _DFS_VERSION		"3.3.2.1"
 
-#define ADFS_MAX_LEN		1024
-#define ADFS_FILENAME_LEN	512
-#define ADFS_ZONENAME_LEN	128
-#define ADFS_NAMESPACE_LEN	128
-#define ADFS_NODENAME_LEN	128
-#define ADFS_UUID_LEN		24		// exactly 24 bytes
+#define _DFS_MAX_LEN		1024
+#define _DFS_FILENAME_LEN	512
+#define _DFS_ZONENAME_LEN	128
+#define _DFS_NAMESPACE_LEN	128
+#define _DFS_NODENAME_LEN	128
+#define _DFS_NODE_ID_LEN	12		// <num>.kch : 8+4=12
+#define _DFS_UUID_LEN		24		// exactly 24 bytes
 
-#define ADFS_RUNNING_FLAG	"adfs.flag"
+#define _DFS_RUNNING_FLAG	"running.flag"
 
 #include "cJSON.h"
 #include "log.h"
 
 
-typedef enum ADFS_NODE_STATE {
-    S_NA		=0,
+typedef enum {
+    S_NA		= 0,
     S_READ_ONLY,
     S_READ_WRITE
-}ADFS_NODE_STATE;
+}_DFS_NODE_STATE;
 
 //==============================================================================
 
@@ -60,5 +61,5 @@ void conf_release(cJSON *json);
 #define DBG_PRINTPN(x)
 #endif // DEBUG
 
-#endif // __ADFS_H__
+#endif // __DEF_H__
 

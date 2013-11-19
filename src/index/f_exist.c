@@ -12,7 +12,7 @@ static nxweb_result exist_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
 {
-    if (strlen(req->uri) >= ADFS_MAX_LEN) {
+    if (strlen(req->uri) >= _DFS_MAX_LEN) {
 	nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
@@ -21,7 +21,7 @@ static nxweb_result exist_on_request(
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
 
-    char fname[ADFS_MAX_LEN] = {0};
+    char fname[_DFS_MAX_LEN] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
     nxweb_url_decode(fname, NULL);
     char *pattern = "^(/[\\w./]{1,512}){1}(\\?[\\w%&=]+)?$";
@@ -31,7 +31,7 @@ static nxweb_result exist_on_request(
 	return -1;
     }
 
-    if (strlen(fname) >= ADFS_FILENAME_LEN) {
+    if (strlen(fname) >= _DFS_FILENAME_LEN) {
 	nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long. It must be less than 250");
 	resp->keep_alive = 0;
 	return -1;
@@ -39,7 +39,7 @@ static nxweb_result exist_on_request(
 
     char msg[1024] = {0};
     
-    if (aim_exist(name_space, fname)) {
+    if (GIm_exist(name_space, fname)) {
 	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
 	log_out("exist", msg, LOG_LEVEL_INFO);
 	nxweb_response_printf(resp, "OK" );
