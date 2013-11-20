@@ -104,8 +104,8 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
 {
     CIManager *pm = &g_manager;
     int exist = 1;
-    char *old_list = NULL;
-    size_t old_list_len = 0 ;
+    char *old_line = NULL;
+    size_t old_line_len = 0 ;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
 
@@ -113,14 +113,14 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     if (pns == NULL) { return -1; }
 
     // (1) need to be released
-    old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
-    if (old_list == NULL || old_list[old_list_len-1] == '$') { exist = 0; }
-    if (exist && !overwrite) { goto ok1; } // exist and not overwrite
+    old_line = kcdbget(pns->index_db, fname, strlen(fname), &old_line_len);
+    if (old_line == NULL || old_line[old_line_len-1] == '$') { exist = 0; }
+    if (exist && !overwrite) { goto ok1; } 		// exist and not overwrite
 
-    CIPosition *pp;	// may be used in "rollback" tag
+    CIPosition *pp;		// may be used in "rollback" tag
     // (2) need to be released
     CIFile a_file;
-    CIf_init(&a_file);
+    GIf_init(&a_file);
 
     CIZone *pz = pm->z_head;
     while (pz) {
@@ -139,7 +139,7 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     // (3) need to be released
     char *record = a_file.get_string(&a_file);
     if (record == NULL) {goto err1;}
-    if (old_list == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
+    if (old_line == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
     else {
 	long len = strlen(record) + 2;
 	// (4) need to be released
@@ -155,17 +155,17 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     if (record) {free(record);}
     a_file.release(&a_file);
 ok1:
-    if (old_list) {kcfree(old_list);}
+    if (old_line) {kcfree(old_line);}
     return 0;
 
 rollback:
-    pp = air.head;
+    pp = a_file.head;
     while (pp) {
 	char *pos_sharp = strstr(pp->zone_node, "#");
 	CINode *pn = m_get_node(pos_sharp + 1, strlen(pos_sharp +1));
 	if (pn != NULL) {
 	    char url[_DFS_MAX_LEN] = {0};
-	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, air.uuid, name_space);
+	    snprintf(url, sizeof(url), "http://%s/erase/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, a_file.uuid, name_space);
 	    GIc_connect(pn, url, FLAG_ERASE);
 	}
 	pp = pp->next;
@@ -174,8 +174,8 @@ rollback:
 err2:
     if (record) {free(record);}
 err1:
-    air.release(&air);
-    if (old_list) {kcfree(old_list);}
+    a_file.release(&a_file);
+    if (old_line) {kcfree(old_line);}
     return -1;
 }
 

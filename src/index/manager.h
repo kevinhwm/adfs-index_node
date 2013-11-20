@@ -13,7 +13,7 @@
 #include "../def.h"
 
 
-typedef struct {
+typedef struct CINameSpace {
     char name[ _DFS_NAMESPACE_LEN ];
     KCDB *index_db;
 
@@ -21,7 +21,7 @@ typedef struct {
     struct CINameSpace *next;
 }CINameSpace;
 
-typedef struct {
+typedef struct CIManager {
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;

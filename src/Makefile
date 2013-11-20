@@ -38,7 +38,7 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_upload.o node/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_download.o node/http_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_erase.o node/http_erase.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_status.o node/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_status.o node/http_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_manager.o node/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_namespace.o node/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_update.o node/update.c
@@ -54,11 +54,11 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o log.o log.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o multipart_parser.o multipart_parser.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_upload.o index/f_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_download.o index/f_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_delete.o index/f_delete.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_exist.o index/f_exist.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o index/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_upload.o index/http_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_download.o index/http_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_delete.o index/http_delete.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_exist.o index/http_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_status.o index/http_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_meta.o index/meta.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_zone.o index/zone.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
@@ -66,10 +66,10 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(idx_OBJS) $(LIBS)
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_upload.o node/f_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_download.o node/f_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_erase.o node/f_erase.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nf_status.o node/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_upload.o node/http_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_download.o node/http_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_erase.o node/http_erase.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_status.o node/http_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_manager.o node/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_namespace.o node/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o n_update.o node/update.c

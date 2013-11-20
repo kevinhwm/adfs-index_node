@@ -56,40 +56,37 @@ int GIf_init(struct CIFile *_this)
 
 
 
-static void f_release(CIFile *_this);
-static void f_create_uuid(CIFile *_this);
+static int f_release(CIFile *_this);
 static int f_add(CIFile *_this, const char *zone, const char *node);
 static char * f_get_string(CIFile *_this);
 
-void GIf_init(CIFile *pr)
+////////////////////////////////////////////////////////////////////////////////
+// just function
+static void create_uuid(CIFile *_this);
+
+int GIf_init(CIFile *_this)
 {
-    if (pr) {
-	memset(pr, 0, sizeof(CIFile));
-	pr->add = f_add;
-	pr->release = f_release;
-	pr->get_string = f_get_string;
-	f_create_uuid(pr);
+    if (_this == NULL) { return -1; }
+    memset(_this, 0, sizeof(CIFile));
+
+    _this->add = f_add;
+    _this->release = f_release;
+    _this->get_string = f_get_string;
+    create_uuid(_this);
+    return 0;
+}
+
+static int f_release(CIFile *_this)
+{
+    for (struct CIPosition *pp = _this->head, *tmp = NULL;
+	    pp;
+	)
+    {
+	tmp=pp; 
+	pp=pp->next; 
+	free(tmp); 
     }
-}
-
-static void f_release(CIFile *_this)
-{
-    CIPosition *pp=_this->head, *tmp;
-    while (pp) {tmp=pp; pp=pp->next; free(tmp);}
-}
-
-static void f_create_uuid(CIFile *_this)
-{
-    time_t t;
-    struct tm lt;
-    struct timeval tv;
-    char buf[32] = {0};
-
-    time(&t);
-    localtime_r(&t, &lt);
-    gettimeofday(&tv, NULL);
-    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &lt);
-    snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
+    return 0;
 }
 
 static int f_add(CIFile *_this, const char *zone, const char *node)
@@ -124,5 +121,20 @@ static char * f_get_string(CIFile *_this)
     // set the last "|" to be "\0"
     a_file[strlen(a_file)-1] = '\0';
     return a_file;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+static void create_uuid(CIFile *_this)
+{
+    time_t t;
+    struct tm lt;
+    struct timeval tv;
+    char buf[32] = {0};
+
+    time(&t);
+    localtime_r(&t, &lt);
+    gettimeofday(&tv, NULL);
+    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &lt);
+    snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
 }
 

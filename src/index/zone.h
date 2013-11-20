@@ -20,7 +20,7 @@ typedef enum {
     FLAG_STATUS,
 } FLAG_CONNECTION;
 
-typedef struct {
+typedef struct CINode {
     struct {
 	CURL *curl;
 	pthread_mutex_t *mutex;
@@ -36,7 +36,7 @@ typedef struct {
     struct CINode *next;
 }CINode;
 
-typedef struct {
+typedef struct CIZone {
     char name[_DFS_ZONENAME_LEN];
     int num;
     double weight;

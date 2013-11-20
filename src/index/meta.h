@@ -9,21 +9,24 @@
 #include "../def.h"
 
 
-typedef struct {
+typedef struct CIPosition {
     // <zone>#<node>
+    /*
     char zone[_DFS_ZONENAME_LEN];
     char node[_DFS_NODENAME_LEN];
     char split;
+    */
+    char zone_node[_DFS_ZONENAME_LEN + _DFS_NODENAME_LEN + 2];
 
     struct CIPosition *prev;
     struct CIPosition *next;
 
     int (*init)(const char *zone, const char *node);
-}CIPosition;
+}CIPosition ;
 
-typedef struct {
+typedef struct CIFile {
     // <uuid><position>|<position>|<position>
-    char uuid[_DFS_UUID_LEN];
+    char uuid[_DFS_UUID_LEN +8];
     int num;
     char split;
 
@@ -31,6 +34,10 @@ typedef struct {
     struct CIPosition *tail;
     struct CIFile *prev;
     struct CIFile *next;
+
+    int (*release)(struct CIFile *);
+    int (*add)(struct CIFile *, const char *zone, const char *node);
+    char * (*get_string)(struct CIFile *);
 
     /*
     int (*release)(struct CIFile *);
@@ -40,6 +47,7 @@ typedef struct {
     */
 }CIFile;
 
+/*
 typedef struct {
     // <file>$<file>$<file>
     // <file>$<file>$<file>$
@@ -55,8 +63,10 @@ typedef struct {
     char * (*output)(struct CILine *);
 }CILine;
 
-int GIf_init(struct CIFile *);
 int GIl_init(struct CILine *);
+*/
+
+int GIf_init(CIFile *);
 
 #endif // __LINE_H__
 
