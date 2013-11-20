@@ -11,7 +11,7 @@ static int z_create(CIZone *_this, const char *name, const char *state, const ch
 static void z_release(CIZone *_this);
 static CINode * z_rand_choose(CIZone *_this);
 
-int GIZ_init(CIZone *_this, const char *name, int weight)
+int GIz_init(CIZone *_this, const char *name, int weight)
 {
     if (_this) {
         memset(_this, 0, sizeof(CIZone));

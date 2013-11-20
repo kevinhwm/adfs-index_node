@@ -7,18 +7,21 @@
 #define __MANAGER_H__
 
 #include <kclangc.h>
+#include <pthread.h>
 #include "zone.h"
+#include "meta.h"
 #include "../def.h"
 
 
-typedef struct CINameSpace {
-    char name[_DFS_NAMESPACE_LEN];
-    KCDB * index_db;
+typedef struct {
+    char name[ _DFS_NAMESPACE_LEN ];
+    KCDB *index_db;
+
     struct CINameSpace *prev;
     struct CINameSpace *next;
 }CINameSpace;
 
-typedef struct CIManager {
+typedef struct {
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;

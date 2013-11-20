@@ -8,12 +8,12 @@ INCLUDE = -I/usr/local/include/
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
 idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
-	   if_upload.o if_download.o if_delete.o if_exist.o if_status.o \
-	   i_record.o i_zone.o i_connect.o i_update.o i_manager.o \
+	   ihttp_upload.o ihttp_download.o ihttp_delete.o ihttp_exist.o ihttp_status.o \
+	   i_meta.o i_zone.o i_connect.o i_update.o i_manager.o \
 	   indexserver.o
 
 nd_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
-	  nf_upload.o nf_download.o nf_erase.o nf_status.o \
+	  nhttp_upload.o nhttp_download.o nhttp_erase.o nhttp_status.o \
 	  n_namespace.o n_update.o n_manager.o \
 	  nodeserver.o
 
@@ -23,22 +23,22 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o log.o log.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o if_upload.o index/f_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o if_download.o index/f_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o if_delete.o index/f_delete.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o if_exist.o index/f_exist.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o if_status.o index/f_status.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_record.o index/record.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_upload.o index/http_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_download.o index/http_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_delete.o index/http_delete.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_exist.o index/http_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_status.o index/http_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_meta.o index/meta.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_zone.o index/zone.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(idx_OBJS) $(LIBS)
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o nf_upload.o node/f_upload.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o nf_download.o node/f_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o nf_erase.o node/f_erase.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o nf_status.o node/f_status.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_upload.o node/http_upload.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_download.o node/http_download.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_erase.o node/http_erase.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_status.o node/f_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_manager.o node/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_namespace.o node/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o n_update.o node/update.c
@@ -49,7 +49,6 @@ release:
 	cp nodeserver node/nodeserver.json bin
 
 debug:
-	mkdir -p bin
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o function.o function.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o conf.o conf.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o cJSON.o cJSON.c
@@ -60,7 +59,7 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_delete.o index/f_delete.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_exist.o index/f_exist.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o index/f_status.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_record.o index/record.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_meta.o index/meta.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_zone.o index/zone.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
@@ -79,6 +78,7 @@ debug:
 	mkdir -p bin
 	cp indexserver index/indexserver.json bin
 	cp nodeserver node/nodeserver.json bin
+
 
 .PHONY:install
 install:

@@ -1,4 +1,4 @@
-/* log.c
+/* log.h
  *
  * kevinhwm@gmail.com
  */

@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 
 #include "manager.h"
-#include "record.h"
+#include "meta.h"
 #include "../cJSON.h"
 
 
@@ -105,39 +105,39 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     CIManager *pm = &g_manager;
     int exist = 1;
     char *old_list = NULL;
-    size_t old_list_len;
+    size_t old_list_len = 0 ;
     const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
 
-    CINameSpace *pns = NULL;
-    pns = m_get_ns(name_space);
+    CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) { return -1; }
+
     // (1) need to be released
     old_list = kcdbget(pns->index_db, fname, strlen(fname), &old_list_len);
-    if (old_list == NULL || old_list[old_list_len-1] == '$') {exist = 0;}
-    if (exist && !overwrite) {goto ok1;} // exist and not overwrite
+    if (old_list == NULL || old_list[old_list_len-1] == '$') { exist = 0; }
+    if (exist && !overwrite) { goto ok1; } // exist and not overwrite
 
     CIPosition *pp;	// may be used in "rollback" tag
     // (2) need to be released
-    CIRecord air;
-    air_init(&air);
+    CIFile a_file;
+    CIf_init(&a_file);
 
     CIZone *pz = pm->z_head;
     while (pz) {
 	CINode * pn = pz->rand_choose(pz);
 	char url[_DFS_MAX_LEN] = {0};
-	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, air.uuid, name_space);
+	snprintf(url, sizeof(url), "http://%s/upload_file/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, a_file.uuid, name_space);
 	if (GIc_upload(pn, url, fname, fdata, fdata_len) < 0) {
 	    printf("upload error: %s\n", url);
 	    goto rollback;
 	}
-	air.add(&air, pz->name, pn->name);
+	a_file.add(&a_file, pz->name, pn->name);
 	pz = pz->next;
     }
 
     // add record
     // (3) need to be released
-    char *record = air.get_string(&air);
+    char *record = a_file.get_string(&a_file);
     if (record == NULL) {goto err1;}
     if (old_list == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
     else {
@@ -153,7 +153,7 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     }
 
     if (record) {free(record);}
-    air.release(&air);
+    a_file.release(&a_file);
 ok1:
     if (old_list) {kcfree(old_list);}
     return 0;
@@ -395,7 +395,7 @@ static CIZone * m_create_zone(const char *name, int weight)
     }
     pz = (CIZone *)malloc(sizeof(CIZone));
     if (pz == NULL) {return NULL;}
-    GIZ_init(pz, name, weight);
+    GIz_init(pz, name, weight);
     pz->prev = pm->z_tail;
     pz->next = NULL;
     if (pm->z_tail) {pm->z_tail->next = pz;}
