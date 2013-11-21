@@ -107,7 +107,7 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     char *old_line = NULL;
     size_t old_line_len = 0 ;
     const char *name_space = ns;
-    if (name_space == NULL) {name_space = "default";}
+    if (name_space == NULL) { name_space = "default"; }
 
     CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) { return -1; }
@@ -115,6 +115,7 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     // (1) need to be released
     old_line = kcdbget(pns->index_db, fname, strlen(fname), &old_line_len);
     if (old_line == NULL || old_line[old_line_len-1] == '$') { exist = 0; }
+    if (old_line) { kcfree(old_line); old_line = NULL;}
     if (exist && !overwrite) { goto ok1; } 		// exist and not overwrite
 
     CIPosition *pp;		// may be used in "rollback" tag
@@ -138,24 +139,21 @@ int GIm_upload(const char *ns, int overwrite, const char *fname, void *fdata, si
     // add record
     // (3) need to be released
     char *record = a_file.get_string(&a_file);
-    if (record == NULL) {goto err1;}
-    if (old_line == NULL) {kcdbset(pns->index_db, fname, strlen(fname), record, strlen(record));}
-    else {
-	long len = strlen(record) + 2;
-	// (4) need to be released
-	char *new_list = malloc(len);
-	if (new_list == NULL)  {goto err2;}
+    if (record == NULL) { goto err1; }
+    size_t len = strlen(record) + 2;
+    // (4) need to be released
+    char *new_list = malloc(len);
+    if (new_list == NULL)  { goto err2; }
 
-	if (exist) {snprintf(new_list, len, "$%s", record);}
-	else {snprintf(new_list, len, "%s", record);}
-	kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
-	if (new_list) {free(new_list);}
-    }
+    snprintf(new_list, len, "$%s", record);
+    int res = kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
 
-    if (record) {free(record);}
+    if (new_list) { free(new_list); }
+    if (record) { free(record); }
     a_file.release(&a_file);
+
+    if (!res) { return -1; }
 ok1:
-    if (old_line) {kcfree(old_line);}
     return 0;
 
 rollback:
@@ -172,19 +170,14 @@ rollback:
     }
     goto err1;
 err2:
-    if (record) {free(record);}
+    if (record) { free(record); }
 err1:
     a_file.release(&a_file);
-    if (old_line) {kcfree(old_line);}
     return -1;
 }
 
-// return value:
-// NULL:    file not found
-// url :    "char *" must be freed by caller
 char * GIm_download(const char *ns, const char *fname, const char *history)
 {
-    //CIManager *pm = &g_manager;
     const char *name_space = ns;
     if (name_space == NULL) { name_space = "default"; }
     CINameSpace *pns = m_get_ns(name_space);
@@ -240,11 +233,23 @@ err1:
     return NULL;
 }
 
+int GIm_exist(const char *name_space, const char *fname)
+{
+    if (name_space == NULL) { name_space = "default"; }
+    CINameSpace *pns = m_get_ns(name_space);
+    if (pns == NULL) { return 0; }
+
+    size_t vsize;
+    char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
+    if (line == NULL) { return 0; }
+    else if (line[vsize-1] == '$') { kcfree(line); return 0; }
+    else { kcfree(line); return 1; }
+}
+
 int GIm_delete(const char *ns, const char *fname)
 {
-    //CIManager *pm = &g_manager;
     const char *name_space = ns;
-    if (name_space == NULL) {name_space = "default";}
+    if (name_space == NULL) { name_space = "default"; }
     CINameSpace *pns = m_get_ns(name_space);
     if (pns == NULL) { return -1; }
 
@@ -252,14 +257,7 @@ int GIm_delete(const char *ns, const char *fname)
     char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
     if (line == NULL) { return -1; }
     if (line[vsize-1] == '$') {goto ok1;}
-
-    char *new_line = malloc(vsize+4);
-    if (new_line == NULL) {goto err1;}
-    memset(new_line, 0, vsize+4);
-    strcpy(new_line, line);
-    strcat(new_line, "$");
-    kcdbset(pns->index_db, fname, strlen(fname), new_line, strlen(new_line));
-    free(new_line);
+    if ( !kcdbappend(pns->index_db, fname, strlen(fname), "$", 1) ) { goto err1; };
 ok1:
     kcfree(line);
     return 0;
@@ -267,20 +265,6 @@ err1:
     kcfree(line);
     return -1;
 }
-
-int GIm_exist(const char *name_space, const char *fname)
-{
-    if (name_space == NULL) {name_space = "default";}
-    CINameSpace *pns = m_get_ns(name_space);
-    if (pns == NULL) {return 0;}
-
-    size_t vsize;
-    char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
-    if (line == NULL) {return 0;}
-    else if (line[vsize-1] == '$') {kcfree(line); return 0;}
-    else {kcfree(line); return 1;}
-}
-
 
 char * GIm_status()
 {

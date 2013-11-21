@@ -11,51 +11,6 @@
 #include "meta.h"
 
 
-/*
-static int l_release(struct CILine *_this);
-static int l_add_rec(struct CILine *_this);
-static int l_del_rec(struct CILine *_this);
-static char * l_output(struct CILine *_this);
-
-
-int GIL_init(struct CILine *_this)
-{
-    if (_this == NULL) { return -1; }
-    memset(_this, 0, sizeof(CILine));
-
-    _this->split = '$';
-    _this->release = l_release();
-    _this->add_rec = l_add_rec;
-    _this->del_rec = l_del_rec;
-    _this->output = l_output;
-    return 0;
-}
-
-
-static int f_release(struct CIFile *_this);
-static int f_add_pos(struct CIRcord *_this);
-static int f_del_pos(struct CIRcord *_this);
-static int f_output(struct CIRcord *_this);
-
-
-
-int GIf_init(struct CIFile *_this)
-{
-    if (_this == NULL) { return -1; }
-    memset(_this, 0, sizeof(CILine));
-
-    _this->split = '|';
-    _this->release = f_release;
-    _this->add_pos = f_add_pos;
-    _this->del_pos = f_del_pos;
-    _this->output = f_output;
-    return 0;
-}
-*/
-
-
-
-
 static int f_release(CIFile *_this);
 static int f_add(CIFile *_this, const char *zone, const char *node);
 static char * f_get_string(CIFile *_this);
@@ -78,12 +33,11 @@ int GIf_init(CIFile *_this)
 
 static int f_release(CIFile *_this)
 {
-    for (struct CIPosition *pp = _this->head, *tmp = NULL;
-	    pp;
-	)
-    {
-	tmp=pp; 
-	pp=pp->next; 
+    CIPosition *pp = _this->head, 
+	       *tmp = NULL;
+    while (pp) {
+	tmp = pp; 
+	pp = pp->next; 
 	free(tmp); 
     }
     return 0;
@@ -93,6 +47,8 @@ static int f_add(CIFile *_this, const char *zone, const char *node)
 {
     CIPosition *pp = malloc(sizeof(CIPosition));
     if (pp == NULL) { return -1; }
+    memset(pp, 0, sizeof(CIPosition));
+
     _this->num++;
     snprintf(pp->zone_node, sizeof(pp->zone_node), "%s#%s", zone, node);
 
@@ -135,6 +91,6 @@ static void create_uuid(CIFile *_this)
     localtime_r(&t, &lt);
     gettimeofday(&tv, NULL);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &lt);
-    snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03d", buf, tv.tv_usec, rand()%1000);
+    snprintf(_this->uuid, sizeof(_this->uuid), "_%s%06ld%03x", buf, tv.tv_usec, rand()%0x1000);
 }
 

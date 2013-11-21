@@ -46,8 +46,8 @@ int 	GIm_init(const char *file_conf, long bnum, unsigned long mem_size, unsigned
 int 	GIm_exit();
 int 	GIm_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
 char *	GIm_download(const char *name_space, const char *fname, const char *history);
-int	GIm_delete(const char *name_space, const char *fname);
 int	GIm_exist(const char *name_space, const char *fname);
+int	GIm_delete(const char *name_space, const char *fname);
 char * 	GIm_status();
 
 // connect.c
@@ -58,4 +58,5 @@ int GIc_connect(CINode *pn, const char *url, FLAG_CONNECTION);
 int GIu_run();
 
 #endif // __MANAGER_H__
+
 
