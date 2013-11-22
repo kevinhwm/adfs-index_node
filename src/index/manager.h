@@ -48,6 +48,7 @@ int 	GIm_upload(const char *name_space, int overwrite, const char *fname, void *
 char *	GIm_download(const char *name_space, const char *fname, const char *history);
 int	GIm_exist(const char *name_space, const char *fname);
 int	GIm_delete(const char *name_space, const char *fname);
+int 	GIm_setnode(const char *node_name, const char *attr_rw);
 char * 	GIm_status();
 
 // connect.c

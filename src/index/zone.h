@@ -21,12 +21,12 @@ typedef enum {
 } FLAG_CONNECTION;
 
 typedef struct CINode {
+
     struct {
 	CURL *curl;
 	pthread_mutex_t *mutex;
 	FLAG_CONNECTION flag;
     } conn[ _DFS_NODE_CURL_NUM ];
-
     char name[ _DFS_NODENAME_LEN ];
     char ip_port[ _DFS_NODENAME_LEN ];
     _DFS_NODE_STATE state;
@@ -37,22 +37,22 @@ typedef struct CINode {
 }CINode;
 
 typedef struct CIZone {
+
     char name[_DFS_ZONENAME_LEN];
     int num;
-    double weight;
-    double count;
 
     struct CINode *head;
     struct CINode *tail;
     struct CIZone *prev;
     struct CIZone *next;
+
     // function
     int (*create)(struct CIZone *, const char *, const char *, const char *);
     void (*release)(struct CIZone *);
-    CINode * (*rand_choose)(struct CIZone *);
+    CINode ** (*get_nodelist)(struct CIZone *_this, int *pnum);
 }CIZone;
 
-int GIz_init(CIZone *_this, const char *name, int weight);
+int GIz_init(CIZone *_this, const char *name);
 
 #endif // __ZONE_H__
 

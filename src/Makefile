@@ -8,7 +8,7 @@ INCLUDE = -I/usr/local/include/
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
 idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
-	   ihttp_upload.o ihttp_download.o ihttp_delete.o ihttp_exist.o ihttp_status.o \
+	   ihttp_upload.o ihttp_download.o ihttp_exist.o ihttp_delete.o ihttp_setnode.o ihttp_status.o \
 	   i_meta.o i_zone.o i_connect.o i_update.o i_manager.o \
 	   indexserver.o
 
@@ -25,8 +25,9 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_upload.o index/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_download.o index/http_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_delete.o index/http_delete.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_exist.o index/http_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_delete.o index/http_delete.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_setnode.o index/http_setnode.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_status.o index/http_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_meta.o index/meta.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_zone.o index/zone.c
@@ -56,8 +57,9 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_upload.o index/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_download.o index/http_download.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_delete.o index/http_delete.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_exist.o index/http_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_delete.o index/http_delete.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_setnode.o index/http_setnode.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_status.o index/http_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_meta.o index/meta.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_zone.o index/zone.c

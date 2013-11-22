@@ -10,14 +10,16 @@
 
 extern nxweb_handler upload_file_handler;
 extern nxweb_handler download_handler;
-extern nxweb_handler delete_handler;
 extern nxweb_handler exist_handler;
+extern nxweb_handler delete_handler;
+extern nxweb_handler setnode_handler;
 extern nxweb_handler status_handler;
 
 NXWEB_SET_HANDLER(upload, "/upload", &upload_file_handler, .priority=1000);
 NXWEB_SET_HANDLER(download, "/download", &download_handler, .priority=1000); 
-NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(exist, "/exist", &exist_handler, .priority=1000); 
+NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
+NXWEB_SET_HANDLER(setnode, "/setnode", &setnode_handler, .priority=1000);
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
 extern CIManager g_manager;
