@@ -6,7 +6,7 @@
 #ifndef __DEF_H__
 #define __DEF_H__
 
-#define _DFS_VERSION		"3.3.4"
+#define _DFS_VERSION		"3.3.5"
 
 #define _DFS_MAX_LEN		1024
 #define _DFS_FILENAME_LEN	512
@@ -31,6 +31,7 @@ typedef enum {
 //==============================================================================
 
 // function.c
+int create_dir(const char *path);
 int get_filename_from_url(char * p, char *pattern);
 
 // conf.c

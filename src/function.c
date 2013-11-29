@@ -5,8 +5,21 @@
 
 #include <string.h>
 #include <pcre.h>
+#include <sys/stat.h>	// mkdir
+#include <dirent.h>
 
 static int match(char *src, char *pattern);
+
+int create_dir(const char *path)
+{
+    DIR *dp = NULL;
+    dp = opendir(path);
+    if (dp == NULL) {
+	if (mkdir(path, 0755) < 0) { return -1; }
+    }
+    else { closedir(dp); }
+    return 0;
+}
 
 int get_filename_from_url(char * p, char *pattern)
 {

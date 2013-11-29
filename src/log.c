@@ -13,7 +13,7 @@
 
 static struct LogFile *hlog = NULL;
 
-int log_init(LOG_LEVEL level)
+int log_init(LOG_LEVEL level, const char *instance_id)
 {
     time_t t;
     struct tm lt;
@@ -34,10 +34,13 @@ int log_init(LOG_LEVEL level)
     if (pthread_mutex_init(hlog->lock, NULL) != 0) { goto err2; }
 
     // instance_id
-    time(&t);
-    localtime_r(&t, &lt);
-    strftime(buf, sizeof(buf), "%y%m%d", &lt);
-    snprintf(hlog->instance_id, sizeof(hlog->instance_id), "ID%s%04d", buf, rand()%10000);
+    if (instance_id == NULL) {
+	time(&t);
+	localtime_r(&t, &lt);
+	strftime(buf, sizeof(buf), "%y%m%d", &lt);
+	snprintf(hlog->instance_id, sizeof(hlog->instance_id), "ID%s%04d", buf, rand()%10000);
+    }
+    else { strncpy(hlog->instance_id, instance_id, sizeof(hlog->instance_id)); }
 
     // log_dir
     strncpy(hlog->log_dir, "log", sizeof(hlog->log_dir));
@@ -99,7 +102,7 @@ void log_out(const char *module, const char *info, LOG_LEVEL level)
 	strncpy(hlog->fname, fname, sizeof(hlog->fname));
 	fprintf(hlog->flog, "\n");
     }
-    else if (strcmp(fname, hlog->fname) != 0) {
+    else if (strcmp(fname, hlog->fname)) {
 	fclose(hlog->flog);
 	hlog->flog = fopen(fname, "a");
 	if (hlog->flog == NULL) { return ; }

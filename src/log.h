@@ -29,7 +29,7 @@ typedef struct LogFile
     FILE * 		flog;
 }LogFile;
 
-int log_init(LOG_LEVEL level);
+int log_init(LOG_LEVEL level, const char *instance_id);
 void log_release();
 void log_out(const char *module, const char *info, LOG_LEVEL level);
 

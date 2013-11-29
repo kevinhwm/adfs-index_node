@@ -7,9 +7,9 @@ CFLAGS = -std=c99 -Wall -D_GNU_SOURCE
 INCLUDE = -I/usr/local/include/ 
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
-idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
+idx_OBJS = function.o conf.o cJSON.o log.o md5.o multipart_parser.o \
 	   ihttp_upload.o ihttp_download.o ihttp_exist.o ihttp_delete.o ihttp_setnode.o ihttp_status.o \
-	   i_meta.o i_zone.o i_connect.o i_update.o i_manager.o \
+	   i_meta.o i_zone.o i_connect.o i_update.o i_syn_primary.o i_syn_secondary.o i_manager.o \
 	   indexserver.o
 
 nd_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
@@ -22,6 +22,7 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o conf.o conf.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o log.o log.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o md5.o md5.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_upload.o index/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o ihttp_download.o index/http_download.c
@@ -34,6 +35,8 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_syn_primary.o index/syn_primary.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_syn_secondary.o index/syn_secondary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(idx_OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_upload.o node/http_upload.c
@@ -46,14 +49,15 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.json bin
-	cp nodeserver node/nodeserver.json bin
+	cp indexserver index/indexserver.conf bin
+	cp nodeserver node/nodeserver.conf bin
 
 debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o function.o function.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o conf.o conf.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o cJSON.o cJSON.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o log.o log.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o md5.o md5.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o multipart_parser.o multipart_parser.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_upload.o index/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ihttp_download.o index/http_download.c
@@ -66,6 +70,8 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_syn_primary.o index/syn_primary.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_syn_secondary.o index/syn_secondary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(idx_OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_upload.o node/http_upload.c
@@ -78,25 +84,25 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.json bin
-	cp nodeserver node/nodeserver.json bin
+	cp indexserver index/indexserver.conf bin
+	cp nodeserver node/nodeserver.conf bin
 
 
 .PHONY:install
 install:
 	mkdir -p /usr/local/adfs/index
-	cp bin/indexserver.json /usr/local/adfs/index
+	cp bin/indexserver.conf /usr/local/adfs/index
 	cp bin/indexserver /usr/local/bin
 	mkdir -p /usr/local/adfs/node
-	cp bin/nodeserver.json /usr/local/adfs/node
+	cp bin/nodeserver.conf /usr/local/adfs/node
 	cp bin/nodeserver /usr/local/bin
 
 .PHONY:uninstall
 uninstall:
 	-rm -f /usr/local/bin/indexserver
 	-rm -f /usr/local/bin/nodeserver
-	-rm /usr/local/bin/adfs/index/indexserver.json
-	-rm /usr/local/bin/adfs/node/nodeserver.json
+	-rm /usr/local/bin/adfs/index/indexserver.conf
+	-rm /usr/local/bin/adfs/node/nodeserver.conf
 	-rmdir /usr/local/bin/adfs/index
 	-rmdir /usr/local/bin/adfs/node
 	-rmdir /usr/local/bin/adfs

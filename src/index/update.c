@@ -5,8 +5,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>	// mkdir
-#include <unistd.h>
 #include <dirent.h>
 #include "../def.h"
 #include "manager.h"
@@ -15,9 +13,7 @@
 static int identify(const char *version);
 static int update(int order);
 static int update_I0300();
-static int create_dir(const char *path);
 
-extern CIManager g_manager;
 static char _DFS_DATA_INDEX[][16] = {"I0300", "I0301"};
 
 int GIu_run()
@@ -67,9 +63,8 @@ static int update(int order)
 
 static int update_I0300()
 {
-    CIManager *pm = &g_manager;
-    if (create_dir(pm->data_dir) < 0) { return -1; }
-    if (create_dir(pm->log_dir) < 0) { return -1; }
+    if (create_dir(MNGR_DATA_DIR) < 0) { return -1; }
+    if (create_dir(MNGR_LOG_DIR) < 0) { return -1; }
 
     DIR *dp = NULL;
     struct dirent *dirp = NULL;
@@ -80,12 +75,12 @@ static int update_I0300()
 	if (dirp->d_type == DT_DIR) { continue; }
 	if (strstr(dirp->d_name, ".kch") != NULL) {
 	    char tmp[512] = {0};
-	    sprintf(tmp, "%s/%s", pm->data_dir, dirp->d_name);
+	    sprintf(tmp, "%s/%s", MNGR_DATA_DIR, dirp->d_name);
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	}
 	if (strstr(dirp->d_name, ".log") != NULL) {
 	    char tmp[512] = {0};
-	    sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);
+	    sprintf(tmp, "%s/%s", MNGR_LOG_DIR, dirp->d_name);
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	}
     }
@@ -95,17 +90,6 @@ static int update_I0300()
     fprintf(f, "I0301");
     fclose(f);
 
-    return 0;
-}
-
-static int create_dir(const char *path)
-{
-    DIR *dp = NULL;
-    dp = opendir(path);
-    if (dp == NULL) {
-	if (mkdir(path, 0755) < 0) { return -1; }
-    }
-    else { closedir(dp); }
     return 0;
 }
 

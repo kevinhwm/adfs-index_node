@@ -1,4 +1,4 @@
-/* f_delete.c
+/* http_delete.c
  *
  * kevinhwm@gmail.com
  */
@@ -6,12 +6,19 @@
 #include "nxweb/nxweb.h"
 #include "manager.h"
 
+extern CIManager g_manager;
 
 static nxweb_result delete_on_request(
         nxweb_http_server_connection* conn, 
         nxweb_http_request* req, 
         nxweb_http_response* resp) 
 {
+    if ( !g_manager.primary ) {
+        nxweb_send_http_error(resp, 400, "Bad Request");
+	resp->keep_alive = 0;
+        return NXWEB_ERROR;
+    }
+
     char fname[_DFS_MAX_LEN] = {0};
     const char *name_space = NULL;
 

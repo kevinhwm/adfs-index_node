@@ -4,19 +4,24 @@
  */
 
 #include <string.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <kclangc.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <curl/curl.h>
+#include <kclangc.h>
 
 #include "manager.h"
 #include "meta.h"
 #include "../cJSON.h"
+#include "../md5.h"
 
 
 static int m_init_log(cJSON *json);				// initialize
 static int m_init_ns(cJSON *json);				// initialize
 static int m_init_zone(cJSON *json);				// initialize
+static int m_init_syn();					// initialize
 static CIZone * m_create_zone(const char *name);		// initialize
 static int m_create_ns(const char *name);			// initialize
 
@@ -26,18 +31,23 @@ static CINode * m_get_node(const char *node_name, size_t len);	// dynamic no wri
 static char * m_get_history(const char *, int);			// dynamic - download
 static CINode * m_choose(const char * record);			// dynamic - download
 
+////////////////////////////////////////////////////////////////////////////////
+// just function
+//static int create_id();						// initialize
+//static int run_syn();						// initialize
+
 
 CIManager g_manager;
 
-int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned long max_file_size)
+int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, unsigned long mem_size, unsigned long max_file_size)
 {
     CIManager *pm = &g_manager;
     memset(pm, 0, sizeof(CIManager));
 
     char *f_flag = _DFS_RUNNING_FLAG;	// running.flag
     if (access(f_flag, F_OK) != -1) {
-	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
 	pm->another_running = 1;
+	fprintf(stderr, "-> another instance is running...\n-> exit\n");
 	return -1;
     }
     else {
@@ -45,8 +55,8 @@ int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 	time_t t;
 	char stime[64] = {0};
 	time(&t);
-	FILE *f = fopen(f_flag, "wb+");
-	if (f == NULL) { return -1; }
+	FILE *f = fopen(f_flag, "w");
+	if (f == NULL) { fprintf(stderr, "-> create running-flag file\n"); return -1; }
 	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
@@ -56,21 +66,25 @@ int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     pm->kc_bnum = bnum;
     pm->kc_msiz = mem_size *1024*1024;
     pm->max_file_size = max_file_size *1024*1024;
-    strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
-    strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
-    sprintf(pm->core_log, "%s/aicore.log", pm->log_dir);
+    pm->primary = role;
+    pm->exit_flag = 0;
+    pm->th_syn = 0;
+    if (syn_dir == NULL) { fprintf(stderr, "-> syn dir error\n"); return -1; }
+    strncpy(pm->syn_dir, syn_dir, sizeof(pm->syn_dir));
 
-    if (GIu_run() < 0) { return -1; }
+    srand(time(NULL));
+    curl_global_init(CURL_GLOBAL_ALL);
+
+    if (GIu_run() < 0) { fprintf(stderr, "-> update data error\n"); return -1; }
 
     cJSON *json = conf_parse(conf_file);
-    if (json == NULL) { return -1; }
+    if (json == NULL) { fprintf(stderr, "-> parser config file error\n"); return -1; }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
     if (m_init_ns(json) < 0) { conf_release(json); return -1; }
     if (m_init_zone(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
 
-    curl_global_init(CURL_GLOBAL_ALL);
-    srand(time(NULL));
+    if (m_init_syn() < 0) { return -1; }
     return 0;
 }
 
@@ -78,6 +92,10 @@ int GIm_exit()
 {
     CIManager *pm = &g_manager;
     if (pm->another_running) { return 0; }
+
+    if (!pm->primary && (pm->th_syn != 0)) {
+	pthread_join(pm->th_syn, NULL);
+    }
 
     CIZone *pz = pm->z_head;
     while (pz) {
@@ -95,6 +113,8 @@ int GIm_exit()
 	free(tmp);
     }
     log_release();
+    GIsp_release();
+    GIss_release();
     curl_global_cleanup();
     remove(_DFS_RUNNING_FLAG); 
     return 0;
@@ -155,12 +175,12 @@ int GIm_upload(const char *name_space, int overwrite, const char *fname, void *f
 
     snprintf(new_list, len, "$%s", record);
     int res = kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
+    
+    if (!res || GIsp_export(pm->syn_dir, name_space, fname, new_list)<0) { goto err3; }
 
     if (new_list) { free(new_list); }
     if (record) { free(record); }
     a_file.release(&a_file);
-
-    if (!res) { return -1; }
     return 0;
 
 rollback:
@@ -174,6 +194,8 @@ rollback:
 	}
     }
     goto err1;
+err3:
+    if (new_list) { free(new_list); }
 err2:
     if (record) { free(record); }
 err1:
@@ -302,13 +324,14 @@ char * GIm_status()
 
 static int m_init_log(cJSON *json)
 {
+    CIManager *pm = &g_manager;
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
 	fprintf(stderr, "[log_level]->config file error\n");
 	return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
-    if (log_init(log_level) < 0) {
+    if (log_init(log_level, pm->instance_id) < 0) {
 	fprintf(stderr, "[log_level]->config value error\n");
 	return -1;
     }
@@ -367,6 +390,36 @@ static int m_init_zone(cJSON *json)
     return 0;
 }
 
+static int m_init_syn()
+{
+    CIManager *pm = &g_manager;
+    unsigned char buf[16] = {0};
+    unsigned char src[128] = {0};
+
+    FILE *f_instance = fopen(MNGR_INSTANCE_F, "r");
+    if (f_instance == NULL) {
+	f_instance = fopen(MNGR_INSTANCE_F, "w");
+	if (f_instance == NULL) { fprintf(stderr, "can not create instance id file\n"); return -1; }
+	snprintf((char *)src, sizeof(src)-1, "%u%u", rand(), (unsigned int)time(NULL));
+	md5(src, strlen((char *)src), buf);
+	for (int i=0; i<16; ++i) {
+	    sprintf(pm->instance_id+2*i, "%02x", buf[i]);
+	}
+	fwrite(pm->instance_id, 1, strlen(pm->instance_id), f_instance);
+    }
+    else { fread(pm->instance_id, 1, sizeof(pm->instance_id), f_instance); }
+    fclose(f_instance);
+
+    if (pm->primary) {
+	if (GIsp_init() < 0) { fprintf(stderr, "syn init error\n"); return -1; }
+    }
+    else {
+	if (GIss_init() < 0) { fprintf(stderr, "syn init error\n"); return -1; }
+    }
+
+    return 0;
+}
+
 static CIZone * m_create_zone(const char *name)
 {
     CIManager * pm = &g_manager;
@@ -401,7 +454,7 @@ static int m_create_ns(const char *name)
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[_DFS_MAX_LEN] = {0};
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-	    pm->data_dir, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
 	free(pns);

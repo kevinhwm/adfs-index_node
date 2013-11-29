@@ -5,7 +5,7 @@
 
 #include <nxweb/nxweb.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <getopt.h>
 #include "../def.h"
 #include "manager.h"
 
@@ -42,9 +42,6 @@ static void server_main()
 
     // Go!
     nxweb_run();
-
-    fprintf(stderr, "Node exit.\n");
-    GNm_exit();
 }
 
 static void show_help(void) 
@@ -60,11 +57,11 @@ static void show_help(void)
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file			(default: nodeserver.json)\n"
+	    " -c file  config file			(default: nodeserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(no default, must be set.)\n"
 	    "\n"
-	    " example:  nodeserver -w ./ -c nodeserver.json -d -P 10010 \n"
+	    " example:  nodeserver -w ./ -c nodeserver.conf -d -P 10010 \n"
 	  );
 }
 
@@ -82,9 +79,9 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char* work_dir="/usr/local/adfs/node";
+    const char* work_dir=".";
     const char* pid_file="nodeserver.pid";
-    const char* conf_file="nodeserver.json";
+    const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
     printf( "====================================================================\n"
@@ -144,9 +141,11 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    CNManager *pm = &g_manager;
-    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main); }
+    if (daemon) { nxweb_run_daemon(work_dir, MNGR_LOG_DIR "/" MNGR_CORE_LOG, pid_file, server_main); }
     else { nxweb_run_normal(work_dir, 0, pid_file, server_main); }
+
+    fprintf(stderr, "Node exit.\n");
+    GNm_exit();
     return EXIT_SUCCESS;
 }
 

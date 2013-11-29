@@ -38,7 +38,7 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
 	time_t t;
 	char stime[64] = {0};
 	time(&t);
-	FILE *f = fopen(f_flag, "wb+");
+	FILE *f = fopen(f_flag, "w");
 	if (f == NULL) { return -1; }
 	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
@@ -49,9 +49,6 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
     pm->kc_bnum = 100000;
     pm->kc_msiz = mem_size *1024*1024;
     pthread_rwlock_init(&pm->ns_lock, NULL);
-    strncpy(pm->data_dir, "data", sizeof(pm->data_dir));
-    strncpy(pm->log_dir, "log", sizeof(pm->log_dir));
-    sprintf(pm->core_log, "%s/ancore.log", pm->log_dir);
 
     if (GNu_run() < 0) { return -1; }
     
@@ -95,7 +92,7 @@ int GNm_save(const char * ns, const char *fname, size_t fname_len, void * fdata,
     if (pns->needto_split(pns)) {
 	char db_args[_DFS_MAX_LEN] = {0};
 	snprintf(db_args, sizeof(db_args), "#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-	if (pns->split_db(pns, pm->data_dir, db_args) < 0) {return -1;}
+	if (pns->split_db(pns, MNGR_DATA_DIR, db_args) < 0) {return -1;}
     }
     if (!kcdbset(pns->tail->db, fname, fname_len, fdata, fdata_len)) {return -1;}
     pns->count_add(pns);
@@ -170,7 +167,7 @@ static CNNameSpace * m_create_ns(const char *name_space)
 
     CNNameSpace * pns = malloc(sizeof(CNNameSpace));
     if (pns == NULL) { goto err1; }
-    if (GNns_init(pns, name_space, pm->data_dir, db_args) < 0) { goto err2; }
+    if (GNns_init(pns, name_space, MNGR_DATA_DIR, db_args) < 0) { goto err2; }
 
     pns->prev = pm->tail;
     pns->next = NULL;
@@ -197,7 +194,7 @@ static int m_init_log(cJSON *json)
         return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
-    if (log_init(log_level) < 0) {
+    if (log_init(log_level, NULL) < 0) {
 	fprintf(stderr, "[log_level]->config value error");
 	return -1;
     }
@@ -206,10 +203,9 @@ static int m_init_log(cJSON *json)
 
 static int m_init_ns()
 {
-    CNManager *pm = &g_manager;
     DIR *dp = NULL;
     struct dirent *dirp;
-    dp = opendir(pm->data_dir);
+    dp = opendir(MNGR_DATA_DIR);
     while ((dirp = readdir(dp)) != NULL) {
 	if ((dirp->d_type == DT_DIR) && (dirp->d_name[0] != '.')) {
 	    if (m_create_ns(dirp->d_name) == NULL) { 

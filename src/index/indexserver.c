@@ -5,7 +5,7 @@
 
 #include <nxweb/nxweb.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <getopt.h>
 #include "manager.h"
 
 extern nxweb_handler upload_file_handler;
@@ -22,7 +22,6 @@ NXWEB_SET_HANDLER(delete, "/delete", &delete_handler, .priority=1000);
 NXWEB_SET_HANDLER(setnode, "/setnode", &setnode_handler, .priority=1000);
 NXWEB_SET_HANDLER(status, "/status", &status_handler, .priority=1000);
 
-extern CIManager g_manager;
 
 static const char* user_name=0;
 static const char* group_name=0;
@@ -48,9 +47,6 @@ static void server_main()
 
     // Go!
     nxweb_run();
-
-    fprintf(stderr, "Index exit.\n");
-    GIm_exit();
 }
 
 static void show_help(void) 
@@ -61,20 +57,18 @@ static void show_help(void)
 	    " -s       shutdown nxweb\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
 	    " -w dir   set work dir			(default: /usr/local/adfs/index)\n"
-	    //" -u user  set process uid\n"
-	    //" -g group set process gid\n"
 	    " -P port  set http port\n"
 	    " -h       show this help\n"
 	    " -v       show version\n"
 
-	    " -c file  config file			(default: indexserver.json)\n"
+	    " -c file  config file			(default: indexserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
 	    " -b bnum  set the number of buckets	(default: 1048576)\n"
-	    //" -x dir   set database dir		(no default, must be set.)\n"
+	    " -t dir   set syn dir"
 
 	    "\n"
-	    " example:  indexserver -w ./ -c indexserver.json -d \n"
+	    " example:  indexserver -w ./ -c indexserver.conf -d \n"
 	   );
 }
 
@@ -91,12 +85,33 @@ int main(int argc, char** argv)
 {
     int daemon=0;
     int shutdown=0;
-    const char *work_dir="/usr/local/adfs/index";
+    const char *work_dir=".";
     const char *pid_file="indexserver.pid";
-    const char *conf_file="indexserver.json";
+    const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
     long bnum = 1048576;
+    int role = 0;
+    const char *syn_dir = NULL;
+    const char * short_options = "hvdsp:w:u:g:P:c:m:M:b:t:";
+    struct option long_options[] = {
+	{ "main", 0, &role, 1},
+	{ NULL, 0, NULL, 'h' },
+	{ NULL, 0, NULL, 'v' },
+	{ NULL, 0, NULL, 'd' },
+	{ NULL, 0, NULL, 's' },
+	{ NULL, 1, NULL, 'p' },
+	{ NULL, 1, NULL, 'w' },
+	{ NULL, 1, NULL, 'u' },
+	{ NULL, 1, NULL, 'g' },
+	{ NULL, 1, NULL, 'P' },
+	{ NULL, 1, NULL, 'c' },
+	{ NULL, 1, NULL, 'm' },
+	{ NULL, 1, NULL, 'M' },
+	{ NULL, 1, NULL, 'b' },
+	{ NULL, 1, NULL, 't' },
+	{ NULL, 0, NULL, 0 }
+    };
 
     fprintf(stdout, 
 	    "====================================================================\n"
@@ -105,7 +120,7 @@ int main(int argc, char** argv)
 	    "====================================================================\n" );
 
     int c;
-    while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:M:b:")) != -1) 
+    while ((c=getopt_long(argc, argv, short_options, long_options, NULL)) != -1) 
     {
 	switch (c) 
 	{
@@ -142,7 +157,9 @@ int main(int argc, char** argv)
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
+	    case 't': syn_dir = optarg; break;
+	    //case 0: role = 1; break;
+	    case '?': fprintf(stdout, "unkown option: %c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
@@ -166,15 +183,17 @@ int main(int argc, char** argv)
     // nxweb_run_xxx will call "chdir" again.
     work_dir = "./";
 
-    if (GIm_init(conf_file, bnum, mem_size, max_file_size) < 0) {
+    if (GIm_init(conf_file, syn_dir, role, bnum, mem_size, max_file_size) < 0) {
 	GIm_exit();
 	return EXIT_FAILURE;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    CIManager *pm = &g_manager;
-    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
+    if (daemon) { nxweb_run_daemon(work_dir, MNGR_LOG_DIR "/" MNGR_CORE_LOG, pid_file, server_main);}
     else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
+
+    fprintf(stderr, "Index exit.\n");
+    GIm_exit();
     return EXIT_SUCCESS;
 }
 

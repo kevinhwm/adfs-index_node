@@ -7,14 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void conf_read_and_filter(const char *conf_file, char **data);
+static int conf_read_and_filter(const char *conf_file, char **data);
 
 cJSON * conf_parse(char *conf_file)
 {
     char *data = NULL;
     cJSON *json = NULL;
 
-    conf_read_and_filter(conf_file, &data);
+    if (conf_read_and_filter(conf_file, &data) < 0) { return NULL; }
     json = cJSON_Parse(data);
     if (data) { free(data); }
     return json;
@@ -22,7 +22,7 @@ cJSON * conf_parse(char *conf_file)
 
 void conf_release(cJSON *json) { cJSON_Delete(json); }
 
-static void conf_read_and_filter(const char *conf_file, char **data)
+static int conf_read_and_filter(const char *conf_file, char **data)
 {
     long flen;
     char buf[1024];
@@ -30,6 +30,7 @@ static void conf_read_and_filter(const char *conf_file, char **data)
     FILE *f;
 
     f = fopen(conf_file, "rb");
+    if (f == NULL) { return -1; }
     fseek(f, 0, SEEK_END);
     flen = ftell(f);
     fseek(f, 0, SEEK_SET);
@@ -41,6 +42,6 @@ static void conf_read_and_filter(const char *conf_file, char **data)
 	strcpy(pd, buf);
 	pd += strlen(buf);
     }
-    return ;
+    return 0;
 }
 

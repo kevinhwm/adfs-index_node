@@ -10,16 +10,16 @@
 #include "namespace.h"
 #include "../def.h"
 
+#define MNGR_DATA_DIR		"data"
+#define MNGR_LOG_DIR		"log"
+#define MNGR_CORE_LOG		"ncore.log"
+
 
 typedef struct CNManager {
     unsigned long kc_apow;
     unsigned long kc_fbp;
     unsigned long kc_bnum;
     unsigned long kc_msiz;
-
-    char data_dir[32];
-    char log_dir[32];
-    char core_log[32];
 
     int another_running;
 

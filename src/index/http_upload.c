@@ -89,6 +89,11 @@ static nxweb_result upload_on_request(
 	nxweb_http_request* req, 
 	nxweb_http_response* resp)
 { 
+    if ( !g_manager.primary ) {
+        nxweb_send_http_error(resp, 400, "Bad Request");
+	resp->keep_alive = 0;
+        return NXWEB_ERROR;
+    }
     if (strlen(req->uri) >= _DFS_MAX_LEN) {
 	nxweb_send_http_error(resp, 414, "Request-URI Too Long");
 	resp->keep_alive=0;
