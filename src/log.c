@@ -34,7 +34,7 @@ int log_init(LOG_LEVEL level, const char *instance_id)
     if (pthread_mutex_init(hlog->lock, NULL) != 0) { goto err2; }
 
     // instance_id
-    if (instance_id == NULL) {
+    if (instance_id == NULL || strlen(instance_id) == 0) {
 	time(&t);
 	localtime_r(&t, &lt);
 	strftime(buf, sizeof(buf), "%y%m%d", &lt);

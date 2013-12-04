@@ -324,14 +324,13 @@ char * GIm_status()
 
 static int m_init_log(cJSON *json)
 {
-    CIManager *pm = &g_manager;
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
 	fprintf(stderr, "[log_level]->config file error\n");
 	return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
-    if (log_init(log_level, pm->instance_id) < 0) {
+    if (log_init(log_level, g_manager.instance_id) < 0) {
 	fprintf(stderr, "[log_level]->config value error\n");
 	return -1;
     }

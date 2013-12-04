@@ -3,14 +3,27 @@
  * kevinhwm@gmail.com
  */
 
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "manager.h"
 #include "../md5.h"
 
+#define _DFS_INC_ID_MAX		16
+
+
+static int sp_fin();
+static void *th_fun(void *param);
+static int scan_fin(const char * dir);
+static int get_fileid(char * name);
+
+
 static struct CISynPrim{
     pthread_mutex_t lock;
-    FILE *f_inc
+    pthread_t th_cls;
+    FILE *f_inc;
     char f_name[512];
-    int count;
+    int num;
 }syn_prim;
 
 int GIsp_init()
@@ -75,16 +88,19 @@ int GIsp_init()
 	fclose(f_r_tid);
     }
 
-    memset(syn_prim, 0, sizeof(syn_prim));
-    if (pthread_mutex_lock(&syn_prim.lock, NULL) != 0) { return -1; }
+    memset(&syn_prim, 0, sizeof(syn_prim));
+    if (pthread_mutex_init(&syn_prim.lock, NULL) != 0) { return -1; }
+    if (pthread_create(&syn_prim.th_cls, NULL, th_fun, NULL) < 0) { return -1; }
 
     return 0;
 }
 
 int GIsp_release()
 {
+    pthread_cancel(syn_prim.th_cls);
+
     pthread_mutex_lock(&syn_prim.lock);
-    if (syn_prim.f_inc) { fclose(syn_prim.f_inc); }
+    sp_fin();
     pthread_mutex_unlock(&syn_prim.lock);
     pthread_mutex_destroy(&syn_prim.lock);
     return 0;
@@ -92,27 +108,93 @@ int GIsp_release()
 
 int GIsp_export(const char *syn_dir, const char *name_space, const char *key, const char *val)
 {
+    pthread_mutex_lock(&syn_prim.lock);
 
     char buf[512] = {0};
     char fname[512] = {0};
     snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
-    if (create_dir(buf) < 0) { return -1; }
-    snprintf(fname, sizeof(fname), "%s/%s", buf, count);
+    if (create_dir(buf) < 0) { goto err1; }
+    syn_prim.num = scan_fin(buf) +1 ;
+    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
 
-    if (f_inc == NULL) {
-	FILE *f_inc = fopen(fname, "a");
-	if (f_inc == NULL) { return -1; }
-	strncpy(f_name, fname, sizeof(f_name));
+    if (syn_prim.f_inc == NULL) {
+	syn_prim.f_inc = fopen(fname, "a");
+	if (syn_prim.f_inc == NULL) { goto err1; }
+	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
     }
-    else if (strcmp(f_name, fname)){
-	fclose(f_inc);
-	f_inc = fopen(fname, "a");
-	if (f_inc == NULL) { return -1; }
-	strncpy(f_name, fname, sizeof(f_name));
+    else if (strcmp(syn_prim.f_name, fname)){
+	fclose(syn_prim.f_inc);
+	syn_prim.f_inc = fopen(fname, "a");
+	if (syn_prim.f_inc == NULL) { goto err1; }
+	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
     }
 
-    fprintf(f_inc, "%s\t%s", key, val);
+    fprintf(syn_prim.f_inc, "%s\t%s\n", key, val);
 
+    pthread_mutex_unlock(&syn_prim.lock);
     return 0;
+err1:
+    pthread_mutex_unlock(&syn_prim.lock);
+    return -1;
+}
+
+static void *th_fun(void *param)
+{
+    sleep(60*60);
+    pthread_mutex_lock(&syn_prim.lock);
+    sp_fin();
+    pthread_mutex_unlock(&syn_prim.lock);
+    return 0;
+}
+
+static int sp_fin()
+{
+    if (syn_prim.f_inc) {
+	fclose(syn_prim.f_inc);
+	syn_prim.f_inc = NULL;
+	char buf[512] = {0};
+	sprintf(buf, "%s.fin", syn_prim.f_name);
+	rename(syn_prim.f_name, buf);
+	memset(syn_prim.f_name, 0, sizeof(syn_prim.f_name));
+	syn_prim.num++;
+    }
+    return 0;
+}
+
+static int scan_fin(const char * dir)
+{
+    int max_id = 0;
+    DIR* dp;
+    struct dirent* dirp;
+
+    dp = opendir(dir);
+    if (dp != NULL) {
+	while ((dirp = readdir(dp)) != NULL) {
+	    int id = get_fileid(dirp->d_name);
+	    max_id = id > max_id ? id : max_id;
+	}
+	closedir(dp);
+    }
+    else {
+	if (mkdir(dir, 0755) < 0) { return -1; }
+    }
+    return max_id;
+}
+
+static int get_fileid(char * name)
+{
+    if (name == NULL) { return -1; }
+    if (strlen(name) > _DFS_INC_ID_MAX) { return -1; }
+    char *pos = strstr(name, ".fin");
+    if (pos == NULL) { return -1; }
+    if (strcmp(pos, ".fin") != 0) { return -1; }
+
+    char tmp[_DFS_INC_ID_MAX] = {0};
+    strncpy(tmp, name, pos-name);
+
+    for (unsigned int i=0; i<strlen(tmp); ++i) {
+	if ( !isdigit(name[i]) ) { return -1; }
+    }
+    return atoi(tmp);
 }
 
