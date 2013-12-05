@@ -12,19 +12,21 @@
 #define _DFS_INC_ID_MAX		16
 
 
-static int sp_fin();
 static void *th_fun(void *param);
+static int open_file(const char *syn_dir, const char *name_space);
+static int close_file();
 static int scan_fin(const char * dir);
 static int get_fileid(char * name);
 
 
-static struct CISynPrim{
-    pthread_mutex_t lock;
-    pthread_t th_cls;
-    FILE *f_inc;
-    char f_name[512];
+struct CISynPrim { 
+    pthread_mutex_t lock; 
+    pthread_t th_cls; 
+    FILE *f_inc; 
+    char f_name[512]; 
     int num;
-}syn_prim;
+} syn_prim = { }; 
+
 
 int GIsp_init()
 {
@@ -100,8 +102,9 @@ int GIsp_release()
     pthread_cancel(syn_prim.th_cls);
 
     pthread_mutex_lock(&syn_prim.lock);
-    sp_fin();
+    close_file();
     pthread_mutex_unlock(&syn_prim.lock);
+
     pthread_mutex_destroy(&syn_prim.lock);
     return 0;
 }
@@ -110,44 +113,48 @@ int GIsp_export(const char *syn_dir, const char *name_space, const char *key, co
 {
     pthread_mutex_lock(&syn_prim.lock);
 
-    char buf[512] = {0};
-    char fname[512] = {0};
-    snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
-    if (create_dir(buf) < 0) { goto err1; }
-    syn_prim.num = scan_fin(buf) +1 ;
-    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
-
-    if (syn_prim.f_inc == NULL) {
-	syn_prim.f_inc = fopen(fname, "a");
-	if (syn_prim.f_inc == NULL) { goto err1; }
-	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
-    }
-    else if (strcmp(syn_prim.f_name, fname)){
-	fclose(syn_prim.f_inc);
-	syn_prim.f_inc = fopen(fname, "a");
-	if (syn_prim.f_inc == NULL) { goto err1; }
-	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
-    }
-
+    open_file(syn_dir, name_space);
     fprintf(syn_prim.f_inc, "%s\t%s\n", key, val);
+    fflush(syn_prim.f_inc);
 
     pthread_mutex_unlock(&syn_prim.lock);
     return 0;
-err1:
-    pthread_mutex_unlock(&syn_prim.lock);
-    return -1;
 }
 
 static void *th_fun(void *param)
 {
     sleep(60*60);
     pthread_mutex_lock(&syn_prim.lock);
-    sp_fin();
+    close_file();
     pthread_mutex_unlock(&syn_prim.lock);
     return 0;
 }
 
-static int sp_fin()
+static int open_file(const char *syn_dir, const char *name_space)
+{
+    char buf[512] = {0};
+    char fname[512] = {0};
+    snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
+    if (create_dir(buf) < 0) { return -1; }
+    syn_prim.num = scan_fin(buf) +1 ;
+    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
+
+    if (syn_prim.f_inc == NULL) {
+	syn_prim.f_inc = fopen(fname, "a");
+	if (syn_prim.f_inc == NULL) { return -1; }
+	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
+    }
+    else if (strcmp(syn_prim.f_name, fname)){
+	close_file();
+
+	syn_prim.f_inc = fopen(fname, "a");
+	if (syn_prim.f_inc == NULL) { return -1; }
+	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
+    }
+    return 0;
+}
+
+static int close_file()
 {
     if (syn_prim.f_inc) {
 	fclose(syn_prim.f_inc);

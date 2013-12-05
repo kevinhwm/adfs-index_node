@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <curl/curl.h>
 #include <kclangc.h>
 
@@ -31,11 +32,6 @@ static CINode * m_get_node(const char *node_name, size_t len);	// dynamic no wri
 static char * m_get_history(const char *, int);			// dynamic - download
 static CINode * m_choose(const char * record);			// dynamic - download
 
-////////////////////////////////////////////////////////////////////////////////
-// just function
-//static int create_id();						// initialize
-//static int run_syn();						// initialize
-
 
 CIManager g_manager;
 
@@ -46,19 +42,18 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
 
     char *f_flag = _DFS_RUNNING_FLAG;	// running.flag
     if (access(f_flag, F_OK) != -1) {
-	pm->another_running = 1;
 	fprintf(stderr, "-> another instance is running...\n-> exit\n");
+	pm->another_running = 1;
 	return -1;
     }
     else {
-	pm->another_running = 0;
-	time_t t;
-	char stime[64] = {0};
-	time(&t);
 	FILE *f = fopen(f_flag, "w");
-	if (f == NULL) { fprintf(stderr, "-> create running-flag file\n"); return -1; }
-	fprintf(f, "%s", ctime_r(&t, stime));
+	if (f == NULL) { 
+	    fprintf(stderr, "-> create running-flag file error\n"); 
+	    return -1; 
+	}
 	fclose(f);
+	pm->another_running = 0;
     }
 
     pm->kc_apow = 0;
@@ -116,7 +111,6 @@ int GIm_exit()
     GIsp_release();
     GIss_release();
     curl_global_cleanup();
-    remove(_DFS_RUNNING_FLAG); 
     return 0;
 }
 

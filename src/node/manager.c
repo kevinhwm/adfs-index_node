@@ -35,12 +35,8 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
     }
     else {
 	pm->another_running = 0;
-	time_t t;
-	char stime[64] = {0};
-	time(&t);
 	FILE *f = fopen(f_flag, "w");
 	if (f == NULL) { return -1; }
-	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
 
