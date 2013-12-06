@@ -18,14 +18,7 @@ static int close_file();
 static int scan_fin(const char * dir);
 static int get_fileid(char * name);
 
-
-struct CISynPrim { 
-    pthread_mutex_t lock; 
-    pthread_t th_cls; 
-    FILE *f_inc; 
-    char f_name[512]; 
-    int num;
-} syn_prim = { }; 
+static CISynPrim *psp = NULL;
 
 
 int GIsp_init()
@@ -42,7 +35,6 @@ int GIsp_init()
      *     如果（TID_l，TID_r都存在）
      *     	如果不同，退出
      *     如果（TID_l，TID_r都不存在），复制本地TID_l到远程TID_r
-     *
      */
 
     int l_exist = 0;
@@ -90,7 +82,19 @@ int GIsp_init()
 	fclose(f_r_tid);
     }
 
-    memset(&syn_prim, 0, sizeof(syn_prim));
+    int ns_num = 0;
+    for (CINameSpace *pns=g_manager.ns_head; pns; pns=pns->next) { ns_num++; }
+    psp = malloc(sizeof(CISynPrim));
+    if (psp == NULL) { return -1; }
+    memset(psp, 0, sizeof(CISynPrim));
+
+    char buf[512] = {0};
+    char fname[512] = {0};
+    snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
+    if (create_dir(buf) < 0) { return -1; }
+    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
+    syn_prim.num = scan_fin(buf) +1 ;
+
     if (pthread_mutex_init(&syn_prim.lock, NULL) != 0) { return -1; }
     if (pthread_create(&syn_prim.th_cls, NULL, th_fun, NULL) < 0) { return -1; }
 
@@ -113,12 +117,16 @@ int GIsp_export(const char *syn_dir, const char *name_space, const char *key, co
 {
     pthread_mutex_lock(&syn_prim.lock);
 
-    open_file(syn_dir, name_space);
-    fprintf(syn_prim.f_inc, "%s\t%s\n", key, val);
-    fflush(syn_prim.f_inc);
-
-    pthread_mutex_unlock(&syn_prim.lock);
-    return 0;
+    if (open_file(syn_dir, name_space) < 0) {
+	pthread_mutex_unlock(&syn_prim.lock);
+	return -1;
+    }
+    else {
+	fprintf(syn_prim.f_inc, "%s\t%s\n", key, val);
+	fflush(syn_prim.f_inc);
+	pthread_mutex_unlock(&syn_prim.lock);
+	return 0;
+    }
 }
 
 static void *th_fun(void *param)
@@ -132,12 +140,6 @@ static void *th_fun(void *param)
 
 static int open_file(const char *syn_dir, const char *name_space)
 {
-    char buf[512] = {0};
-    char fname[512] = {0};
-    snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
-    if (create_dir(buf) < 0) { return -1; }
-    syn_prim.num = scan_fin(buf) +1 ;
-    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
 
     if (syn_prim.f_inc == NULL) {
 	syn_prim.f_inc = fopen(fname, "a");
@@ -156,12 +158,16 @@ static int open_file(const char *syn_dir, const char *name_space)
 
 static int close_file()
 {
+    fprintf(stderr, "close file\n");
     if (syn_prim.f_inc) {
 	fclose(syn_prim.f_inc);
 	syn_prim.f_inc = NULL;
 	char buf[512] = {0};
 	sprintf(buf, "%s.fin", syn_prim.f_name);
-	rename(syn_prim.f_name, buf);
+
+	fprintf(stderr, "%s\n", syn_prim.f_name);
+	fprintf(stderr, "%s\n", buf);
+	if (rename(syn_prim.f_name, buf) < 0) { fprintf(stderr, "rename file error\n"); }
 	memset(syn_prim.f_name, 0, sizeof(syn_prim.f_name));
 	syn_prim.num++;
     }

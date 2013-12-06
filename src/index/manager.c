@@ -62,8 +62,6 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
     pm->kc_msiz = mem_size *1024*1024;
     pm->max_file_size = max_file_size *1024*1024;
     pm->primary = role;
-    pm->exit_flag = 0;
-    pm->th_syn = 0;
     if (syn_dir == NULL) { fprintf(stderr, "-> syn dir error\n"); return -1; }
     strncpy(pm->syn_dir, syn_dir, sizeof(pm->syn_dir));
 
@@ -87,10 +85,6 @@ int GIm_exit()
 {
     CIManager *pm = &g_manager;
     if (pm->another_running) { return 0; }
-
-    if (!pm->primary && (pm->th_syn != 0)) {
-	pthread_join(pm->th_syn, NULL);
-    }
 
     CIZone *pz = pm->z_head;
     while (pz) {

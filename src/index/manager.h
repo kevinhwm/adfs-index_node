@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include "zone.h"
 #include "meta.h"
+#include "namespace.h"
 #include "../def.h"
 
 #define MNGR_DATA_DIR 		"data"
@@ -19,13 +20,6 @@
 #define MNGR_TEAM_L_F		"team_id"
 #define MNGR_TEAM_R_F		"team"
 
-typedef struct CINameSpace {
-    char name[ _DFS_NAMESPACE_LEN ];
-    KCDB *index_db;
-
-    struct CINameSpace *prev;
-    struct CINameSpace *next;
-}CINameSpace;
 
 typedef struct CIManager {
     int another_running;
@@ -36,17 +30,7 @@ typedef struct CIManager {
     unsigned long kc_msiz;
     unsigned long max_file_size;
 
-    /*
-    char data_dir[32];
-    char log_dir[32];
-    char core_log[32];
-    char instance[32];
-    char team[32];
-    */
-
     int primary;
-    int exit_flag;
-    pthread_t th_syn;
     char syn_dir[_DFS_MAX_LEN];
 
     char instance_id[64];
@@ -75,15 +59,6 @@ int GIc_connect(CINode *pn, const char *url, FLAG_CONNECTION);
 
 // update.c
 int GIu_run();
-
-// syn_primary.c
-int GIsp_init();
-int GIsp_release();
-int GIsp_export(const char *, const char *, const char *, const char *);
-
-// syn_secondary.c
-int GIss_init();
-int GIss_release();
 
 #endif // __MANAGER_H__
 

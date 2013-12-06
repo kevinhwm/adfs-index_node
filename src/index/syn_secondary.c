@@ -4,7 +4,6 @@
  */
 
 #include "manager.h"
-#include "../md5.h"
 
 int GIss_init()
 {
@@ -16,7 +15,6 @@ int GIss_init()
      *     	如果TID_l存在，比较两个TID	（重启）
      *     		如果不同，退出。
      *     	如果TID_l不存在，复制TID_r到本地为TID_l	（新建）
-     *
      */
 
     char r_tid[64] = {0};
