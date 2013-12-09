@@ -44,7 +44,3 @@ int GIss_init()
     return 0;
 }
 
-int GIss_release()
-{
-    return 0;
-}

@@ -19,10 +19,10 @@
 #include "../md5.h"
 
 
+static int m_init_syn();
 static int m_init_log(cJSON *json);				// initialize
 static int m_init_ns(cJSON *json);				// initialize
 static int m_init_zone(cJSON *json);				// initialize
-static int m_init_syn();					// initialize
 static CIZone * m_create_zone(const char *name);		// initialize
 static int m_create_ns(const char *name);			// initialize
 
@@ -64,6 +64,7 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
     pm->primary = role;
     if (syn_dir == NULL) { fprintf(stderr, "-> syn dir error\n"); return -1; }
     strncpy(pm->syn_dir, syn_dir, sizeof(pm->syn_dir));
+    if (m_init_syn() < 0) { return -1; }
 
     srand(time(NULL));
     curl_global_init(CURL_GLOBAL_ALL);
@@ -77,7 +78,6 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
     if (m_init_zone(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
 
-    if (m_init_syn() < 0) { return -1; }
     return 0;
 }
 
@@ -102,8 +102,10 @@ int GIm_exit()
 	free(tmp);
     }
     log_release();
+    /*
     GIsp_release();
     GIss_release();
+    */
     curl_global_cleanup();
     return 0;
 }
@@ -163,8 +165,8 @@ int GIm_upload(const char *name_space, int overwrite, const char *fname, void *f
 
     snprintf(new_list, len, "$%s", record);
     int res = kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
-    
-    if (!res || GIsp_export(pm->syn_dir, name_space, fname, new_list)<0) { goto err3; }
+    if (!res) { goto err3; }
+    //if (!res || GIsp_export(pm->syn_dir, name_space, fname, new_list)<0) { goto err3; }
 
     if (new_list) { free(new_list); }
     if (record) { free(record); }
@@ -310,6 +312,38 @@ char * GIm_status()
     return p;
 }
 
+static int m_init_syn()
+{
+    // read/create local instance id
+    CIManager *pm = &g_manager;
+    unsigned char buf[16] = {0};
+    unsigned char src[128] = {0};
+
+    FILE *f_instance = fopen(MNGR_INSTANCE_F, "r");
+    if (f_instance == NULL) {
+	f_instance = fopen(MNGR_INSTANCE_F, "w");
+	if (f_instance == NULL) { fprintf(stderr, "can not create instance id file\n"); return -1; }
+	snprintf((char *)src, sizeof(src)-1, "%u%u", rand(), (unsigned int)time(NULL));
+	md5(src, strlen((char *)src), buf);
+	for (int i=0; i<16; ++i) {
+	    sprintf(pm->instance_id+2*i, "%02x", buf[i]);
+	}
+	fwrite(pm->instance_id, 1, strlen(pm->instance_id), f_instance);
+    }
+    else { fread(pm->instance_id, 1, sizeof(pm->instance_id), f_instance); }
+    fclose(f_instance);
+
+    // read/create remote id
+    if (pm->primary) {
+	if (GIsp_init() < 0) { fprintf(stderr, "primary init error\n"); return -1; }
+    }
+    else {
+	if (GIss_init() < 0) { fprintf(stderr, "secondary init error\n"); return -1; }
+    }
+
+    return 0;
+}
+
 static int m_init_log(cJSON *json)
 {
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
@@ -345,6 +379,7 @@ static int m_init_ns(cJSON *json)
 	    }
 	}
     }
+
     return 0;
 }
 
@@ -377,36 +412,6 @@ static int m_init_zone(cJSON *json)
     return 0;
 }
 
-static int m_init_syn()
-{
-    CIManager *pm = &g_manager;
-    unsigned char buf[16] = {0};
-    unsigned char src[128] = {0};
-
-    FILE *f_instance = fopen(MNGR_INSTANCE_F, "r");
-    if (f_instance == NULL) {
-	f_instance = fopen(MNGR_INSTANCE_F, "w");
-	if (f_instance == NULL) { fprintf(stderr, "can not create instance id file\n"); return -1; }
-	snprintf((char *)src, sizeof(src)-1, "%u%u", rand(), (unsigned int)time(NULL));
-	md5(src, strlen((char *)src), buf);
-	for (int i=0; i<16; ++i) {
-	    sprintf(pm->instance_id+2*i, "%02x", buf[i]);
-	}
-	fwrite(pm->instance_id, 1, strlen(pm->instance_id), f_instance);
-    }
-    else { fread(pm->instance_id, 1, sizeof(pm->instance_id), f_instance); }
-    fclose(f_instance);
-
-    if (pm->primary) {
-	if (GIsp_init() < 0) { fprintf(stderr, "syn init error\n"); return -1; }
-    }
-    else {
-	if (GIss_init() < 0) { fprintf(stderr, "syn init error\n"); return -1; }
-    }
-
-    return 0;
-}
-
 static CIZone * m_create_zone(const char *name)
 {
     CIManager * pm = &g_manager;
@@ -434,19 +439,33 @@ static int m_create_ns(const char *name)
     for (; pns; pns = pns->next) {
 	if (strcmp(pns->name, name) == 0) { return -1; }
     }
-    pns = malloc(sizeof(CINameSpace));
-    if (pns == NULL) { return -1; }
-    memset(pns, 0, sizeof(CINameSpace));
 
+    char db_args[_DFS_MAX_LEN] = {0};
+    snprintf(db_args, sizeof(db_args), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+
+    pns = malloc(sizeof(CINameSpace));
+    if (pns == NULL || GIns_init(pns, name, db_args, pm->primary) < 0) { 
+	if (pns) { 
+	    free(pns); 
+	    pns = NULL;
+	}
+	return -1;
+    }
+
+    /*
     strncpy(pns->name, name, sizeof(pns->name));
     char indexdb_path[_DFS_MAX_LEN] = {0};
+
     snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
 	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+
     pns->index_db = kcdbnew();
     if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
 	free(pns);
 	return -1;
     }
+    */
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;

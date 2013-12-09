@@ -3,7 +3,7 @@
  * kevinhwm@gmail.com
  */
 
-#include <unistd.h>
+//#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "manager.h"
@@ -12,13 +12,12 @@
 #define _DFS_INC_ID_MAX		16
 
 
-static void *th_fun(void *param);
+/*
 static int open_file(const char *syn_dir, const char *name_space);
 static int close_file();
 static int scan_fin(const char * dir);
 static int get_fileid(char * name);
-
-static CISynPrim *psp = NULL;
+*/
 
 
 int GIsp_init()
@@ -82,62 +81,10 @@ int GIsp_init()
 	fclose(f_r_tid);
     }
 
-    int ns_num = 0;
-    for (CINameSpace *pns=g_manager.ns_head; pns; pns=pns->next) { ns_num++; }
-    psp = malloc(sizeof(CISynPrim));
-    if (psp == NULL) { return -1; }
-    memset(psp, 0, sizeof(CISynPrim));
-
-    char buf[512] = {0};
-    char fname[512] = {0};
-    snprintf(buf, sizeof(buf), "%s/%s", syn_dir, name_space);
-    if (create_dir(buf) < 0) { return -1; }
-    snprintf(fname, sizeof(fname), "%s/%d", buf, syn_prim.num);
-    syn_prim.num = scan_fin(buf) +1 ;
-
-    if (pthread_mutex_init(&syn_prim.lock, NULL) != 0) { return -1; }
-    if (pthread_create(&syn_prim.th_cls, NULL, th_fun, NULL) < 0) { return -1; }
-
     return 0;
 }
 
-int GIsp_release()
-{
-    pthread_cancel(syn_prim.th_cls);
-
-    pthread_mutex_lock(&syn_prim.lock);
-    close_file();
-    pthread_mutex_unlock(&syn_prim.lock);
-
-    pthread_mutex_destroy(&syn_prim.lock);
-    return 0;
-}
-
-int GIsp_export(const char *syn_dir, const char *name_space, const char *key, const char *val)
-{
-    pthread_mutex_lock(&syn_prim.lock);
-
-    if (open_file(syn_dir, name_space) < 0) {
-	pthread_mutex_unlock(&syn_prim.lock);
-	return -1;
-    }
-    else {
-	fprintf(syn_prim.f_inc, "%s\t%s\n", key, val);
-	fflush(syn_prim.f_inc);
-	pthread_mutex_unlock(&syn_prim.lock);
-	return 0;
-    }
-}
-
-static void *th_fun(void *param)
-{
-    sleep(60*60);
-    pthread_mutex_lock(&syn_prim.lock);
-    close_file();
-    pthread_mutex_unlock(&syn_prim.lock);
-    return 0;
-}
-
+/*
 static int open_file(const char *syn_dir, const char *name_space)
 {
 
@@ -210,4 +157,5 @@ static int get_fileid(char * name)
     }
     return atoi(tmp);
 }
+*/
 

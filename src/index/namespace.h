@@ -12,39 +12,37 @@
 #include "../def.h"
 
 
-typedef struct CISynPrim {
-    pthread_t th_cls; 
+typedef struct CINsSec {
+    pthread_t th_get;
+    int num;
+    int line;
+}CINsSec;
 
-    struct {
-	pthread_mutex_t lock; 
-	int num;
-	FILE *f_inc; 
-	char f_name[512]; 
-    } syn_prim;
-}CISynPrim;
+typedef struct CINsPrim {
+    pthread_mutex_t lock; 
+    int num;
+    FILE *f_inc; 
+    char f_name[512]; 
 
-
-typedef struct CISynSec {
-}CISynSec;
+    int (*output)(struct CINsPrim *_this);
+}CINsPrim;
 
 
 typedef struct CINameSpace {
     char name[ _DFS_NAMESPACE_LEN ];
     KCDB *index_db;
 
+    struct CINsPrim prim;
+    struct CINsSec sec;
+
     struct CINameSpace *prev;
     struct CINameSpace *next;
+
+    int (*release)(struct CINameSpace *_this);
+    int (*output)(struct CINameSpace *_this);
 }CINameSpace;
 
-
-// syn_primary.c
-int GIsp_init();
-int GIsp_release();
-int GIsp_export(const char *, const char *, const char *, const char *);
-
-// syn_secondary.c
-int GIss_init();
-int GIss_release();
+int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int primary);
 
 #endif // __NAMESPACE_H__
 

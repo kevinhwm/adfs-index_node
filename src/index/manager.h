@@ -30,11 +30,10 @@ typedef struct CIManager {
     unsigned long kc_msiz;
     unsigned long max_file_size;
 
-    int primary;
     char syn_dir[_DFS_MAX_LEN];
-
     char instance_id[64];
     char team_id[64];
+    int primary;
 
     struct CINameSpace *ns_head;
     struct CINameSpace *ns_tail;
@@ -59,6 +58,12 @@ int GIc_connect(CINode *pn, const char *url, FLAG_CONNECTION);
 
 // update.c
 int GIu_run();
+
+// syn_primary.c
+int GIsp_init();
+
+// syn_secondary.c
+int GIss_init();
 
 #endif // __MANAGER_H__
 
