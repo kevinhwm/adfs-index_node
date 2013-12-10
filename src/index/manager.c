@@ -102,6 +102,7 @@ int GIm_exit()
 	free(tmp);
     }
     log_release();
+    remove(_DFS_RUNNING_FLAG);
     /*
     GIsp_release();
     GIss_release();
