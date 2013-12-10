@@ -83,18 +83,13 @@ static int ns_output(CINameSpace *_this, const char *info)
 
 static int open_log(CINsPrim *pprim, const char *name_space)
 {
-    if (pprim->f_inc == NULL) {
-	pprim->f_inc = fopen(fname, "a");
-	if (pprim->f_inc == NULL) { return -1; }
-	strncpy(pprim->f_name, fname, sizeof(pprim->f_name));
-    }
-    else if (strcmp(pprim->f_name, fname)){
-	close_log();
+    if (pprim->f_inc) { return 0; }
 
-	pprim->f_inc = fopen(fname, "a");
-	if (pprim->f_inc == NULL) { return -1; }
-	strncpy(pprim->f_name, fname, sizeof(pprim->f_name));
-    }
+    char buf[_DFS_MAX_LEN] = {0};
+    sprintf(buf, "%s/%s/%d", g_manager.syn_dir, name_space, pprim->num);
+    pprim->f_inc = fopen(buf, "a");
+    if (pprim->f_inc == NULL) { return -1; }
+    strncpy(pprim->f_name, buf, sizeof(pprim->f_name));
     return 0;
 }
 
