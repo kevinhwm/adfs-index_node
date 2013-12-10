@@ -68,12 +68,13 @@ static void show_help(void)
 	    " -t dir   set syn dir"
 
 	    "\n"
-	    " example:  indexserver -w ./ -c indexserver.conf -d \n"
+	    " example:  indexserver -w . -t ../pub -c indexserver.conf -P 10001 --main -d \n"
 	   );
 }
 
 void _dfs_exit()
 {
+    fprintf(stderr, "-> _dfs_exit\n");
     static int flag = 0;
     if (flag) {return;}
     flag = 1;

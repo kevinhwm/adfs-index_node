@@ -12,12 +12,6 @@
 #include "../def.h"
 
 
-typedef struct CINsSec {
-    pthread_t th_get;
-    int num;
-    int line;
-}CINsSec;
-
 typedef struct CINsPrim {
     pthread_mutex_t lock; 
     int num;
@@ -26,6 +20,25 @@ typedef struct CINsPrim {
 
     int (*output)(struct CINsPrim *_this);
 }CINsPrim;
+
+typedef struct CINsSec {
+    pthread_t th_get;
+    int num;
+    int line;
+}CINsSec;
+
+typedef struct CINameSpace {
+    char name[ _DFS_NAMESPACE_LEN ];
+    KCDB *index_db;
+
+    struct CINsPrim *prim;
+
+    struct CINameSpace *prev;
+    struct CINameSpace *next;
+
+    int (*release)(struct CINameSpace *_this);
+    int (*output)(struct CINameSpace *_this, const char *info);
+}CINameSpace;
 
 
 int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int primary);

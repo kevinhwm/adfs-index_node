@@ -23,8 +23,8 @@ static int m_init_syn();
 static int m_init_log(cJSON *json);				// initialize
 static int m_init_ns(cJSON *json);				// initialize
 static int m_init_zone(cJSON *json);				// initialize
-static CIZone * m_create_zone(const char *name);		// initialize
 static int m_create_ns(const char *name);			// initialize
+static CIZone * m_create_zone(const char *name);		// initialize
 
 static CINameSpace * m_get_ns(const char *ns);			// dynamic no write - upload download delete exist
 static CINode * m_get_node(const char *node_name, size_t len);	// dynamic no write - upload download
@@ -97,16 +97,11 @@ int GIm_exit()
     while (pns) {
 	CINameSpace *tmp = pns;
 	pns = pns->next;
-	kcdbclose(tmp->index_db);
-	kcdbdel(tmp->index_db);
+	tmp->release(tmp);
 	free(tmp);
     }
     log_release();
     remove(_DFS_RUNNING_FLAG);
-    /*
-    GIsp_release();
-    GIss_release();
-    */
     curl_global_cleanup();
     return 0;
 }
@@ -167,7 +162,7 @@ int GIm_upload(const char *name_space, int overwrite, const char *fname, void *f
     snprintf(new_list, len, "$%s", record);
     int res = kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
     if (!res) { goto err3; }
-    //if (!res || GIsp_export(pm->syn_dir, name_space, fname, new_list)<0) { goto err3; }
+    if (pns->output == NULL || pns->output(pns, new_list) < 0) { goto err3; }
 
     if (new_list) { free(new_list); }
     if (record) { free(record); }
@@ -336,10 +331,10 @@ static int m_init_syn()
 
     // read/create remote id
     if (pm->primary) {
-	if (GIsp_init() < 0) { fprintf(stderr, "primary init error\n"); return -1; }
+	if (GIsp_init() < 0) { fprintf(stderr, "-> primary init error\n"); return -1; }
     }
     else {
-	if (GIss_init() < 0) { fprintf(stderr, "secondary init error\n"); return -1; }
+	if (GIss_init() < 0) { fprintf(stderr, "-> secondary init error\n"); return -1; }
     }
 
     return 0;
@@ -441,19 +436,12 @@ static int m_create_ns(const char *name)
 	if (strcmp(pns->name, name) == 0) { return -1; }
     }
 
+    char db_args[_DFS_MAX_LEN] = {0};
+    snprintf(db_args, sizeof(db_args), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
     pns = malloc(sizeof(CINameSpace));
     if (pns == NULL) { return -1; }
-    memset(pns, 0, sizeof(CINameSpace));
-
-    strncpy(pns->name, name, sizeof(pns->name));
-    pns->index_db = kcdbnew();
-    char db_path[_DFS_MAX_LEN] = {0};
-    snprintf(db_path, sizeof(db_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-    if (kcdbopen(pns->index_db, db_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) { 
-	free(pns); 
-	return -1; 
-    }
+    if (GIns_init(pns, name, db_args, pm->primary) < 0) { free(pns); return -1; }
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;
