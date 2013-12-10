@@ -441,32 +441,19 @@ static int m_create_ns(const char *name)
 	if (strcmp(pns->name, name) == 0) { return -1; }
     }
 
-    char db_args[_DFS_MAX_LEN] = {0};
-    snprintf(db_args, sizeof(db_args), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-
     pns = malloc(sizeof(CINameSpace));
-    if (pns == NULL || GIns_init(pns, name, db_args, pm->primary) < 0) { 
-	if (pns) { 
-	    free(pns); 
-	    pns = NULL;
-	}
-	return -1;
-    }
+    if (pns == NULL) { return -1; }
+    memset(pns, 0, sizeof(CINameSpace));
 
-    /*
     strncpy(pns->name, name, sizeof(pns->name));
-    char indexdb_path[_DFS_MAX_LEN] = {0};
-
-    snprintf(indexdb_path, sizeof(indexdb_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
-	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
-
     pns->index_db = kcdbnew();
-    if (kcdbopen(pns->index_db, indexdb_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) {
-	free(pns);
-	return -1;
+    char db_path[_DFS_MAX_LEN] = {0};
+    snprintf(db_path, sizeof(db_path), "%s/%s.kch#apow=%lu#fpow=%lu#bnum=%lu#msiz=%lu", 
+	    MNGR_DATA_DIR, name, pm->kc_apow, pm->kc_fbp, pm->kc_bnum, pm->kc_msiz);
+    if (kcdbopen(pns->index_db, db_path, KCOREADER|KCOWRITER|KCOCREATE|KCOTRYLOCK) == 0) { 
+	free(pns); 
+	return -1; 
     }
-    */
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;

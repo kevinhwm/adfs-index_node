@@ -9,7 +9,7 @@ LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
 idx_OBJS = function.o conf.o cJSON.o log.o md5.o multipart_parser.o \
 	   ihttp_upload.o ihttp_download.o ihttp_exist.o ihttp_delete.o ihttp_setnode.o ihttp_status.o \
-	   i_meta.o i_zone.o i_connect.o i_update.o i_namespace.o i_syn_primary.o i_syn_secondary.o i_manager.o \
+	   i_meta.o i_zone.o i_connect.o i_update.o i_syn_primary.o i_syn_secondary.o i_manager.o \
 	   indexserver.o
 
 nd_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
@@ -35,7 +35,6 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_namespace.o index/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_syn_primary.o index/syn_primary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_syn_secondary.o index/syn_secondary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
@@ -71,7 +70,6 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_connect.o index/connect.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_namespace.o index/namespace.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_syn_primary.o index/syn_primary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_syn_secondary.o index/syn_secondary.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c

@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include "zone.h"
 #include "meta.h"
-#include "namespace.h"
 #include "../def.h"
 
 #define MNGR_DATA_DIR 		"data"
@@ -20,6 +19,14 @@
 #define MNGR_TEAM_L_F		"team_id"
 #define MNGR_TEAM_R_F		"team"
 
+
+typedef struct CINameSpace {
+    char name[ _DFS_NAMESPACE_LEN ];
+    KCDB *index_db;
+
+    struct CINameSpace *prev;
+    struct CINameSpace *next;
+}CINameSpace;
 
 typedef struct CIManager {
     int another_running;

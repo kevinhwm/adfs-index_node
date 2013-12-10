@@ -3,21 +3,8 @@
  * kevinhwm@gmail.com
  */
 
-//#include <unistd.h>
-#include <dirent.h>
-#include <sys/stat.h>
 #include "manager.h"
 #include "../md5.h"
-
-#define _DFS_INC_ID_MAX		16
-
-
-/*
-static int open_file(const char *syn_dir, const char *name_space);
-static int close_file();
-static int scan_fin(const char * dir);
-static int get_fileid(char * name);
-*/
 
 
 int GIsp_init()
@@ -70,92 +57,95 @@ int GIsp_init()
 	for (int i=0; i<16; ++i) {
 	    sprintf(l_tid+2*i, "%02x", buf[i]);
 	}
-	f_l_tid = fopen(MNGR_TEAM_L_F, "a");
-	if (f_l_tid == NULL) { return -1; }
-	fwrite(l_tid, 1, strlen(l_tid), f_l_tid);
-	fclose(f_l_tid);
 
 	f_r_tid = fopen(r_tid_path, "a");
 	if (f_r_tid == NULL) { return -1; }
 	fwrite(l_tid, 1, strlen(l_tid), f_r_tid);
 	fclose(f_r_tid);
+
+	f_l_tid = fopen(MNGR_TEAM_L_F, "a");
+	if (f_l_tid == NULL) { return -1; }
+	fwrite(l_tid, 1, strlen(l_tid), f_l_tid);
+	fclose(f_l_tid);
     }
 
     return 0;
 }
 
 /*
-static int open_file(const char *syn_dir, const char *name_space)
-{
+   static int open_file(const char *syn_dir, const char *name_space)
+   {
 
-    if (syn_prim.f_inc == NULL) {
-	syn_prim.f_inc = fopen(fname, "a");
-	if (syn_prim.f_inc == NULL) { return -1; }
-	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
-    }
-    else if (strcmp(syn_prim.f_name, fname)){
-	close_file();
+   if (syn_prim.f_inc == NULL) {
+   syn_prim.f_inc = fopen(fname, "a");
+   if (syn_prim.f_inc == NULL) { return -1; }
+   strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
+   }
+   else if (strcmp(syn_prim.f_name, fname)){
+   close_file();
 
-	syn_prim.f_inc = fopen(fname, "a");
-	if (syn_prim.f_inc == NULL) { return -1; }
-	strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
-    }
-    return 0;
-}
+   syn_prim.f_inc = fopen(fname, "a");
+   if (syn_prim.f_inc == NULL) { return -1; }
+   strncpy(syn_prim.f_name, fname, sizeof(syn_prim.f_name));
+   }
+   return 0;
+   }
 
-static int close_file()
-{
-    fprintf(stderr, "close file\n");
-    if (syn_prim.f_inc) {
-	fclose(syn_prim.f_inc);
-	syn_prim.f_inc = NULL;
-	char buf[512] = {0};
-	sprintf(buf, "%s.fin", syn_prim.f_name);
+   static int close_file()
+   {
+   fprintf(stderr, "close file\n");
+   if (syn_prim.f_inc) {
+   fclose(syn_prim.f_inc);
+   syn_prim.f_inc = NULL;
+   char buf[512] = {0};
+   sprintf(buf, "%s.fin", syn_prim.f_name);
 
-	fprintf(stderr, "%s\n", syn_prim.f_name);
-	fprintf(stderr, "%s\n", buf);
-	if (rename(syn_prim.f_name, buf) < 0) { fprintf(stderr, "rename file error\n"); }
-	memset(syn_prim.f_name, 0, sizeof(syn_prim.f_name));
-	syn_prim.num++;
-    }
-    return 0;
-}
+   fprintf(stderr, "%s\n", syn_prim.f_name);
+   fprintf(stderr, "%s\n", buf);
+   if (rename(syn_prim.f_name, buf) < 0) { fprintf(stderr, "rename file error\n"); }
+   memset(syn_prim.f_name, 0, sizeof(syn_prim.f_name));
+   syn_prim.num++;
+   }
+   return 0;
+   }
 
-static int scan_fin(const char * dir)
-{
-    int max_id = 0;
-    DIR* dp;
-    struct dirent* dirp;
+   static int scan_fin(const char * dir)
+   {
+   int max_id = 0;
+   DIR* dp;
+   struct dirent* dirp;
 
-    dp = opendir(dir);
-    if (dp != NULL) {
-	while ((dirp = readdir(dp)) != NULL) {
-	    int id = get_fileid(dirp->d_name);
-	    max_id = id > max_id ? id : max_id;
-	}
-	closedir(dp);
-    }
-    else {
-	if (mkdir(dir, 0755) < 0) { return -1; }
-    }
-    return max_id;
-}
+   dp = opendir(dir);
+   if (dp != NULL) {
+   while ((dirp = readdir(dp)) != NULL) {
+   int id = get_fileid(dirp->d_name);
+   max_id = id > max_id ? id : max_id;
+   }
+   closedir(dp);
+   }
+   else {
+   if (mkdir(dir, 0755) < 0) { return -1; }
+   }
+   return max_id;
+   }
+
+#define _DFS_INC_ID_MAX		16
 
 static int get_fileid(char * name)
 {
-    if (name == NULL) { return -1; }
-    if (strlen(name) > _DFS_INC_ID_MAX) { return -1; }
-    char *pos = strstr(name, ".fin");
-    if (pos == NULL) { return -1; }
-    if (strcmp(pos, ".fin") != 0) { return -1; }
+if (name == NULL) { return -1; }
+if (strlen(name) > _DFS_INC_ID_MAX) { return -1; }
+char *pos = strstr(name, ".fin");
+if (pos == NULL) { return -1; }
+if (strcmp(pos, ".fin") != 0) { return -1; }
 
-    char tmp[_DFS_INC_ID_MAX] = {0};
-    strncpy(tmp, name, pos-name);
+char tmp[_DFS_INC_ID_MAX] = {0};
+strncpy(tmp, name, pos-name);
 
-    for (unsigned int i=0; i<strlen(tmp); ++i) {
-	if ( !isdigit(name[i]) ) { return -1; }
-    }
-    return atoi(tmp);
+for (unsigned int i=0; i<strlen(tmp); ++i) {
+if ( !isdigit(name[i]) ) { return -1; }
+}
+return atoi(tmp);
 }
 */
 

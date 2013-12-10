@@ -28,20 +28,6 @@ typedef struct CINsPrim {
 }CINsPrim;
 
 
-typedef struct CINameSpace {
-    char name[ _DFS_NAMESPACE_LEN ];
-    KCDB *index_db;
-
-    struct CINsPrim prim;
-    struct CINsSec sec;
-
-    struct CINameSpace *prev;
-    struct CINameSpace *next;
-
-    int (*release)(struct CINameSpace *_this);
-    int (*output)(struct CINameSpace *_this);
-}CINameSpace;
-
 int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int primary);
 
 #endif // __NAMESPACE_H__
