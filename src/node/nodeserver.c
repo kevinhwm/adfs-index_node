@@ -84,10 +84,11 @@ int main(int argc, char** argv)
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
-    printf( "====================================================================\n"
-	    "                    Node " _DFS_VERSION "\n"
-	    "                  " __DATE__ "  " __TIME__ "\n"
-	    "====================================================================\n" );
+    fprintf(stdout,
+	    "--------------------------------------------------------------------\n"
+	    "-			    Node " _DFS_VERSION "\t\t\t\t   -\n"
+	    "-			" __DATE__ "  " __TIME__ "\t\t\t   -\n"
+	    "--------------------------------------------------------------------\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:")) != -1) 
     {

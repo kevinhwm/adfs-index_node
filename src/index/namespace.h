@@ -37,7 +37,7 @@ typedef struct CINameSpace {
     struct CINameSpace *next;
 
     int (*release)(struct CINameSpace *_this);
-    int (*output)(struct CINameSpace *_this, const char *info);
+    int (*output)(struct CINameSpace *_this, const char *name, const char *info);
 }CINameSpace;
 
 

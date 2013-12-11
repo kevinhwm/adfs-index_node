@@ -43,14 +43,14 @@ void conf_release(cJSON *json);
 #ifdef DEBUG
 #include <stdio.h>
 
-#define DBG_PRINTS(x)	printf("%s", x)
-#define DBG_PRINTSN(x)	printf("%s\n", x)
-#define DBG_PRINTI(x)	printf("%d", x)
-#define DBG_PRINTIN(x)	printf("%d\n", x)
-#define DBG_PRINTU(x)	printf("%lu", x)
-#define DBG_PRINTUN(x)	printf("%lu\n", x)
-#define DBG_PRINTP(x)	printf("%p", x)
-#define DBG_PRINTPN(x)	printf("%p\n", x)
+#define DBG_PRINTS(x)	fprintf(stderr, "%s",   x)
+#define DBG_PRINTSN(x)	fprintf(stderr, "%s\n", x)
+#define DBG_PRINTI(x)	fprintf(stderr, "%d",   x)
+#define DBG_PRINTIN(x)	fprintf(stderr, "%d\n", x)
+#define DBG_PRINTU(x)	fprintf(stderr, "%u",   x)
+#define DBG_PRINTUN(x)	fprintf(stderr, "%u\n", x)
+#define DBG_PRINTP(x)	fprintf(stderr, "%p",   x)
+#define DBG_PRINTPN(x)	fprintf(stderr, "%p\n", x)
 #else
 #define DBG_PRINTS(x)
 #define DBG_PRINTSN(x)
