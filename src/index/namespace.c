@@ -34,6 +34,9 @@ int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int pri
 	if (_this->prim == NULL) { return -1; }
 	memset(_this->prim, 0, sizeof(CINsPrim));
 
+	DBG_PRINTSN("ns init 1");
+	DBG_PRINTPN(_this->prim->f_inc);
+
 	pthread_mutex_init(&_this->prim->lock, NULL);
 	char buf[_DFS_MAX_LEN] = {0};
 	sprintf(buf, "%s/%s", g_manager.syn_dir, name);
@@ -45,27 +48,33 @@ int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int pri
 	_this->output = NULL;
     }
 
+    DBG_PRINTSN("ns init 1");
+    DBG_PRINTPN(_this->prim);
     _this->release = ns_release;
     return 0;
 }
 
 static int ns_release(CINameSpace *_this)
 {
-    DBG_PRINTS("ns release 1\n");
     if (_this->index_db) { 
 	kcdbclose(_this->index_db);
 	kcdbdel(_this->index_db);
 	_this->index_db = NULL; 
     }
-    DBG_PRINTS("ns release 2\n");
     if (_this->prim) {
 	pthread_mutex_lock(&_this->prim->lock);
+
+	DBG_PRINTSN("ns release");
+	DBG_PRINTPN(_this->prim);
+	DBG_PRINTPN(_this->prim->f_inc);
+	DBG_PRINTSN("ns release =");
+
 	close_log(_this->prim);
+
 	pthread_mutex_destroy(&_this->prim->lock);
 	free(_this->prim);
 	_this->prim = NULL;
     }
-    DBG_PRINTS("ns release 3\n");
     return 0;
 }
 
@@ -73,34 +82,16 @@ static int ns_output(CINameSpace *_this, const char *name, const char *info)
 {
     pthread_mutex_lock(&_this->prim->lock);
 
-#ifdef DEBUG
-    if (_this->prim->f_inc) { 
-	fprintf(stderr, "file handle is not NULL\n"); 
-	fprintf(stderr, "file name %s\n", _this->prim->f_name); 
-    }
-    else { 
-	fprintf(stderr, "file handle is NULL\n"); 
-	fprintf(stderr, "file name %s\n", _this->prim->f_name); 
-    }
-#endif
-
     if (open_log(_this->prim, _this->name) < 0) { 
 	pthread_mutex_unlock(&_this->prim->lock);
 	return -1; 
     }
+
+    DBG_PRINTSN("ns output  - f_ptr");
+    DBG_PRINTPN(_this->prim->f_inc);
+
     fprintf(_this->prim->f_inc, "%s\t%s\n", name, info);
     fflush(_this->prim->f_inc);
-
-#ifdef DEBUG
-    if (_this->prim->f_inc) { 
-	fprintf(stderr, "file handle is not NULL\n"); 
-	fprintf(stderr, "file name %s\n", _this->prim->f_name); 
-    }
-    else { 
-	fprintf(stderr, "file handle is NULL\n"); 
-	fprintf(stderr, "file name %s\n", _this->prim->f_name); 
-    }
-#endif
 
     pthread_mutex_unlock(&_this->prim->lock);
     return 0;
@@ -108,7 +99,13 @@ static int ns_output(CINameSpace *_this, const char *name, const char *info)
 
 static int open_log(CINsPrim *pprim, const char *name_space)
 {
+    DBG_PRINTSN("open log 1");
+    DBG_PRINTPN(pprim);
+
     if (pprim->f_inc) { return 0; }
+
+    DBG_PRINTSN("open log 2 - f_ptr");
+    DBG_PRINTPN(pprim->f_inc);
 
     char buf[_DFS_MAX_LEN] = {0};
     sprintf(buf, "%s/%s/%d", g_manager.syn_dir, name_space, pprim->num);
@@ -120,25 +117,20 @@ static int open_log(CINsPrim *pprim, const char *name_space)
 
 static int close_log(CINsPrim *pprim)
 {
-    DBG_PRINTS("ns close log 1\n");
+    DBG_PRINTSN("close log 1 - f_ptr");
+    DBG_PRINTPN((*pprim).f_inc);
+
     if (pprim->f_inc) {
-	DBG_PRINTS("ns close log 2\n");
 	fclose(pprim->f_inc);
-	DBG_PRINTS("ns close log 3\n");
 	pprim->f_inc = NULL;
 
 	char buf[_DFS_MAX_LEN] = {0};
 	sprintf(buf, "%s.fin", pprim->f_name);
 
-	DBG_PRINTS("ns close log 4\n");
-	DBG_PRINTS(pprim->f_name);
-	DBG_PRINTS(buf);
-
 	if (rename(pprim->f_name, buf) < 0) { fprintf(stderr, "rename file error\n"); }
 	memset(pprim->f_name, 0, sizeof(pprim->f_name));
 	pprim->num++;
     }
-    DBG_PRINTS("ns close log 5\n");
     return 0;
 }
 
@@ -161,8 +153,6 @@ static int scan_fin(const char * dir)
     }
     return max_id;
 }
-
-#define _DFS_INC_ID_MAX		16
 
 static int get_fileid(char * name)
 {

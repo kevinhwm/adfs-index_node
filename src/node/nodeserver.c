@@ -86,8 +86,8 @@ int main(int argc, char** argv)
 
     fprintf(stdout,
 	    "--------------------------------------------------------------------\n"
-	    "-			    Node " _DFS_VERSION "\t\t\t\t   -\n"
-	    "-			" __DATE__ "  " __TIME__ "\t\t\t   -\n"
+	    "-			    Node " _DFS_VERSION                         "\n"
+	    "-			" __DATE__ "  " __TIME__                        "\n"
 	    "--------------------------------------------------------------------\n" );
     int c;
     while ((c=getopt(argc, argv, "hvdsp:w:u:g:P:c:m:")) != -1) 

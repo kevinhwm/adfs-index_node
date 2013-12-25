@@ -116,8 +116,8 @@ int main(int argc, char** argv)
 
     fprintf(stdout, 
 	    "--------------------------------------------------------------------\n"
-	    "-			    Index " _DFS_VERSION "\t\t\t\t   -\n"
-	    "-			" __DATE__ "  " __TIME__ "\t\t\t   -\n"
+	    "-			    Index " _DFS_VERSION "\n"
+	    "-			" __DATE__ "  " __TIME__ "\n"
 	    "--------------------------------------------------------------------\n" );
     int c;
     while ((c=getopt_long(argc, argv, short_options, long_options, NULL)) != -1) 

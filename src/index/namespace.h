@@ -12,6 +12,8 @@
 #include "../def.h"
 
 
+#define _DFS_INC_ID_MAX		16
+
 typedef struct CINsPrim {
     pthread_mutex_t lock; 
     int num;

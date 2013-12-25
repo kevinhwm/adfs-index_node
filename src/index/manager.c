@@ -83,11 +83,9 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
 
 int GIm_exit()
 {
-    DBG_PRINTS("gim exit 1\n");
     CIManager *pm = &g_manager;
     if (pm->another_running) { return 0; }
 
-    DBG_PRINTS("gim exit 2\n");
     CIZone *pz = pm->z_head;
     while (pz) {
 	CIZone *tmp = pz;
@@ -95,32 +93,16 @@ int GIm_exit()
 	tmp->release(tmp);
 	free(tmp);
     }
-    DBG_PRINTS("gim exit 3\n");
     CINameSpace *pns = pm->ns_head;
     while (pns) {
 	CINameSpace *tmp = pns;
 	pns = pns->next;
-
-#ifdef DEBUG
-	if (tmp->prim->f_inc) { 
-	    fprintf(stderr, "file handle is not NULL\n"); 
-	    fprintf(stderr, "file name %s\n", tmp->prim->f_name); 
-	}
-	else { 
-	    fprintf(stderr, "file handle is NULL\n"); 
-	    fprintf(stderr, "file name %s\n", tmp->prim->f_name); 
-	}
-#endif
 	tmp->release(tmp);
 	free(tmp);
     }
-    DBG_PRINTS("gim exit 4\n");
     log_release();
-    DBG_PRINTS("gim exit 5\n");
     remove(_DFS_RUNNING_FLAG);
-    DBG_PRINTS("gim exit 6\n");
     curl_global_cleanup();
-    DBG_PRINTS("gim exit 7\n");
     return 0;
 }
 
@@ -461,17 +443,8 @@ static int m_create_ns(const char *name)
     pns = malloc(sizeof(CINameSpace));
     if (pns == NULL) { return -1; }
     if (GIns_init(pns, name, db_args, pm->primary) < 0) { free(pns); return -1; }
-
-#ifdef DEBUG
-    if (pns->prim->f_inc) { 
-	fprintf(stderr, "file handle is not NULL\n"); 
-	fprintf(stderr, "file name %s\n", pns->prim->f_name); 
-    }
-    else { 
-	fprintf(stderr, "file handle is NULL\n"); 
-	fprintf(stderr, "file name %s\n", pns->prim->f_name); 
-    }
-#endif
+    DBG_PRINTSN("create ns 1");
+    DBG_PRINTPN(pns->prim);
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;
