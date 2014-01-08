@@ -34,9 +34,6 @@ int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int pri
 	if (_this->prim == NULL) { return -1; }
 	memset(_this->prim, 0, sizeof(CINsPrim));
 
-	DBG_PRINTSN("ns init 1");
-	DBG_PRINTPN(_this->prim->f_inc);
-
 	pthread_mutex_init(&_this->prim->lock, NULL);
 	char buf[_DFS_MAX_LEN] = {0};
 	sprintf(buf, "%s/%s", g_manager.syn_dir, name);
@@ -48,8 +45,12 @@ int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int pri
 	_this->output = NULL;
     }
 
-    DBG_PRINTSN("ns init 1");
+    DBG_PRINTSN("ns init -->");
+    DBG_PRINTS("file ptr - ");
+    DBG_PRINTPN(_this->prim->f_inc);
+    DBG_PRINTS("prim ptr - ");
     DBG_PRINTPN(_this->prim);
+    DBG_PRINTSN("ns init <--");
     _this->release = ns_release;
     return 0;
 }
@@ -64,10 +65,12 @@ static int ns_release(CINameSpace *_this)
     if (_this->prim) {
 	pthread_mutex_lock(&_this->prim->lock);
 
-	DBG_PRINTSN("ns release");
+	DBG_PRINTSN("ns release -->");
+	DBG_PRINTS("file ptr - ");
 	DBG_PRINTPN(_this->prim);
+	DBG_PRINTS("prim ptr - ");
 	DBG_PRINTPN(_this->prim->f_inc);
-	DBG_PRINTSN("ns release =");
+	DBG_PRINTSN("ns release <--");
 
 	close_log(_this->prim);
 
@@ -87,7 +90,7 @@ static int ns_output(CINameSpace *_this, const char *name, const char *info)
 	return -1; 
     }
 
-    DBG_PRINTSN("ns output  - f_ptr");
+    DBG_PRINTSN("ns output - f_ptr");
     DBG_PRINTPN(_this->prim->f_inc);
 
     fprintf(_this->prim->f_inc, "%s\t%s\n", name, info);

@@ -97,6 +97,12 @@ int GIm_exit()
     while (pns) {
 	CINameSpace *tmp = pns;
 	pns = pns->next;
+
+	DBG_PRINTSN("gim_exit release -->");
+	DBG_PRINTPN(pns->prim);
+	DBG_PRINTPN(pns->prim->f_inc);
+	DBG_PRINTSN("gim_exit release <--");
+
 	tmp->release(tmp);
 	free(tmp);
     }
