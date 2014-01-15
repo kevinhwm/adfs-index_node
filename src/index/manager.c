@@ -98,10 +98,10 @@ int GIm_exit()
 	CINameSpace *tmp = pns;
 	pns = pns->next;
 
-	DBG_PRINTSN("gim_exit release -->");
-	DBG_PRINTPN(pns->prim);
-	DBG_PRINTPN(pns->prim->f_inc);
-	DBG_PRINTSN("gim_exit release <--");
+	DBG_PRINTSN("exit 1");
+	DBG_PRINTSN(tmp->name);
+	DBG_PRINTPN(tmp->prim);
+	DBG_PRINTPN(tmp->prim->f_inc);
 
 	tmp->release(tmp);
 	free(tmp);
@@ -163,7 +163,7 @@ int GIm_upload(const char *name_space, int overwrite, const char *fname, void *f
     size_t len = strlen(record) + 2;
     // (4) need to be released
     char *new_list = malloc(len);
-    if (new_list == NULL)  { goto err2; }
+    if (new_list == NULL) { goto err2; }
 
     snprintf(new_list, len, "$%s", record);
     int res = kcdbappend(pns->index_db, fname, strlen(fname), new_list, strlen(new_list));
@@ -449,8 +449,6 @@ static int m_create_ns(const char *name)
     pns = malloc(sizeof(CINameSpace));
     if (pns == NULL) { return -1; }
     if (GIns_init(pns, name, db_args, pm->primary) < 0) { free(pns); return -1; }
-    DBG_PRINTSN("create ns 1");
-    DBG_PRINTPN(pns->prim);
 
     pns->prev = pm->ns_tail;
     pns->next = NULL;

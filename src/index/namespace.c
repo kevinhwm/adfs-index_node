@@ -45,12 +45,6 @@ int GIns_init(CINameSpace *_this, const char *name, const char *db_args, int pri
 	_this->output = NULL;
     }
 
-    DBG_PRINTSN("ns init -->");
-    DBG_PRINTS("file ptr - ");
-    DBG_PRINTPN(_this->prim->f_inc);
-    DBG_PRINTS("prim ptr - ");
-    DBG_PRINTPN(_this->prim);
-    DBG_PRINTSN("ns init <--");
     _this->release = ns_release;
     return 0;
 }
@@ -65,12 +59,10 @@ static int ns_release(CINameSpace *_this)
     if (_this->prim) {
 	pthread_mutex_lock(&_this->prim->lock);
 
-	DBG_PRINTSN("ns release -->");
-	DBG_PRINTS("file ptr - ");
+	DBG_PRINTSN("ns release 1");
+	DBG_PRINTSN(_this->name);
 	DBG_PRINTPN(_this->prim);
-	DBG_PRINTS("prim ptr - ");
 	DBG_PRINTPN(_this->prim->f_inc);
-	DBG_PRINTSN("ns release <--");
 
 	close_log(_this->prim);
 
@@ -85,30 +77,27 @@ static int ns_output(CINameSpace *_this, const char *name, const char *info)
 {
     pthread_mutex_lock(&_this->prim->lock);
 
+    DBG_PRINTSN("ns output 1");
+    DBG_PRINTSN(_this->name);
+    DBG_PRINTPN(_this->prim);
+    DBG_PRINTPN(_this->prim->f_inc);
+
     if (open_log(_this->prim, _this->name) < 0) { 
 	pthread_mutex_unlock(&_this->prim->lock);
 	return -1; 
     }
 
-    DBG_PRINTSN("ns output - f_ptr");
-    DBG_PRINTPN(_this->prim->f_inc);
-
     fprintf(_this->prim->f_inc, "%s\t%s\n", name, info);
     fflush(_this->prim->f_inc);
 
     pthread_mutex_unlock(&_this->prim->lock);
+
     return 0;
 }
 
 static int open_log(CINsPrim *pprim, const char *name_space)
 {
-    DBG_PRINTSN("open log 1");
-    DBG_PRINTPN(pprim);
-
     if (pprim->f_inc) { return 0; }
-
-    DBG_PRINTSN("open log 2 - f_ptr");
-    DBG_PRINTPN(pprim->f_inc);
 
     char buf[_DFS_MAX_LEN] = {0};
     sprintf(buf, "%s/%s/%d", g_manager.syn_dir, name_space, pprim->num);
@@ -120,9 +109,6 @@ static int open_log(CINsPrim *pprim, const char *name_space)
 
 static int close_log(CINsPrim *pprim)
 {
-    DBG_PRINTSN("close log 1 - f_ptr");
-    DBG_PRINTPN((*pprim).f_inc);
-
     if (pprim->f_inc) {
 	fclose(pprim->f_inc);
 	pprim->f_inc = NULL;

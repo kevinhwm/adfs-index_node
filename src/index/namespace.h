@@ -19,8 +19,6 @@ typedef struct CINsPrim {
     int num;
     FILE *f_inc; 
     char f_name[512]; 
-
-    int (*output)(struct CINsPrim *_this);
 }CINsPrim;
 
 typedef struct CINsSec {
