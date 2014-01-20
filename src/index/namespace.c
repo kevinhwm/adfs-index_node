@@ -89,9 +89,7 @@ static int ns_output(CINameSpace *_this, const char *name, const char *info)
 
     fprintf(_this->prim->f_inc, "%s\t%s\n", name, info);
     fflush(_this->prim->f_inc);
-
     pthread_mutex_unlock(&_this->prim->lock);
-
     return 0;
 }
 

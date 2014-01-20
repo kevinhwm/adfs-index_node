@@ -88,23 +88,23 @@ int GIm_exit()
 
     CIZone *pz = pm->z_head;
     while (pz) {
-	CIZone *tmp = pz;
+	CIZone *z_tmp = pz;
 	pz = pz->next;
-	tmp->release(tmp);
-	free(tmp);
+	z_tmp->release(z_tmp);
+	free(z_tmp);
     }
     CINameSpace *pns = pm->ns_head;
     while (pns) {
-	CINameSpace *tmp = pns;
+	CINameSpace *ns_tmp = pns;
 	pns = pns->next;
 
 	DBG_PRINTSN("exit 1");
-	DBG_PRINTSN(tmp->name);
-	DBG_PRINTPN(tmp->prim);
-	DBG_PRINTPN(tmp->prim->f_inc);
+	DBG_PRINTSN(ns_tmp->name);
+	DBG_PRINTPN(ns_tmp->prim);
+	DBG_PRINTPN(ns_tmp->prim->f_inc);
 
-	tmp->release(tmp);
-	free(tmp);
+	ns_tmp->release(ns_tmp);
+	free(ns_tmp);
     }
     log_release();
     remove(_DFS_RUNNING_FLAG);
