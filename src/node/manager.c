@@ -186,7 +186,7 @@ static int m_init_log(cJSON *json)
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]-> Config file error.\n-> Exit.\n");
+	fprintf(stderr, "Config file error. No 'log_level' section.\n-> Exit.\n");
         return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
