@@ -87,8 +87,7 @@ int main(int argc, char** argv)
     const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
-    fprintf(stdout,
-	    "--------------------------------------------------------------------\n"
+    printf( "--------------------------------------------------------------------\n"
 	    "-			    Node " _DFS_VERSION                         "\n"
 	    "-			" __DATE__ "  " __TIME__                        "\n"
 	    "--------------------------------------------------------------------\n" );
@@ -107,24 +106,24 @@ int main(int argc, char** argv)
 	    case 'g': group_name=optarg; break;
 	    case 'P': port=atoi(optarg);
 		      if (port<=0) {
-			  fprintf(stdout, "invalid port: %s\n\n", optarg);
+			  fprintf(stderr, "invalid port: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
 	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
-			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
+	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
     }
     if ((argc-optind)>0) {
-	fprintf(stdout, "too many arguments\n\n"); show_help();
+	fprintf(stderr, "too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
     if (shutdown) {
@@ -133,7 +132,7 @@ int main(int argc, char** argv)
     }
     /////////////////////////////////////////////////////////////////////////////////
     if (chdir(work_dir) < 0) {
-	fprintf(stdout, "work dir error\n");
+	fprintf(stderr, "work dir error\n");
 	return EXIT_FAILURE;
     }
     // nxweb_run_xxx will call "chdir" again.

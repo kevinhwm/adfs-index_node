@@ -54,8 +54,7 @@ static void server_main()
 
 static void show_help(void) 
 {
-    fprintf(stdout, ""
-	    "usage:    indexserver <options>\n"
+    printf( "usage:    indexserver <options>\n"
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
@@ -117,8 +116,7 @@ int main(int argc, char** argv)
 	{ NULL, 0, NULL, 0 }
     };
 
-    fprintf(stdout, 
-	    "--------------------------------------------------------------------\n"
+    printf( "--------------------------------------------------------------------\n"
 	    "-			    Index " _DFS_VERSION "\n"
 	    "-			" __DATE__ "  " __TIME__ "\n"
 	    "--------------------------------------------------------------------\n" );
@@ -137,39 +135,39 @@ int main(int argc, char** argv)
 	    case 'g': group_name=optarg; break;
 	    case 'P': port=atoi(optarg);
 		      if (port<=0) { 
-			  fprintf(stdout, "invalid port: %s\n\n", optarg); 
+			  fprintf(stderr, "invalid port: %s\n\n", optarg); 
 			  return EXIT_FAILURE; 
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
 	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
-			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'M': max_file_size = atoi(optarg);
 		      if (max_file_size <= 0) {
-			  fprintf(stdout, "invalid file size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid file size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'b': bnum = atol(optarg);
 		      if (bnum <= 0) {
-			  fprintf(stdout, "invalid bnum %s\n\n", optarg);
+			  fprintf(stderr, "invalid bnum %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 't': syn_dir = optarg; break;
 	    //case 0: role = 1; break;
-	    case '?': fprintf(stdout, "unkown option: %c\n\n", optopt);
+	    case '?': fprintf(stderr, "unkown option: %c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
     }
 
     if ((argc-optind)>0) {
-	fprintf(stdout, "too many arguments\n\n"); show_help();
+	fprintf(stderr, "too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
 
@@ -180,7 +178,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     if (chdir(work_dir) < 0) {
-	fprintf(stdout, "work dir error\n");
+	fprintf(stderr, "work dir error\n");
 	return EXIT_FAILURE;
     }
     // nxweb_run_xxx will call "chdir" again.
