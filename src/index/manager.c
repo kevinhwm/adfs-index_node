@@ -307,12 +307,12 @@ static int m_init_log(cJSON *json)
 {
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]-> Config file error\n-> Exit.\n");
+	fprintf(stderr, "[log_level]-> Config file error. No 'log_level' section.\n-> Exit.\n");
 	return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
     if (log_init(log_level) < 0) {
-	fprintf(stderr, "[log_level]-> Config value error\n-> Exit.\n");
+	fprintf(stderr, "[log_level]-> Config value error.\n-> Exit.\n");
 	return -1;
     }
     return 0;
@@ -321,7 +321,7 @@ static int m_init_log(cJSON *json)
 static int m_init_ns(cJSON *json)
 {
     if (m_create_ns("default") < 0) {
-	fprintf(stderr, "[default]-> Create namespace error\n-> Exit.\n");
+	fprintf(stderr, "[default]-> Create namespace error.\n-> Exit.\n");
 	return -1;
     }
     cJSON *j_tmp = cJSON_GetObjectItem(json, "namespace");
@@ -329,14 +329,18 @@ static int m_init_ns(cJSON *json)
 	for (; j_tmp; j_tmp = j_tmp->next) {
 	    size_t len = strlen(j_tmp->valuestring);
 	    if (len == 0 || len >= _DFS_NAMESPACE_LEN) {
-		fprintf(stderr, "[namespace]-> Create file error\n-> Exit.\n");
+		fprintf(stderr, "[namespace]-> Create file error.\n-> Exit.\n");
 		return -1;
 	    }
 	    if (m_create_ns(j_tmp->valuestring) < 0) {
-		fprintf(stderr, "[%s]-> Create namespace error\n-> Exit.\n", j_tmp->valuestring);
+		fprintf(stderr, "[%s]-> Create namespace error.\n-> Exit.\n", j_tmp->valuestring);
 		return -1;
 	    }
 	}
+    }
+    else {
+	fprintf(stderr, "Config file error. No 'namespace' section.\n-> Exit.\n");
+	return -1;
     }
     return 0;
 }
@@ -366,6 +370,10 @@ static int m_init_zone(cJSON *json)
 		}
 	    }
 	}
+    }
+    else {
+	fprintf(stderr, "Config file error. No 'zone' section.\n-> Exit.\n");
+	return -1;
     }
     return 0;
 }
