@@ -343,7 +343,63 @@ int aim_exist(const char *name_space, const char *fname)
     else {kcfree(line); return 1;}
 }
 
+char * aim_length(const char *ns, const char *fname, const char *history)
+{
+    //AIManager *pm = &g_manager;
+    const char *name_space = ns;
+    if (name_space == NULL) {name_space = "default";}
+    AINameSpace *pns = m_get_ns(name_space);
+    if (pns == NULL) {return NULL;}
 
+    int order = 0;
+    if (history != NULL) {
+	for (int i=0; i<strlen(history); ++i) {
+	    if (history[i] < '0' || history[i] > '9') { return NULL; }
+	}
+	if ((order = atoi(history)) < 0) {return NULL;}
+    }
+
+    size_t vsize;
+    char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
+    if (line == NULL) {return NULL;}
+    char *url = (char *)malloc(ADFS_MAX_PATH);
+    if (url == NULL) {goto err1;}
+    memset(url, 0, ADFS_MAX_PATH);
+    char *record = m_get_history(line, order);
+    if (record == NULL) {goto err2;}
+
+    AIZone *pz = m_choose_zone(record + ADFS_UUID_LEN);
+    if (pz == NULL) {goto err3;}
+    char *pos_zone = strstr(record, pz->name);
+    char *pos_sharp = strstr(pos_zone, "#");
+    char *pos_split = strstr(pos_sharp, "|");
+    if (pos_split) {
+	char node_name[ADFS_FILENAME_LEN] = {0};
+	strncpy(node_name, pos_sharp+1, (int)(pos_split-pos_sharp-1));
+	AINode *pn = m_get_node_by_name(node_name, strlen(node_name));
+	if (pn == NULL) {goto err3;}
+	snprintf(url, ADFS_MAX_PATH, "http://%s/length/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+    }
+    else {
+	AINode *pn = m_get_node_by_name(pos_sharp+1, strlen(pos_sharp+1));
+	if (pn == NULL) {goto err3;}
+	snprintf(url, ADFS_MAX_PATH, "http://%s/length/%s%.*s", pn->ip_port, fname, ADFS_UUID_LEN, record);
+    }
+    strncat(url, "?namespace=", ADFS_MAX_PATH);
+    strncat(url, pns->name, ADFS_MAX_PATH);
+    //pm->s_download.inc(&(pm->s_download));
+
+    if (record) {free(record);}
+    if (line) {kcfree(line);}
+    return url;
+err3:
+    if (record) {free(record);}
+err2:
+    if (url) {free(url);}
+err1:
+    if (line) {kcfree(line);}
+    return NULL;
+}
 char * aim_status()
 {
     int size = 1024 * 32;

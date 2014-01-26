@@ -7,7 +7,7 @@ CFLAGS = -std=c99 -Wall
 INCLUDE=-I/usr/local/include/ 
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lcurl -pthread
 TARGET = indexserver
-OBJS = if_upload.o if_download.o if_delete.o if_exist.o if_status.o \
+OBJS = if_upload.o if_download.o if_delete.o if_exist.o if_length.o if_status.o \
        ai_record.o ai_zone.o ai_connect.o ai_stat.o ai_manager.o ai_function.o \
        cJSON.o log.o multipart_parser.o indexserver.o
 
@@ -20,6 +20,7 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_download.o if_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_delete.o if_delete.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_exist.o if_exist.c
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_length.o if_length.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o if_status.o if_status.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_record.o ai_record.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o ai_zone.o ai_zone.c

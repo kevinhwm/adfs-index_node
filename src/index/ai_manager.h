@@ -47,6 +47,7 @@ ADFS_RESULT aim_upload(const char *name_space, int overwrite, const char *fname,
 char * aim_download(const char *name_space, const char *fname, const char *history);
 ADFS_RESULT aim_delete(const char *name_space, const char *fname);
 int aim_exist(const char *name_space, const char *fname);
+char * aim_length(const char *name_space, const char *fname, const char *history);
 char * aim_status();
 
 // connect.c

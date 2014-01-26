@@ -28,6 +28,7 @@ ADFS_RESULT anm_init(const char * conf_file, const char * dbpath, unsigned long 
 void anm_exit();
 ADFS_RESULT anm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 void anm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
+int anm_length(const char *name_space, const char *fname, unsigned long *pfile_len);
 ADFS_RESULT anm_erase(const char *name_space, const char *fname);
 ADFS_RESULT anm_syn();
 

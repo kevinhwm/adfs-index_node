@@ -138,6 +138,25 @@ void anm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfi
     kcfree(id);
 }
 
+int anm_length(const char *ns, const char *fname, unsigned long *pfile_len)
+{
+    ANNameSpace * pns = NULL;
+    const char *name_space = ns;
+    if (name_space == NULL) {name_space = "default";}
+    pns = m_get_ns(name_space);
+    if (pns == NULL) {return -1 ;}
+
+    size_t len = 0;
+    char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
+    if (id == NULL) {return -1;}
+    NodeDB *pn = pns->get(pns, atoi(id));
+    if (pn == NULL) {kcfree(id); return -1;}
+    char *pbuf = kcdbget(pn->db, fname, strlen(fname), pfile_len);
+    kcfree(pbuf);
+    kcfree(id);
+    return 0;
+}
+
 ADFS_RESULT anm_erase(const char *ns, const char *fname)
 {
     ANNameSpace * pns = NULL;

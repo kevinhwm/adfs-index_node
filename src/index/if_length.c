@@ -1,4 +1,4 @@
-/* if_exist.c
+/* if_length.c
  *
  * huangtao@antiy.com
  * Antiy Labs. Basic Platform R & D Center.
@@ -8,7 +8,7 @@
 #include <string.h>
 #include "ai_manager.h"
 
-static nxweb_result exist_on_request(
+static nxweb_result length_on_request(
 	nxweb_http_server_connection* conn, 
 	nxweb_http_request* req, 
 	nxweb_http_response* resp) 
@@ -18,18 +18,22 @@ static nxweb_result exist_on_request(
 	resp->keep_alive=0;
 	return NXWEB_ERROR;
     }
-    nxweb_set_response_content_type(resp, "text/html");
     nxweb_parse_request_parameters(req, 0);
     const char *name_space = nx_simple_map_get_nocase( req->parameters, "namespace" );
+    const char *history = nx_simple_map_get_nocase( req->parameters, "history" );
 
     char fname[ADFS_MAX_PATH] = {0};
     strncpy(fname, req->path_info, sizeof(fname));
+    printf("1-%s\n", fname);
     nxweb_url_decode(fname, NULL);
+    printf("2-%s\n", fname);
     if (get_filename_from_url(fname) != 0) {
+	printf("3-%s\n", fname);
 	nxweb_send_http_error(resp, 403, "Forbidden\nCheck file name");
 	resp->keep_alive = 0;
 	return ADFS_ERROR;
     }
+    printf("4-%s\n", fname);
 
     if (strlen(fname) >= ADFS_FILENAME_LEN) {
 	nxweb_send_http_error(resp, 403, "Forbidden\nFile name is too long. It must be less than 250");
@@ -38,24 +42,28 @@ static nxweb_result exist_on_request(
     }
 
     char msg[1024] = {0};
-    
-    if (aim_exist(name_space, fname)) {
-	snprintf(msg, sizeof(msg), "[%s:%s]->ok.[%s]", name_space, fname, conn->remote_addr);
-	log_out("exist", msg, LOG_LEVEL_INFO);
-	nxweb_response_printf(resp, "OK" );
-	return NXWEB_OK;
-    }
-    else {
+    printf("10\n");
+    char *redirect_url = aim_length(name_space, fname, history);
+    if (redirect_url == NULL) {
+	printf("20\n");
 	nxweb_send_http_error(resp, 404, "Not Found");
 	resp->keep_alive = 0;
-	snprintf(msg, sizeof(msg), "[%s:%s]->no file.[%s]", name_space, fname, conn->remote_addr);
-	log_out("exist", msg, LOG_LEVEL_INFO);
-	return NXWEB_ERROR;
+	snprintf(msg, sizeof(msg), "[%s:%s:%s]->no file.[%s]", name_space, fname, history, conn->remote_addr);
+	log_out("length", msg, LOG_LEVEL_INFO);
+	return ADFS_ERROR;
+    }
+    else {
+    printf("30\n");
+	nxweb_send_redirect(resp, 302, redirect_url, conn->secure);
+	snprintf(msg, sizeof(msg), "[%s:%s:%s-%s]->ok.[%s]", name_space, fname, history, redirect_url, conn->remote_addr);
+	log_out("length", msg, LOG_LEVEL_INFO);
+	free(redirect_url);
+	return NXWEB_OK;
     }
 }
 
-nxweb_handler exist_handler={
-    .on_request = exist_on_request,
+nxweb_handler length_handler={
+    .on_request = length_on_request,
     .flags = NXWEB_PARSE_PARAMETERS
 };
 

@@ -7,7 +7,7 @@ CFLAGS = -std=c99 -Wall -D_GNU_SOURCE
 INCLUDE = -I../include
 LIBS = -lnxweb -lkyotocabinet -lrt -lpthread
 TARGET = nodeserver
-OBJS = if_upload.o if_download.o if_erase.o if_status.o if_syn.o\
+OBJS = if_upload.o if_download.o if_length.o if_erase.o if_status.o if_syn.o\
        an_namespace.o an_manager.o \
        conf.o log.o multipart_parser.o nodeserver.o
 
@@ -19,6 +19,7 @@ release:$(OBJS)
 debug:
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_upload.o if_upload.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_download.o if_download.c
+	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_length.o if_length.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_erase.o if_erase.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_status.o if_status.c
 	$(CC) $(CFLAGS) -DDEBUG $(INCLUDE) -c -o if_syn.o if_syn.c
