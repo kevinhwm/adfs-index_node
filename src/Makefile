@@ -46,8 +46,8 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.json bin
-	cp nodeserver node/nodeserver.json bin
+	cp indexserver index/indexserver.conf bin
+	cp nodeserver node/nodeserver.conf bin
 
 debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o function.o function.c
@@ -78,25 +78,25 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nodeserver.o node/nodeserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o nodeserver $(nd_OBJS) $(LIBS)
 	mkdir -p bin
-	cp indexserver index/indexserver.json bin
-	cp nodeserver node/nodeserver.json bin
+	cp indexserver index/indexserver.conf bin
+	cp nodeserver node/nodeserver.conf bin
 
 
 .PHONY:install
 install:
 	mkdir -p /usr/local/adfs/index
-	cp bin/indexserver.json /usr/local/adfs/index
+	cp bin/indexserver.conf /usr/local/adfs/index
 	cp bin/indexserver /usr/local/bin
 	mkdir -p /usr/local/adfs/node
-	cp bin/nodeserver.json /usr/local/adfs/node
+	cp bin/nodeserver.conf /usr/local/adfs/node
 	cp bin/nodeserver /usr/local/bin
 
 .PHONY:uninstall
 uninstall:
 	-rm -f /usr/local/bin/indexserver
 	-rm -f /usr/local/bin/nodeserver
-	-rm /usr/local/bin/adfs/index/indexserver.json
-	-rm /usr/local/bin/adfs/node/nodeserver.json
+	-rm /usr/local/bin/adfs/index/indexserver.conf
+	-rm /usr/local/bin/adfs/node/nodeserver.conf
 	-rmdir /usr/local/bin/adfs/index
 	-rmdir /usr/local/bin/adfs/node
 	-rmdir /usr/local/bin/adfs

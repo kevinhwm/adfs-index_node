@@ -170,7 +170,7 @@ static nxweb_result upload_on_request(
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    else if (res > 0) { snprintf(msg, sizeof(msg), "[%s]->ok.[%s]", fname, conn->remote_addr); }
+    else if (res > 0) { snprintf(msg, sizeof(msg), "[%s:%s:%s]->ok.[%s]", namespace, fname, overwrite, conn->remote_addr); }
     else { snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr); }
 
     log_out("upload", msg, LOG_LEVEL_INFO);
