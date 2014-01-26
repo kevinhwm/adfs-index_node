@@ -29,18 +29,14 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
 
     char *f_flag = _DFS_RUNNING_FLAG;
     if (access(f_flag, F_OK) != -1) {
-	fprintf(stdout, "-> Another instance is running...\n-> exit.\n");
+	fprintf(stdout, "-> Another instance is running...\n-> Exit.\n");
 	pm->another_running = 1;
 	return -1;
     }
     else {
 	pm->another_running = 0;
-	time_t t;
-	char stime[64] = {0};
-	time(&t);
-	FILE *f = fopen(f_flag, "wb+");
+	FILE *f = fopen(f_flag, "w+");
 	if (f == NULL) { return -1; }
-	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
 
@@ -56,12 +52,12 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
     if (GNu_run() < 0) { return -1; }
     
     if (access(conf_file, F_OK) == -1) {
-	fprintf(stdout, "-> Config file does not exist...\n-> exit.\n");
+	fprintf(stdout, "-> Config file does not exist...\n-> Exit.\n");
 	return -1;
     }
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { 
-	fprintf(stdout, "-> Parse config file failed...\n-> exit.");
+	fprintf(stdout, "-> Parse config file failed...\n-> Exit.");
 	return -1; }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
     conf_release(json);
@@ -199,12 +195,12 @@ static int m_init_log(cJSON *json)
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]-> Config file error");
+	fprintf(stderr, "[log_level]-> Config file error.\n-> Exit.\n");
         return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
     if (log_init(log_level) < 0) {
-	fprintf(stderr, "[log_level]-> Config value error");
+	fprintf(stderr, "[log_level]-> Config value error.\n-> Exit.\n");
 	return -1;
     }
     return 0;

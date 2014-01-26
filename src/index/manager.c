@@ -36,18 +36,14 @@ int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 
     char *f_flag = _DFS_RUNNING_FLAG;	// running.flag
     if (access(f_flag, F_OK) != -1) {
-	fprintf(stdout, "-> Another instance is running...\n-> exit.\n");
+	fprintf(stdout, "-> Another instance is running...\n-> Exit.\n");
 	pm->another_running = 1;
 	return -1;
     }
     else {
 	pm->another_running = 0;
-	time_t t;
-	char stime[64] = {0};
-	time(&t);
-	FILE *f = fopen(f_flag, "wb+");
+	FILE *f = fopen(f_flag, "w+");
 	if (f == NULL) { return -1; }
-	fprintf(f, "%s", ctime_r(&t, stime));
 	fclose(f);
     }
 
@@ -63,12 +59,12 @@ int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
     if (GIu_run() < 0) { return -1; }
 
     if (access(conf_file, F_OK) == -1) {
-	fprintf(stdout, "-> Config file does not exist...\n-> exit.\n");
+	fprintf(stdout, "-> Config file does not exist...\n-> Exit.\n");
 	return -1;
     }
     cJSON *json = conf_parse(conf_file);
     if (json == NULL) { 
-	fprintf(stdout, "-> Parse config file failed...\n-> exit.\n"); 
+	fprintf(stdout, "-> Parse config file failed...\n-> Exit.\n"); 
 	return -1; 
     }
     if (m_init_log(json) < 0) { conf_release(json); return -1; }
@@ -311,12 +307,12 @@ static int m_init_log(cJSON *json)
 {
     cJSON *j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]-> Config file error\n");
+	fprintf(stderr, "[log_level]-> Config file error\n-> Exit.\n");
 	return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
     if (log_init(log_level) < 0) {
-	fprintf(stderr, "[log_level]-> Config value error\n");
+	fprintf(stderr, "[log_level]-> Config value error\n-> Exit.\n");
 	return -1;
     }
     return 0;
@@ -325,7 +321,7 @@ static int m_init_log(cJSON *json)
 static int m_init_ns(cJSON *json)
 {
     if (m_create_ns("default") < 0) {
-	fprintf(stderr, "[default]-> Create namespace error\n");
+	fprintf(stderr, "[default]-> Create namespace error\n-> Exit.\n");
 	return -1;
     }
     cJSON *j_tmp = cJSON_GetObjectItem(json, "namespace");
@@ -333,11 +329,11 @@ static int m_init_ns(cJSON *json)
 	for (; j_tmp; j_tmp = j_tmp->next) {
 	    size_t len = strlen(j_tmp->valuestring);
 	    if (len == 0 || len >= _DFS_NAMESPACE_LEN) {
-		fprintf(stderr, "[namespace]-> Create file error\n");
+		fprintf(stderr, "[namespace]-> Create file error\n-> Exit.\n");
 		return -1;
 	    }
 	    if (m_create_ns(j_tmp->valuestring) < 0) {
-		fprintf(stderr, "[%s]-> Create namespace error\n", j_tmp->valuestring);
+		fprintf(stderr, "[%s]-> Create namespace error\n-> Exit.\n", j_tmp->valuestring);
 		return -1;
 	    }
 	}
@@ -353,7 +349,7 @@ static int m_init_zone(cJSON *json)
 	    cJSON *j_name = cJSON_GetObjectItem(j_tmp, "name");
 	    CIZone *pz = m_create_zone(j_name->valuestring);
 	    if (pz == NULL) {
-		fprintf(stderr, "[%s]-> Create zone error\n", j_name->valuestring);
+		fprintf(stderr, "[%s]-> Create zone error\n-> Exit.\n", j_name->valuestring);
 		return -1;
 	    }
 
@@ -365,7 +361,7 @@ static int m_init_zone(cJSON *json)
 		char *state = one_attr->next->valuestring;
 		char *ip_port = one_attr->next->next->valuestring;
 		if (!name || !state || !ip_port || (pz->create(pz, name, ip_port, state) < 0)) {
-		    fprintf(stderr, "[%s]-> Create node error\n", node->string);
+		    fprintf(stderr, "[%s]-> Create node error\n-> Exit.\n", node->string);
 		    return -1;
 		}
 	    }
