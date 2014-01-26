@@ -97,12 +97,6 @@ int GIm_exit()
     while (pns) {
 	CINameSpace *ns_tmp = pns;
 	pns = pns->next;
-
-	DBG_PRINTSN("exit 1");
-	DBG_PRINTSN(ns_tmp->name);
-	DBG_PRINTPN(ns_tmp->prim);
-	DBG_PRINTPN(ns_tmp->prim->f_inc);
-
 	ns_tmp->release(ns_tmp);
 	free(ns_tmp);
     }

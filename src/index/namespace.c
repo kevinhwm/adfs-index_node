@@ -58,14 +58,7 @@ static int ns_release(CINameSpace *_this)
     }
     if (_this->prim) {
 	pthread_mutex_lock(&_this->prim->lock);
-
-	DBG_PRINTSN("ns release 1");
-	DBG_PRINTSN(_this->name);
-	DBG_PRINTPN(_this->prim);
-	DBG_PRINTPN(_this->prim->f_inc);
-
 	close_log(_this->prim);
-
 	pthread_mutex_destroy(&_this->prim->lock);
 	free(_this->prim);
 	_this->prim = NULL;
@@ -76,17 +69,10 @@ static int ns_release(CINameSpace *_this)
 static int ns_output(CINameSpace *_this, const char *name, const char *info)
 {
     pthread_mutex_lock(&_this->prim->lock);
-
-    DBG_PRINTSN("ns output 1");
-    DBG_PRINTSN(_this->name);
-    DBG_PRINTPN(_this->prim);
-    DBG_PRINTPN(_this->prim->f_inc);
-
     if (open_log(_this->prim, _this->name) < 0) { 
 	pthread_mutex_unlock(&_this->prim->lock);
 	return -1; 
     }
-
     fprintf(_this->prim->f_inc, "%s\t%s\n", name, info);
     fflush(_this->prim->f_inc);
     pthread_mutex_unlock(&_this->prim->lock);

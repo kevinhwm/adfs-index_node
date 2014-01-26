@@ -42,6 +42,9 @@ static void server_main()
 
     // Go!
     nxweb_run();
+
+    GNm_exit();
+    fprintf(stderr, "Node exit.\n\n");
 }
 
 static void show_help(void) 
@@ -145,8 +148,6 @@ int main(int argc, char** argv)
     if (daemon) { nxweb_run_daemon(work_dir, MNGR_LOG_DIR "/" MNGR_CORE_LOG, pid_file, server_main); }
     else { nxweb_run_normal(work_dir, 0, pid_file, server_main); }
 
-    GNm_exit();
-    fprintf(stderr, "Node exit.\n\n");
     return EXIT_SUCCESS;
 }
 
