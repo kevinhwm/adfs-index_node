@@ -29,13 +29,13 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
 
     char *f_flag = _DFS_RUNNING_FLAG;
     if (access(f_flag, F_OK) != -1) {
-	fprintf(stdout, "-> another instance is running...\n-> exit.\n");
+	fprintf(stdout, "-> Another instance is running...\n-> Exit.\n");
 	pm->another_running = 1;
 	return -1;
     }
     else {
 	pm->another_running = 0;
-	FILE *f = fopen(f_flag, "w");
+	FILE *f = fopen(f_flag, "w+");
 	if (f == NULL) { return -1; }
 	fclose(f);
     }
@@ -186,12 +186,12 @@ static int m_init_log(cJSON *json)
     cJSON *j_tmp = NULL;
     j_tmp = cJSON_GetObjectItem(json, "log_level");
     if (j_tmp == NULL) {
-	fprintf(stderr, "[log_level]->config file error");
+	fprintf(stderr, "[log_level]-> Config file error.\n-> Exit.\n");
         return -1;
     }
     LOG_LEVEL log_level = j_tmp->valueint;
     if (log_init(log_level, NULL) < 0) {
-	fprintf(stderr, "[log_level]->config value error");
+	fprintf(stderr, "[log_level]-> Config value error.\n-> Exit.\n");
 	return -1;
     }
     return 0;

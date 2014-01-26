@@ -47,7 +47,7 @@ int GIm_init(const char *conf_file, const char *syn_dir, int role, long bnum, un
 	return -1;
     }
     else {
-	FILE *f = fopen(f_flag, "w");
+	FILE *f = fopen(f_flag, "w+");
 	if (f == NULL) { 
 	    fprintf(stderr, "-> Create running-flag file error.\n-> Exit.\n"); 
 	    return -1; 
