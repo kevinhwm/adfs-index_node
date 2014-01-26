@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     int shutdown=0;
     const char* work_dir="/usr/local/adfs/node";
     const char* pid_file="nodeserver.pid";
-    const char* conf_file="nodeserver.json";
+    const char* conf_file="nodeserver.conf";
     unsigned long mem_size = 512;
 
     printf( "====================================================================\n"

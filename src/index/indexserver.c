@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     int shutdown=0;
     const char *work_dir="/usr/local/adfs/index";
     const char *pid_file="indexserver.pid";
-    const char *conf_file="indexserver.json";
+    const char *conf_file="indexserver.conf";
     unsigned long mem_size = 256;
     unsigned long max_file_size = 128;
     long bnum = 1048576;
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     }
 
     if ((argc-optind)>0) {
-	fprintf(stdout, "too many arguments\n\n"); show_help();
+	fprintf(stdout, "Too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
 
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     if (chdir(work_dir) < 0) {
-	fprintf(stdout, "work dir error\n");
+	fprintf(stdout, "Work dir error\n");
 	return EXIT_FAILURE;
     }
     // nxweb_run_xxx will call "chdir" again.
@@ -173,8 +173,8 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     CIManager *pm = &g_manager;
-    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main);}
-    else {nxweb_run_normal(work_dir, 0, pid_file, server_main);}
+    if (daemon) { nxweb_run_daemon(work_dir, pm->core_log, pid_file, server_main); }
+    else { nxweb_run_normal(work_dir, 0, pid_file, server_main); }
     return EXIT_SUCCESS;
 }
 

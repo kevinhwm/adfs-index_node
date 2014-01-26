@@ -3,17 +3,16 @@
  * kevinhwm@gmail.com
  */
 
-#include "cJSON.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "def.h"
 
 static void conf_read_and_filter(const char *conf_file, char **data);
 
-cJSON * conf_parse(char *conf_file)
+cJSON * conf_parse(const char *conf_file)
 {
     char *data = NULL;
     cJSON *json = NULL;
-
     conf_read_and_filter(conf_file, &data);
     json = cJSON_Parse(data);
     if (data) { free(data); }
