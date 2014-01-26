@@ -55,8 +55,7 @@ static void server_main()
 
 static void show_help(void) 
 {
-    fprintf(stdout, ""
-	    "usage:    indexserver <options>\n"
+    printf( "usage:    indexserver <options>\n"
 	    " -d       run as daemon\n"
 	    " -s       shutdown nxweb\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
@@ -66,15 +65,13 @@ static void show_help(void)
 	    " -P port  set http port\n"
 	    " -h       show this help\n"
 	    " -v       show version\n"
-
-	    " -c file  config file			(default: indexserver.json)\n"
+	    " -c file  config file			(default: indexserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 256)\n"
 	    " -M fmax  set file max size in MB	(default: 128)\n"
 	    " -b bnum  set the number of buckets	(default: 1048576)\n"
 	    //" -x dir   set database dir		(no default, must be set.)\n"
-
 	    "\n"
-	    " example:  indexserver -w ./ -c indexserver.json -d \n"
+	    " example:  indexserver -w . -c indexserver.conf -d \n"
 	   );
 }
 
@@ -98,8 +95,7 @@ int main(int argc, char** argv)
     unsigned long max_file_size = 128;
     long bnum = 1048576;
 
-    fprintf(stdout, 
-	    "====================================================================\n"
+    printf( "====================================================================\n"
 	    "                    Index " _DFS_VERSION "\n"
 	    "                  " __DATE__ "  " __TIME__ "\n"
 	    "====================================================================\n" );
@@ -119,37 +115,37 @@ int main(int argc, char** argv)
 	    case 'g': group_name=optarg; break;
 	    case 'P': port=atoi(optarg);
 		      if (port<=0) { 
-			  fprintf(stdout, "invalid port: %s\n\n", optarg); 
+			  fprintf(stderr, "invalid port: %s\n\n", optarg); 
 			  return EXIT_FAILURE; 
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
 	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
-			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'M': max_file_size = atoi(optarg);
 		      if (max_file_size <= 0) {
-			  fprintf(stdout, "invalid file size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid file size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'b': bnum = atol(optarg);
 		      if (bnum <= 0) {
-			  fprintf(stdout, "invalid bnum %s\n\n", optarg);
+			  fprintf(stderr, "invalid bnum %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
+	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
     }
 
     if ((argc-optind)>0) {
-	fprintf(stdout, "Too many arguments\n\n"); show_help();
+	fprintf(stderr, "Too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
 
@@ -160,7 +156,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////////////
     if (chdir(work_dir) < 0) {
-	fprintf(stdout, "Work dir error\n");
+	fprintf(stderr, "Work dir error\n");
 	return EXIT_FAILURE;
     }
     // nxweb_run_xxx will call "chdir" again.

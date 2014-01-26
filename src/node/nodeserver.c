@@ -59,12 +59,11 @@ static void show_help(void)
 	    " -P port  set http port\n"
 	    " -h       show this help\n"
 	    " -v       show version\n"
-
-	    " -c file  config file			(default: nodeserver.json)\n"
+	    " -c file  config file			(default: nodeserver.conf)\n"
 	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(no default, must be set.)\n"
 	    "\n"
-	    " example:  nodeserver -w ./ -c nodeserver.json -d -P 10010 \n"
+	    " example:  nodeserver -w . -c nodeserver.conf -d -P 10010 \n"
 	  );
 }
 
@@ -106,24 +105,24 @@ int main(int argc, char** argv)
 	    case 'g': group_name=optarg; break;
 	    case 'P': port=atoi(optarg);
 		      if (port<=0) {
-			  fprintf(stdout, "invalid port: %s\n\n", optarg);
+			  fprintf(stderr, "invalid port: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
 	    case 'c': conf_file=optarg; break;
 	    case 'm': mem_size = atoi(optarg);
 		      if (mem_size <= 0) {
-			  fprintf(stdout, "invalid mem size: %s\n\n", optarg);
+			  fprintf(stderr, "invalid mem size: %s\n\n", optarg);
 			  return EXIT_FAILURE;
 		      }
 		      break;
-	    case '?': fprintf(stdout, "unkown option: -%c\n\n", optopt);
+	    case '?': fprintf(stderr, "unkown option: -%c\n\n", optopt);
 		      show_help();
 		      return EXIT_FAILURE;
 	}
     }
     if ((argc-optind)>0) {
-	fprintf(stdout, "too many arguments\n\n"); show_help();
+	fprintf(stderr, "too many arguments\n\n"); show_help();
 	return EXIT_FAILURE;
     }
     if (shutdown) {
@@ -132,7 +131,7 @@ int main(int argc, char** argv)
     }
     /////////////////////////////////////////////////////////////////////////////////
     if (chdir(work_dir) < 0) {
-	fprintf(stdout, "work dir error\n");
+	fprintf(stderr, "work dir error\n");
 	return EXIT_FAILURE;
     }
     // nxweb_run_xxx will call "chdir" again.
