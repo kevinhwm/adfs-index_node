@@ -46,6 +46,7 @@ int 	GIm_init(const char *file_conf, long bnum, unsigned long mem_size, unsigned
 int 	GIm_exit();
 int 	GIm_upload(const char *name_space, int overwrite, const char *fname, void *fdata, size_t fdata_len);
 char *	GIm_download(const char *name_space, const char *fname, const char *history);
+char *	GIm_length(const char *ns, const char *fname, const char *history);
 int	GIm_exist(const char *name_space, const char *fname);
 int	GIm_delete(const char *name_space, const char *fname);
 int 	GIm_setnode(const char *node_name, const char *attr_rw);

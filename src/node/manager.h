@@ -34,6 +34,7 @@ int GNm_init(const char * conf_file, unsigned long cache_size);
 int GNm_exit();
 int GNm_save(const char * name_space, const char *fname, size_t fname_len, void * fp, size_t fp_len);
 int GNm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size);
+int GNm_length(const char *ns, const char *fname, unsigned long *pfile_len);
 int GNm_erase(const char *name_space, const char *fname);
 
 // update.c

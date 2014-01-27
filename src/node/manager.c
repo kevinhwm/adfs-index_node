@@ -107,12 +107,11 @@ int GNm_save(const char * ns, const char *fname, size_t fname_len, void * fdata,
     return 0;
 }
 
-int GNm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfile_size)
+int GNm_get(const char *name_space, const char *fname, void ** ppfile_data, size_t *pfile_size)
 {
     *ppfile_data = NULL;
     *pfile_size = 0;
     CNNameSpace * pns = NULL;
-    const char *name_space = ns;
     if (name_space == NULL) {name_space = "default";}
     pns = m_get_ns(name_space);
     if (pns == NULL) {return -1;}
@@ -123,6 +122,24 @@ int GNm_get(const char *ns, const char *fname, void ** ppfile_data, size_t *pfil
     NodeDB *pn = pns->get(pns, atoi(id));
     if (pn == NULL) {kcfree(id); return -1;}
     *ppfile_data = kcdbget(pn->db, fname, strlen(fname), pfile_size);
+    kcfree(id);
+    return 0;
+}
+
+int GNm_length(const char *name_space, const char *fname, unsigned long *pfile_len)
+{
+    CNNameSpace * pns = NULL;
+    if (name_space == NULL) {name_space = "default";}
+    pns = m_get_ns(name_space);
+    if (pns == NULL) {return -1 ;}
+
+    size_t len = 0;
+    char *id = kcdbget(pns->index_db, fname, strlen(fname), &len);
+    if (id == NULL) {return -1;}
+    NodeDB *pn = pns->get(pns, atoi(id));
+    if (pn == NULL) {kcfree(id); return -1;}
+    char *pbuf = kcdbget(pn->db, fname, strlen(fname), pfile_len);
+    kcfree(pbuf);
     kcfree(id);
     return 0;
 }

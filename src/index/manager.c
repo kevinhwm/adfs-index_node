@@ -238,6 +238,47 @@ int GIm_exist(const char *name_space, const char *fname)
     else { kcfree(line); return 1; }
 }
 
+char * GIm_length(const char *name_space, const char *fname, const char *history)
+{
+    if (name_space == NULL) { name_space = "default"; }
+    CINameSpace *pns = m_get_ns(name_space);
+    if (pns == NULL) { return NULL; }
+
+    int order = 0;
+    if (history != NULL) {
+	for (int i=0; i<strlen(history); ++i) {
+	    if ( !isdigit(history[i]) ) { return NULL; }
+	}
+	if ((order =atoi(history)) < 0) { return NULL; }
+    }
+
+    size_t vsize;
+    char *line = kcdbget(pns->index_db, fname, strlen(fname), &vsize);
+    if (line == NULL) { return NULL; }
+    char *url = (char *)malloc(_DFS_MAX_LEN);
+    if (url == NULL) { goto err1; }
+    memset(url, 0, _DFS_MAX_LEN);
+
+    char *record = m_get_history(line, order);
+    if (record == NULL) { goto err2; }
+
+    CINode *pn = m_choose(record + _DFS_UUID_LEN);
+    if (pn == NULL) { goto err3; }
+    snprintf(url, _DFS_MAX_LEN, "http://%s/download/%s%.*s?namespace=%s", pn->ip_port, fname, _DFS_UUID_LEN, record, pns->name);
+    printf("%s\n", url);
+
+    if (record) { free(record); }
+    if (line) { kcfree(line); }
+    return url;
+err3:
+    if (record) { free(record); }
+err2:
+    if (url) { free(url); }
+err1:
+    if (line) { kcfree(line); }
+    return NULL;
+}
+
 int GIm_delete(const char *name_space, const char *fname)
 {
     if (name_space == NULL) { name_space = "default"; }
