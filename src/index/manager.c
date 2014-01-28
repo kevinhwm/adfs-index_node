@@ -335,7 +335,9 @@ char * GIm_status()
 	    strncat(p, "</td><td ", size);
 	    char url[1024] = {0};
 	    snprintf(url, sizeof(url), "http://%s/status", pn->ip_port);
-	    if (GIc_connect(pn, url, FLAG_STATUS) >= 0) {strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);}
+	    if (GIc_connect(pn, url, FLAG_STATUS) >= 0) {
+		strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);
+	    }
 	    else {strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size);}
 	    strncat(p, "</td></tr>", size);
 	}
@@ -365,8 +367,13 @@ static int m_init_ns(cJSON *json)
 	fprintf(stderr, "[default]-> Create namespace error.\n-> Exit.\n");
 	return -1;
     }
+
     cJSON *j_tmp = cJSON_GetObjectItem(json, "namespace");
-    if (j_tmp && (j_tmp = j_tmp->child)) {
+    if (j_tmp == NULL) {
+	fprintf(stderr, "Config file error. No 'namespace' section.\n-> Exit.\n");
+	return -1;
+    }
+    else if ((j_tmp = j_tmp->child)) {
 	for (; j_tmp; j_tmp = j_tmp->next) {
 	    size_t len = strlen(j_tmp->valuestring);
 	    if (len == 0 || len >= _DFS_NAMESPACE_LEN) {
@@ -379,18 +386,19 @@ static int m_init_ns(cJSON *json)
 	    }
 	}
     }
-    else {
-	fprintf(stderr, "Config file error. No 'namespace' section.\n-> Exit.\n");
-	return -1;
-    }
+
     return 0;
 }
 
 static int m_init_zone(cJSON *json)
 {
     cJSON *j_tmp = cJSON_GetObjectItem(json, "zone");
-    if (j_tmp && (j_tmp = j_tmp->child)) {
-	for (; j_tmp; j_tmp = j_tmp->next) {
+    if (j_tmp == NULL) {
+	fprintf(stderr, "Config file error. No 'zone' section.\n-> Exit.\n");
+	return -1;
+    }
+    else if ((j_tmp = j_tmp->child)) {
+	for (; j_tmp; j_tmp=j_tmp->next) {
 	    cJSON *j_name = cJSON_GetObjectItem(j_tmp, "name");
 	    CIZone *pz = m_create_zone(j_name->valuestring);
 	    if (pz == NULL) {
@@ -412,10 +420,7 @@ static int m_init_zone(cJSON *json)
 	    }
 	}
     }
-    else {
-	fprintf(stderr, "Config file error. No 'zone' section.\n-> Exit.\n");
-	return -1;
-    }
+
     return 0;
 }
 

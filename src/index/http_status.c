@@ -1,4 +1,4 @@
-/* f_status.c
+/* http_status.c
  *
  * kevinhwm@gmail.com
  */
@@ -17,10 +17,10 @@ static nxweb_result status_on_request(
     nxweb_response_append_str(resp, "<html><head><title>status</title></head><body>");
     nxweb_response_append_str(resp, "<h3>status table</h3>");
 
-    char *p = GIm_status();
-    nxweb_response_append_str(resp, p);
+    char *pinfo = GIm_status();
+    nxweb_response_append_str(resp, pinfo);
     nxweb_response_append_str(resp, "</body></html>");
-    free(p);
+    free(pinfo);
     return NXWEB_OK;
 }
 

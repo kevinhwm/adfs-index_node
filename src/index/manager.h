@@ -61,4 +61,3 @@ int GIu_run();
 
 #endif // __MANAGER_H__
 
-

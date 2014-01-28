@@ -1,4 +1,4 @@
-/* f_delete.c
+/* http_delete.c
  *
  * kevinhwm@gmail.com
  */

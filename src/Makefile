@@ -7,7 +7,7 @@ CFLAGS = -std=c99 -Wall -D_GNU_SOURCE
 INCLUDE = -I/usr/local/include/ 
 LIBS = -lnxweb -lkyotocabinet -lrt -lm -lpcre -lcurl -pthread
 
-idx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
+ndx_OBJS = function.o conf.o cJSON.o log.o multipart_parser.o \
 	   ihttp_upload.o ihttp_download.o ihttp_exist.o ihttp_length.o ihttp_delete.o ihttp_setnode.o ihttp_status.o \
 	   i_meta.o i_zone.o i_connect.o i_update.o i_manager.o \
 	   indexserver.o
@@ -36,7 +36,7 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(idx_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(ndx_OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_upload.o node/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_download.o node/http_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_length.o node/http_length.c
@@ -70,7 +70,7 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(idx_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(ndx_OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_upload.o node/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_download.o node/http_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_length.o node/http_length.c
@@ -105,7 +105,12 @@ uninstall:
 	-rmdir /usr/local/bin/adfs/node
 	-rmdir /usr/local/bin/adfs
 
+
 .PHONY:clean
 clean:
-	-rm -rf bin $(idx_OBJS) $(nd_OBJS) indexserver nodeserver
+	-rm -rf $(ndx_OBJS) $(nd_OBJS) indexserver nodeserver
+	-rm -rf bin/indexserver
+	-rm -rf bin/indexserver.conf
+	-rm -rf bin/nodeserver
+	-rm -rf bin/nodeserver.conf
 
