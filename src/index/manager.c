@@ -320,26 +320,47 @@ char * GIm_status()
 {
     int size = 1024 * 32;
     char *p = malloc(size);
-    if (p == NULL) {return NULL;}
+    if (p == NULL) { return NULL; }
     memset(p, 0, size);
 
     CIManager *pm = &g_manager;
+
+    /*
+    for (CINameSpace *pns=pm->ns_head; pns; pns=pns->next) {
+	unsigned long = kcdbcount(pns->index_db);
+    }
+    */
     for (CIZone *pz = pm->z_head; pz; pz = pz->next) {
-	strncat(p, "<li><font color=\"blue\">Zone: ", size);
+	strncat(p, "<li><font color=\"blue\">", size);
 	strncat(p, pz->name, size);
-	strncat(p, "</font></li><table border=\"1\">\n", size);
-	strncat(p, "<tr><th>node</th><th>status</th></tr>\n", size);
+	strncat(p, "</font></li><table border=\"1\" cellspacing=\"0\" cellpadding=\"6\">\n", size);
+	strncat(p, "<tr bgcolor=\"gray\" style=\"color:white\"><th>Name</th><th>Address</th><th>S_Run</th><th>S_RW</th></tr>\n", size);
 	for (CINode *pn = pz->head; pn; pn = pn->next) {
 	    strncat(p, "<tr><td>", size);
+	    strncat(p, pn->name, size);
+	    strncat(p, "</td><td>", size);
 	    strncat(p, pn->ip_port, size);
 	    strncat(p, "</td><td ", size);
+
 	    char url[1024] = {0};
 	    snprintf(url, sizeof(url), "http://%s/status", pn->ip_port);
 	    if (GIc_connect(pn, url, FLAG_STATUS) >= 0) {
 		strncat(p, "bgcolor=\"green\"><font color=\"white\">alive</font>", size);
 	    }
-	    else {strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size);}
-	    strncat(p, "</td></tr>", size);
+	    else { strncat(p, "bgcolor=\"red\"><font color=\"white\">lost</font>", size); }
+	    strncat(p, "</td><td ", size);
+
+	    if (pn->state == S_READ_WRITE) { 
+		strncat(p, "bgcolor=\"green\"><font color=\"white\">RW</font>", size); 
+	    }
+	    else if (pn->state == S_READ_ONLY) { 
+		strncat(p, "bgcolor=\"yellow\"><font color=\"black\">RO</font>", size); 
+	    }
+	    else { 
+		strncat(p, "bgcolor=\"red\"><font color=\"white\">NA</font>", size); 
+	    }
+
+	    strncat(p, "</tr>", size);
 	}
 	strncat(p, "</table>", size);
     }

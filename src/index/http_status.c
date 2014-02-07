@@ -15,7 +15,6 @@ static nxweb_result status_on_request(
 {
     nxweb_set_response_content_type(resp, "text/html");
     nxweb_response_append_str(resp, "<html><head><title>status</title></head><body>");
-    nxweb_response_append_str(resp, "<h3>status table</h3>");
 
     char *pinfo = GIm_status();
     nxweb_response_append_str(resp, pinfo);
