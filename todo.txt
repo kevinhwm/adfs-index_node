@@ -1,5 +1,6 @@
 
 version 3.3
+[+] 上传成功后返回OK_<namespace>_<filename>_<uuid>。为此增加一个依赖库libuuid
 [+] 显示部分状态信息，增加node名字和node读写状态，增加功能接口列表
 [+] 增加length接口，返回单个文件长度
 [+] 增加node读写状态属性和读写状态设置接口

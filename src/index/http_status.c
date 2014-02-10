@@ -17,7 +17,7 @@ static nxweb_result status_on_request(
     nxweb_response_append_str(resp, "<html><head><title>status</title></head><body>");
     nxweb_response_append_str(resp, ""
 	    "<li><strong>Node List</strong></li>"
-	    "<HR align=\"left\" width=\"60\%\" color=#000000 SIZE=2>"
+	    "<HR align=\"left\" width=\"600\" color=#000000 SIZE=2>"
 	    );
 
     char *pinfo = GIm_status();
@@ -25,7 +25,7 @@ static nxweb_result status_on_request(
 
     nxweb_response_append_str(resp, "<br><br>"
 	    "<li><strong>Functions</strong></li>"
-	    "<HR align=\"left\" width=\"60\%\" color=#000000 SIZE=2>"
+	    "<HR align=\"left\" width=\"600\" color=#000000 SIZE=2>"
 	    "/upload/&ltfilename&gt?namespace=&ltns&gt&ampoverwrite=(1)<br>"
 	    "/download/&ltfilename&gt?namespace=&ltns&gt&amphistory=&ltorder&gt<br>"
 	    "/delete/&ltfilename&gt?namespace=&ltns&gt<br>"

@@ -13,7 +13,7 @@
 
 static int update(int order);
 static int identify(const char *version);
-static int update_N0300();
+static int update_N0300_to_N0301();
 static int create_dir(const char *path);
 
 extern CNManager g_manager;
@@ -43,7 +43,7 @@ static int update(int order)
 {
     switch (order) {
 	case 0:
-	    if (update_N0300() < 0) { return -1; }
+	    if (update_N0300_to_N0301() < 0) { return -1; }
 	case 1:
 	    break;
 	default:
@@ -64,7 +64,7 @@ static int identify(const char *version)
     return -1;
 }
 
-static int update_N0300()
+static int update_N0300_to_N0301()
 {
     CNManager *pm = &g_manager;
     if (create_dir(pm->data_dir) < 0) { return -1; }
@@ -77,22 +77,30 @@ static int update_N0300()
     if (dp == NULL) { return -1; }
     while ((dirp = readdir(dp)) != NULL) {
 	if (dirp->d_type == DT_DIR) {
-	    if ((dirp->d_name[0] != '.') && (strcmp(dirp->d_name, pm->data_dir) != 0) && (strcmp(dirp->d_name, pm->log_dir) != 0)) { 
+	    if ((dirp->d_name[0] != '.') && 
+		(strcmp(dirp->d_name, pm->data_dir) != 0) && 
+		(strcmp(dirp->d_name, pm->log_dir) != 0)) 
+	    {
 		char tmp[512] = {0};
 		sprintf(tmp, "%s/%s", pm->data_dir, dirp->d_name);
 		if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	    }
 	}
-	else if (strstr(dirp->d_name, ".log") != NULL) {
-	    char tmp[512] = {0};
-	    sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);
-	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
+	else {
+	    int len = strlen(dirp->d_name);
+	    if (len >= 4 && strstr(dirp->d_name+(len-4), ".log") == 0) {
+		char tmp[512] = {0};
+		sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);
+		if (rename(dirp->d_name, tmp) < 0) { return -1; }
+	    }
 	}
     }
     closedir(dp);
+
     FILE *f = fopen("version", "w");
     fprintf(f, "N0301");
     fclose(f);
+
     return 0;
 }
 

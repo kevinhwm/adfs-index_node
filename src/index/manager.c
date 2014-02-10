@@ -325,11 +325,6 @@ char * GIm_status()
 
     CIManager *pm = &g_manager;
 
-    /*
-    for (CINameSpace *pns=pm->ns_head; pns; pns=pns->next) {
-	unsigned long = kcdbcount(pns->index_db);
-    }
-    */
     for (CIZone *pz = pm->z_head; pz; pz = pz->next) {
 	strncat(p, "<font color=\"blue\">", size);
 	strncat(p, pz->name, size);

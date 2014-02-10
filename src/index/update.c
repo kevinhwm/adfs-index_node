@@ -14,7 +14,7 @@
 
 static int identify(const char *version);
 static int update(int order);
-static int update_I0300();
+static int update_I0300_to_I0301();
 static int create_dir(const char *path);
 
 extern CIManager g_manager;
@@ -56,7 +56,7 @@ static int update(int order)
 {
     switch (order) {
 	case 0: 
-	    if (update_I0300() < 0) { return -1; }
+	    if (update_I0300_to_I0301() < 0) { return -1; }
 	case 1: 
 	    break;
 	default:
@@ -65,7 +65,7 @@ static int update(int order)
     return 0;
 }
 
-static int update_I0300()
+static int update_I0300_to_I0301()
 {
     CIManager *pm = &g_manager;
     if (create_dir(pm->data_dir) < 0) { return -1; }
@@ -83,7 +83,8 @@ static int update_I0300()
 	    sprintf(tmp, "%s/%s", pm->data_dir, dirp->d_name);
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	}
-	if (strstr(dirp->d_name, ".log") != NULL) {
+	int len = strlen(dirp->d_name);
+	if (len >= 4 && strcmp(dirp->d_name+(len-4), ".log") == 0) {
 	    char tmp[512] = {0};
 	    sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }

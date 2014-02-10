@@ -3,6 +3,7 @@
  * kevinhwm@gmail.com
  */
 
+#include <uuid/uuid.h>
 #include <nxweb/nxweb.h>
 #include <kclangc.h>
 #include "../multipart_parser.h"
@@ -140,8 +141,12 @@ static nxweb_result upload_on_request(
 		res = -1;
 	    }
 	    else {
-		nxweb_response_append_str(resp, "<html><head><title>Upload</title></head><body>" );
-		nxweb_response_printf(resp, "OK" );
+		uuid_t uu;
+		uuid_generate(uu);
+		char s_uu[64] = {0};
+		uuid_unparse(uu, s_uu);
+
+		nxweb_response_printf(resp, "OK\n%s_%s_%s", namespace, fname, s_uu);
 		res = 1;
 	    }
 	}
@@ -155,7 +160,8 @@ static nxweb_result upload_on_request(
 	    ufo->file_ptr = NULL;
 	}
     }
-    else {nxweb_response_append_str(resp, "<html><head><title>Upload</title></head>"
+    else {nxweb_response_append_str(resp, ""
+	    "<html><head><title>Upload</title></head>\n"
 	    "<body><form method='post' enctype='multipart/form-data'>\n"
 	    "File to upload: "
 	    "<input type='file' multiple name='uploadedfile' />\n"
@@ -165,13 +171,17 @@ static nxweb_result upload_on_request(
 
     char msg[1024] = {0};
     if (res < 0) {
-	snprintf(msg, sizeof(msg), "[%s]->error.[%s]", fname, conn->remote_addr);
+	snprintf(msg, sizeof(msg), "[%s:%s:%s]->error.[%s]", namespace, fname, overwrite, conn->remote_addr);
 	log_out("upload", msg, LOG_LEVEL_INFO);
 	resp->keep_alive = 0;
 	return NXWEB_ERROR;
     }
-    else if (res > 0) { snprintf(msg, sizeof(msg), "[%s:%s:%s]->ok.[%s]", namespace, fname, overwrite, conn->remote_addr); }
-    else { snprintf(msg, sizeof(msg), "[%s]->request.[%s]", fname, conn->remote_addr); }
+    else if (res > 0) { 
+	snprintf(msg, sizeof(msg), "[%s:%s:%s]->ok.[%s]", namespace, fname, overwrite, conn->remote_addr); 
+    }
+    else { 
+	snprintf(msg, sizeof(msg), "[%s:%s:%s]->request.[%s]", namespace, fname, overwrite, conn->remote_addr); 
+    }
 
     log_out("upload", msg, LOG_LEVEL_INFO);
     return NXWEB_OK;

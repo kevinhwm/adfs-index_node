@@ -36,7 +36,7 @@ release:
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o indexserver.o index/indexserver.c
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(ndx_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib/ -o indexserver $(ndx_OBJS) $(LIBS) -luuid
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_upload.o node/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_download.o node/http_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o nhttp_length.o node/http_length.c
@@ -70,7 +70,7 @@ debug:
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_manager.o index/manager.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o i_update.o index/update.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o indexserver.o index/indexserver.c
-	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(ndx_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -Wl,-rpath=./ -Wl,-rpath=/usr/local/lib -o indexserver $(ndx_OBJS) $(LIBS) -luuid
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_upload.o node/http_upload.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_download.o node/http_download.c
 	$(CC) $(CFLAGS) $(INCLUDE) -DDEBUG -c -o nhttp_length.o node/http_length.c
