@@ -331,9 +331,9 @@ char * GIm_status()
     }
     */
     for (CIZone *pz = pm->z_head; pz; pz = pz->next) {
-	strncat(p, "<li><font color=\"blue\">", size);
+	strncat(p, "<font color=\"blue\">", size);
 	strncat(p, pz->name, size);
-	strncat(p, "</font></li><table border=\"1\" cellspacing=\"0\" cellpadding=\"6\">\n", size);
+	strncat(p, "</font><table border=\"1\" cellspacing=\"0\" cellpadding=\"6\">\n", size);
 	strncat(p, "<tr bgcolor=\"gray\" style=\"color:white\"><th>Name</th><th>Address</th><th>S_Run</th><th>S_RW</th></tr>\n", size);
 	for (CINode *pn = pz->head; pn; pn = pn->next) {
 	    strncat(p, "<tr><td>", size);

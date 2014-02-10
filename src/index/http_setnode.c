@@ -19,8 +19,8 @@ static nxweb_result setnode_on_request(
     }
 
     nxweb_parse_request_parameters(req, 0);
-    const char *node_name = nx_simple_map_get_nocase(req->parameters, "node");
-    const char *attr_rw = nx_simple_map_get_nocase(req->parameters, "attr");
+    const char *node_name = nx_simple_map_get_nocase(req->parameters, "name");
+    const char *attr_rw = nx_simple_map_get_nocase(req->parameters, "state");
     if (node_name == NULL || attr_rw == NULL) {goto err1;}
     if (GIm_setnode(node_name, attr_rw) < 0) {goto err1;}
 
