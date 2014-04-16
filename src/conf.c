@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "def.h"
 
 static void conf_read_and_filter(const char *conf_file, char **data);
