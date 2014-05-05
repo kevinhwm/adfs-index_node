@@ -59,7 +59,7 @@ static void show_help(void)
 {
     printf( "usage:    indexserver <options>\n"
 	    " -d       run as daemon\n"
-	    " -s       shutdown nxweb\n"
+	    " -s       shutdown indexserver\n"
 	    " -p file  set pid file			(default: indexserver.pid)\n"
 	    " -w dir   set work dir			(default: /usr/local/adfs/index)\n"
 	    //" -u user  set process uid\n"
@@ -73,7 +73,7 @@ static void show_help(void)
 	    " -b bnum  set the number of buckets	(default: 1048576)\n"
 	    //" -x dir   set database dir		(no default, must be set.)\n"
 	    "\n"
-	    " example:  indexserver -w . -c indexserver.conf -d \n"
+	    " example:  indexserver -w . -c indexserver.conf -d -P 8341\n"
 	   );
 }
 

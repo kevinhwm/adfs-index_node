@@ -51,7 +51,7 @@ static void show_help(void)
 {
     printf( "usage:    nodeserver <options>\n"
 	    " -d       run as daemon\n"
-	    " -s       shutdown nxweb\n"
+	    " -s       shutdown nodeserver\n"
 	    " -p file  set pid file			(default: nodeserver.pid)\n"
 	    " -w dir   set work dir			(default: /usr/local/adfs/node)\n"
 	    //" -u user  set process uid\n"
@@ -63,7 +63,7 @@ static void show_help(void)
 	    " -m mem   set memory map size in MB	(default: 512)\n"
 	    " -x dir   set work dir			(no default, must be set.)\n"
 	    "\n"
-	    " example:  nodeserver -w . -c nodeserver.conf -d -P 10010 \n"
+	    " example:  nodeserver -w . -c nodeserver.conf -d -P 9527 \n"
 	  );
 }
 
