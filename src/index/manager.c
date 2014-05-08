@@ -74,6 +74,7 @@ int GIm_init(const char *conf_file, long bnum, unsigned long mem_size, unsigned 
 
     curl_global_init(CURL_GLOBAL_ALL);
     srand(time(NULL));
+    fprintf(stderr, "ADFS is running...\n");
     return 0;
 }
 

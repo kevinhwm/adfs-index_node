@@ -78,12 +78,13 @@ static int update_I0300_to_I0301()
     if (dp == NULL) { return -1; }
     while ((dirp = readdir(dp)) != NULL) {
 	if (dirp->d_type == DT_DIR) { continue; }
-	if (strstr(dirp->d_name, ".kch") != NULL) {
+	size_t len = strlen(dirp->d_name);
+	if (strcmp(dirp->d_name+(len-4), ".kch") == 0) {
 	    char tmp[512] = {0};
 	    sprintf(tmp, "%s/%s", pm->data_dir, dirp->d_name);
 	    if (rename(dirp->d_name, tmp) < 0) { return -1; }
 	}
-	int len = strlen(dirp->d_name);
+	len = strlen(dirp->d_name);
 	if (len >= 4 && strcmp(dirp->d_name+(len-4), ".log") == 0) {
 	    char tmp[512] = {0};
 	    sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);

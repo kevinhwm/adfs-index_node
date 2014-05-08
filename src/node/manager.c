@@ -63,6 +63,7 @@ int GNm_init(const char *conf_file, unsigned long mem_size)
     conf_release(json);
 
     if (m_init_ns() < 0) { return -1; }
+    fprintf(stderr, "ADFS is running...\n");
     return 0;
 }
 

@@ -87,8 +87,8 @@ static int update_N0300_to_N0301()
 	    }
 	}
 	else {
-	    int len = strlen(dirp->d_name);
-	    if (len >= 4 && strstr(dirp->d_name+(len-4), ".log") == 0) {
+	    size_t len = strlen(dirp->d_name);
+	    if (len >= 4 && strcmp(dirp->d_name+(len-4), ".log") == 0) {
 		char tmp[512] = {0};
 		sprintf(tmp, "%s/%s", pm->log_dir, dirp->d_name);
 		if (rename(dirp->d_name, tmp) < 0) { return -1; }
